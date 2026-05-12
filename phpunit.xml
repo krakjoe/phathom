@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<phpunit colors="true"
+         bootstrap="vendor/autoload.php"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         cacheDirectory=".phpunit.cache">
+  <testsuites>
+    <testsuite name="File">
+      <file>tests/File/Test.php</file>
+    </testsuite>
+    <testsuite name="Lexer">
+      <file>tests/Lexer/Test.php</file>
+    </testsuite>
+    <testsuite name="Grammar">
+      <file>tests/Grammar/Test.php</file>
+    </testsuite>
+    <testsuite name="Grammar\\Basic">
+      <file>tests/Grammar/Basic/Test.php</file>
+    </testsuite>
+    <testsuite name="Grammar\\Include">
+      <file>tests/Grammar/Include/Test.php</file>
+    </testsuite>
+    <testsuite name="Grammar\\Pipe">
+      <file>tests/Grammar/Pipe/Test.php</file>
+    </testsuite>
+    <testsuite name="Grammar\\Sequence">
+      <file>tests/Grammar/Sequence/Test.php</file>
+    </testsuite>
+    <testsuite name="Grammar\\Quantifiers\\Asterix">
+      <file>tests/Grammar/Quantifiers/Asterix/Test.php</file>
+    </testsuite>
+    <testsuite name="Grammar\\Quantifiers\\Plus">
+      <file>tests/Grammar/Quantifiers/Plus/Test.php</file>
+    </testsuite>
+    <testsuite name="Grammar\\Quantifiers\\Optional">
+      <file>tests/Grammar/Quantifiers/Optional/Test.php</file>
+    </testsuite>
+  </testsuites>
+  <source>
+    <include>
+      <directory suffix=".php">src</directory>
+    </include>
+    <exclude/>
+  </source>
+</phpunit>

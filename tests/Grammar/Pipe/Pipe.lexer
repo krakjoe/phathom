@@ -1,0 +1,15 @@
+[ALPHA]
+pattern = "/[a-zA-Z]+/"
+
+[LEFT_BRACKET]
+pattern = "/\[/"
+
+[RIGHT_BRACKET]
+pattern = "/\]/"
+
+[EQUALS]
+pattern = "/=/"
+
+[WHITESPACE]
+pattern = "/\s+/"
+skip = true

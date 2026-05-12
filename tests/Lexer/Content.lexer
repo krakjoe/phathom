@@ -1,0 +1,9 @@
+[INTEGER]
+pattern = "/[0-9]+/"
+
+[ALPHANUM]
+pattern = "/[a-zA-Z0-9]+/"
+
+[WHITESPACE]
+pattern = "/\s+/"
+skip = true

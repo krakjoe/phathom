@@ -1,0 +1,97 @@
+<?php
+
+namespace pharos\phathom
+{
+    final class Lexer
+    {
+        public function __construct(string $grammar, string $config) {
+            $path = \sprintf(
+                "%s%s%s",
+                \dirname($grammar),
+                \DIRECTORY_SEPARATOR,
+                $config);
+
+            if (!\file_exists($path)) {
+                throw new \Exception(
+                    "$path does not exist");
+            }
+
+            $this->config =
+                @\parse_ini_file($path, true);
+
+            if ($this->config === false) {
+                throw new \Exception(
+                    "$path does not contain valid configuration (ini syntax)");
+            }
+        }
+
+        public function tokenize(File $file): array {
+            $tokens   = [];
+            $buffer   = $file->getBuffer();
+            $position = 0;
+            $limit    = \strlen($buffer);
+
+            $skip    = \array_filter(
+                $this->config,
+                fn($c) => isset($c['skip']) && $c['skip']);
+            $consume = \array_filter(
+                $this->config,
+                fn($c) => !(isset($c['skip']) && $c['skip']));
+
+            while ($position < $limit) {
+                $advanced = true;
+                while ($advanced && $position < $limit) {
+                    $advanced = false;
+                    foreach ($skip as $config) {
+                        if (!\preg_match($config['pattern'], $buffer, $matches, \PREG_OFFSET_CAPTURE, $position)) {
+                            continue;
+                        }
+                        if ($matches[0][1] !== $position) {
+                            continue;
+                        }
+                        $position += \strlen($matches[0][0]);
+                        $advanced  = true;
+                        break;
+                    }
+                }
+
+                if ($position >= $limit) {
+                    break;
+                }
+
+                $best   = null;
+                $length = 0;
+                $type   = null;
+
+                foreach ($consume as $name => $config) {
+                    if (!\preg_match($config['pattern'], $buffer, $matches, \PREG_OFFSET_CAPTURE, $position)) {
+                        continue;
+                    }
+                    if ($matches[0][1] !== $position) {
+                        continue;
+                    }
+                    $chunk = \strlen($matches[0][0]);
+                    if ($chunk > $length) {
+                        $length = $chunk;
+                        $best   = $matches[0][0];
+                        $type   = $name;
+                    }
+                }
+
+                if ($best !== null) {
+                    $tokens[] = [
+                        'type' => $type,
+                        'value' => $best
+                    ];
+                    $position += $length;
+                } else {
+                    $position++;
+                }
+            }
+
+            return $tokens;
+        }
+
+        private array|bool $config;
+    }
+}

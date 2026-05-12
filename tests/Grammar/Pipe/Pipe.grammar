@@ -1,0 +1,17 @@
+lexer: Pipe.lexer
+
+type: \pharos\phathom\tests\Grammar\Pipe\File
+
+section:
+    (LEFT_BRACKET ALPHA RIGHT_BRACKET) {
+        $this->section($2);
+    }
+
+item:
+    (ALPHA EQUALS ALPHA) {
+        $this->item($1, $3);
+    }
+
+line: section | item
+
+unit: line*

@@ -1,0 +1,10 @@
+lexer: Basic.lexer
+
+type: \pharos\phathom\tests\Grammar\File
+
+# comment
+
+unit:
+    (ALPHA EQUALS NUM) {
+        return $this->returnThings($1, $3);
+    }
