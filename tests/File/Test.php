@@ -57,8 +57,9 @@ final class Test extends \PHPUnit\Framework\TestCase
         $meta      = \stream_get_meta_data($temporary);
         $file = new \pharos\phathom\File($meta['uri']);
 
-        $this->assertEmpty($file->buffer());
-        $this->assertTrue($file->buffer() !== false);
+        $buffer = $file->getBuffer();
+        $this->assertEmpty($buffer);
+        $this->assertTrue($buffer !== false);
     }
 
     public function testPath() : void {
