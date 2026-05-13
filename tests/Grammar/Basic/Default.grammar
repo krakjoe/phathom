@@ -7,4 +7,5 @@ item:
         return $this->returnThings($1, $3);
     }
 
+# Last rule is entry point if no unit specified
 _: item+
