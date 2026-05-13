@@ -44,8 +44,10 @@ final class Test extends \PHPUnit\Framework\TestCase
     public function testCaching() : void {
         $file = new \pharos\phathom\File(__FILE__);
 
-        $first  = $file->buffer();
-        $second = $file->buffer();
+        $file->buffer();
+        $first  = $file->getBuffer();
+        $file->buffer();
+        $second = $file->getBuffer();
 
         $this->assertSame($first, $second);
     }

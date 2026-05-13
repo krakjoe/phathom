@@ -1,5 +1,5 @@
 <?php
-namespace pharos\phathom\tests\Grammar\Quantifier\Optional;
+namespace pharos\phathom\tests\Grammar\Quantifiers\Optional;
 
 final class Test extends \PHPUnit\Framework\TestCase
 {

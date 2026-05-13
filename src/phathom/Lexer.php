@@ -4,6 +4,8 @@ namespace pharos\phathom
 {
     final class Lexer
     {
+        private array|bool $config;
+
         public function __construct(string $grammar, string $config) {
             $path = \sprintf(
                 "%s%s%s",
@@ -91,7 +93,5 @@ namespace pharos\phathom
 
             return $tokens;
         }
-
-        private array|bool $config;
     }
 }

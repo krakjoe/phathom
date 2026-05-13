@@ -34,6 +34,10 @@ namespace pharos\phathom
                         $this->file,
                         $lines)));
 
+            if ($this->lexer === null) {
+                throw new \Exception("$this->file does not declare a lexer");
+            }
+
             if (empty($this->rules)) {
                 throw new \Exception("$this->file does not contain any rules");
             }
@@ -329,7 +333,7 @@ namespace pharos\phathom
 
             $this->start = isset($this->compiled['unit'])
                 ? 'unit'
-                : \array_key_first($this->compiled);
+                : \array_key_last($this->compiled);
 
             $this->identifyTerminals();
         }

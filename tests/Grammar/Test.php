@@ -81,4 +81,17 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         new \pharos\phathom\Grammar($unruled);
     }
+
+    public function testUnlexed() : void {
+        $unlexed = \sprintf(
+            "%s%sUnlexed.grammar",
+            \dirname(__FILE__),
+            \DIRECTORY_SEPARATOR);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage(
+            "$unlexed does not declare a lexer");
+
+        new \pharos\phathom\Grammar($unlexed);
+    }
 }
