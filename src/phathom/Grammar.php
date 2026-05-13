@@ -125,6 +125,11 @@ namespace pharos\phathom
                     $position++;
                 }
 
+                if ($depth !== 0) {
+                    throw new \Exception(
+                        "$this->file contains unmatched $open in \"$content\", missing $close");
+                }
+
                 return [\trim($content), $position];
             };
 

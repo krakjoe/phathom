@@ -94,4 +94,17 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         new \pharos\phathom\Grammar($unlexed);
     }
+
+    public function testUnbalanced() : void {
+        $unbalanced = \sprintf(
+            "%s%sUnbalanced.grammar",
+            \dirname(__FILE__),
+            \DIRECTORY_SEPARATOR);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage(
+            "$unbalanced contains unmatched { in \" { }\", missing }");
+
+        new \pharos\phathom\Grammar($unbalanced);
+    }
 }
