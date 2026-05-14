@@ -27,6 +27,17 @@ namespace pharos\phathom
             }
         }
 
+        public function add(array $patterns): void {
+            foreach ($patterns as $pattern) {
+                $this->config[$pattern] = [
+                    'pattern' => 
+                    \sprintf(
+                        "/%s/",
+                        $pattern)
+                ];
+            }
+        }
+
         public function tokenize(File $file): array {
             $tokens   = [];
             $buffer   = $file->getBuffer();

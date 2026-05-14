@@ -1,0 +1,9 @@
+[ALPHA]
+pattern = "/[a-z]+/"
+
+[EQUALS]
+pattern = "/=/"
+
+[WHITESPACE]
+pattern = "/\s+/"
+skip = true

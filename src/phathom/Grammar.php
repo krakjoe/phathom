@@ -8,6 +8,7 @@ namespace pharos\phathom
         private array   $rules     = [];   /* raw rules from grammar file parse       */
         private array   $compiled  = [];   /* desugared rules used by the Earley loop */
         private array   $terminals = [];   /* terminal name => true                   */
+        private array   $patterns  = [];   /* pattern terminal name => true           */
         private array   $synthetic = [];   /* name => 'star'|'plus'|'opt'             */
         private string  $start     = '';
         private string  $type      = Node::class;
@@ -117,11 +118,22 @@ namespace pharos\phathom
                 $position++;
 
                 while ($position < $length && $depth > 0) {
+                    if ($buffer[$position] === '\\') {
+                        /* escape */
+                        $content .= $buffer[$position++];
+                        if ($position < $length) {
+                            $content .= $buffer[$position++];
+                        }
+                        continue;
+                    }
+
                     if ($buffer[$position] === $open)  $depth++;
                     if ($buffer[$position] === $close) $depth--;
+                    
                     if ($depth > 0) {
                         $content .= $buffer[$position];
                     }
+                    
                     $position++;
                 }
 
@@ -156,6 +168,14 @@ namespace pharos\phathom
                         $position++;
                         break;
 
+                    case '<':
+                        [$content, $position] = $balance($buffer, $position, '<', '>');
+                        $tokens[] = [
+                            'type' => 'PATTERN',
+                            'value' => $content
+                        ];
+                        break;
+
                     case '(':
                         [$content, $position] = $balance($buffer, $position, '(', ')');
                         $tokens[]      = [
@@ -173,7 +193,8 @@ namespace pharos\phathom
                         break;
 
                     default:
-                        if (\ctype_alpha($buffer[$position]) || $buffer[$position] === '_') {
+                        if (\ctype_alpha($buffer[$position]) ||
+                            $buffer[$position] === '_') {
                             $ident = '';
                             while (($position < $length) &&
                                    (
@@ -210,6 +231,71 @@ namespace pharos\phathom
             return $tokens;
         }
 
+        private function tokenizeSymbols(string $buffer): array {
+            $tokens = [];
+            $length = \strlen($buffer);
+            $position = 0;
+
+            while ($position < $length) {
+                if (\ctype_space($buffer[$position])) {
+                    $position++;
+                    continue;
+                }
+
+                if ($buffer[$position] === '<') {
+                    $pattern = '';
+                    $position++; // skip <
+                    while ($position < $length) {
+                        if ($buffer[$position] === '\\') {
+                            /* escape */
+                            $pattern .= $buffer[$position++];
+                            if ($position < $length) {
+                                $pattern .= $buffer[$position++];
+                            }
+                        } elseif ($buffer[$position] === '>') {
+                            $position++;
+                            break;
+                        } else {
+                            $pattern .= $buffer[$position++];
+                        }
+                    }
+                    $tokens[] = [
+                        'type' => 'PATTERN',
+                        'value' => $pattern
+                    ];
+                } elseif (\ctype_alpha($buffer[$position]) ||
+                          $buffer[$position] === '_') {
+                    $ident = '';
+                    while (($position < $length) &&
+                           (
+                                \ctype_alnum($buffer[$position]) || 
+                                $buffer[$position] === '_' || 
+                                $buffer[$position] === '\\'
+                            )) {
+                        $ident .= $buffer[$position++];
+                    }
+                    $tokens[] = [
+                        'type' => 'IDENT',
+                        'value' => $ident
+                    ];
+                } else {
+                    $position++;
+                }
+
+                if ($position < $length) {
+                    if ($buffer[$position] === '*' ||
+                        $buffer[$position] === '+' ||
+                        $buffer[$position] === '?') {
+                        $tokens[
+                            \count($tokens) - 1
+                        ]['quantifier'] = $buffer[$position++];
+                    }
+                }
+            }
+
+            return $tokens;
+        }
+
         /* Parse a space-separated symbol sequence from a PAREN body, each symbol
          * optionally followed by a *, +, or ? quantifier.
          *
@@ -218,11 +304,11 @@ namespace pharos\phathom
          */
         private function parseSymbols(string $sequence): array {
             $symbols = [];
-            \preg_match_all('/([a-zA-Z_][a-zA-Z0-9_]*)([*+?])?/', $sequence, $matches, \PREG_SET_ORDER);
-            foreach ($matches as $match) {
+            foreach ($this->tokenizeSymbols($sequence) as $token) {
                 $symbols[] = [
-                    'name'       => $match[1],
-                    'quantifier' => ($match[2] ?? '') !== '' ? $match[2] : null,
+                    'name'       => $token['value'],
+                    'type'       => $token['type'],
+                    'quantifier' => $token['quantifier'] ?? null,
                 ];
             }
             return $symbols;
@@ -235,7 +321,8 @@ namespace pharos\phathom
          *   rule        := IDENT COLON alternative (PIPE alternative)*
          *   alternative := PAREN BRACE            (action:     (expr) { code })
          *                | PAREN                  (sequence:   (A B? C*))
-         *                | IDENT QUANTIFIER?       (expression: rule[*+?])
+         *                | IDENT QUANTIFIER?      (expression: rule[*+?])
+         *                | PATTERN QUANTIFIER?    (expression: <regex>[*+?])
          */
 
         private function parse(array $tokens): void {
@@ -274,27 +361,35 @@ namespace pharos\phathom
                         throw new \Exception("Unexpected EOF in rule '{$name['value']}'");
                     }
 
-                    if ($next['type'] === 'PAREN') {
-                        $paren = $consume();
-                        $ahead = $peek();
-                        if ($ahead && $ahead['type'] === 'BRACE') {
-                            $consume();
-                            $this->actionRule($name['value'], $paren['value'], $ahead['value']);
-                        } else {
-                            /* Bare parens: a multi-symbol sequence without an action. */
-                            $this->sequenceRule($name['value'], $paren['value']);
-                        }
-                    } elseif ($next['type'] === 'IDENT') {
-                        $ident = $consume();
-                        /* Consume a quantifier directly attached to this symbol. */
-                        $ahead      = $peek();
-                        $quantifier = ($ahead && $ahead['type'] === 'QUANTIFIER')
-                                        ? $consume()['value']
-                                            : null;
-                        $this->expressionRule($name['value'], $ident['value'], $quantifier);
-                    } else {
-                        throw new \Exception(
-                            "Unexpected {$next['type']} in rule '{$name['value']}'");
+                    switch ($next['type']) {
+                        case 'PAREN':
+                            $paren = $consume();
+                            $ahead = $peek();
+                            if ($ahead && $ahead['type'] === 'BRACE') {
+                                $consume();
+                                $this->actionRule($name['value'], $paren['value'], $ahead['value']);
+                            } else {
+                                /* Bare parens: a multi-symbol sequence without an action. */
+                                $this->sequenceRule($name['value'], $paren['value']);
+                            }
+                        break;
+
+                        case 'IDENT':
+                        case 'PATTERN':
+                            $token      = $consume();
+                            $quantifier = null;
+                            /* Consume a quantifier directly attached to this symbol. */
+                            if (($ahead = $peek()) &&
+                                ($ahead['type'] === 'QUANTIFIER')) {
+                                $quantifier =
+                                    $consume()['value'];
+                            }
+                            $this->expressionRule($name['value'], $token, $quantifier);
+                        break;
+
+                        default:
+                            throw new \Exception(
+                                "Unexpected {$next['type']} in rule '{$name['value']}'");
                     }
 
                     $next = $peek();
@@ -321,11 +416,12 @@ namespace pharos\phathom
             ];
         }
 
-        /* Single IDENT (optionally quantified) referencing another rule. */
-        private function expressionRule(string $rule, string $symbol, ?string $quantifier = null): void {
+        /* Single IDENT or PATTERN (optionally quantified). */
+        private function expressionRule(string $rule, array $token, ?string $quantifier = null): void {
             $this->rules[$rule][] = [
                 'symbols' => [[
-                    'name'       => \trim($symbol),
+                    'name'       => \trim($token['value']),
+                    'type'       => $token['type'],
                     'quantifier' => $quantifier,
                 ]],
                 'action' => null,
@@ -341,6 +437,12 @@ namespace pharos\phathom
                 : \array_key_last($this->compiled);
 
             $this->identifyTerminals();
+
+            if (\count($this->patterns)) {
+                $this->lexer->add(
+                    \array_keys(
+                        $this->patterns));
+            }
         }
 
         /* Rewrite quantified symbols into synthetic nullable/recursive rules,
@@ -354,14 +456,14 @@ namespace pharos\phathom
             $synthetic = [];
 
             foreach ($this->compiled as &$alternatives) {
-                foreach ($alternatives as &$alt) {
-                    foreach ($alt['symbols'] as &$sym) {
-                        if ($sym['quantifier'] === null) {
+                foreach ($alternatives as &$alternative) {
+                    foreach ($alternative['symbols'] as &$symbol) {
+                        if ($symbol['quantifier'] === null) {
                             continue;
                         }
 
-                        $base  = $sym['name'];
-                        $type  = $sym['quantifier'];
+                        $base  = $symbol['name'];
+                        $type  = $symbol['quantifier'];
                         $kind  = match ($type) {
                             '*'     => 'star',
                             '+'     => 'plus',
@@ -372,8 +474,17 @@ namespace pharos\phathom
                                 $base, $kind);
 
                         if (!isset($synthetic[$name])) {
-                            $self = [['name' => $name, 'quantifier' => null]];
-                            $one  = [['name' => $base, 'quantifier' => null]];
+                            $self = [[
+                                'name'       => $name,
+                                'type'       => 'IDENT',
+                                'quantifier' => null
+                            ]];
+
+                            $one = [[
+                                'name'       => $base,
+                                'type'       => $symbol['type'],
+                                'quantifier' => null
+                            ]];
 
                             $synthetic[$name] = match ($kind) {
                                 'star' => [
@@ -392,8 +503,8 @@ namespace pharos\phathom
                             $this->synthetic[$name] = $kind;
                         }
 
-                        $sym['name']       = $name;
-                        $sym['quantifier'] = null;
+                        $symbol['name']       = $name;
+                        $symbol['quantifier'] = null;
                     }
                 }
             }
@@ -403,13 +514,18 @@ namespace pharos\phathom
 
         /* A terminal is any symbol that is not itself a defined rule. */
         private function identifyTerminals(): void {
-            $ruleNames = \array_keys($this->compiled);
-
             foreach ($this->compiled as $alternatives) {
-                foreach ($alternatives as $alt) {
-                    foreach ($alt['symbols'] as $sym) {
-                        if (!\in_array($sym['name'], $ruleNames, true)) {
-                            $this->terminals[$sym['name']] = true;
+                foreach ($alternatives as $alternative) {
+                    foreach ($alternative['symbols'] as $symbol) {
+                        if (!\array_key_exists($symbol['name'], $this->compiled)) {
+                            switch ($symbol['type'] ?? null) {
+                                case 'PATTERN':
+                                    $this->patterns[$symbol['name']] = true;
+                                break;
+
+                                default:
+                                    $this->terminals[$symbol['name']] = true;
+                            }
                         }
                     }
                 }
@@ -511,7 +627,8 @@ namespace pharos\phathom
                                 ]);
                             }
                         }
-                    } elseif (isset($this->terminals[$dotted['name']])) {
+                    } elseif (isset($this->terminals[$dotted['name']]) ||
+                              isset($this->patterns[$dotted['name']])) {
                         /* Scan */
                         if ($i < $limit && $tokens[$i]['type'] === $dotted['name']) {
                             $add($i + 1, [
