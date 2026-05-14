@@ -28,6 +28,9 @@
     <testsuite name="Grammar\\Pattern">
       <file>tests/Grammar/Pattern/Test.php</file>
     </testsuite>
+    <testsuite name="Grammar\\Unexpected">
+      <file>tests/Grammar/Unexpected/Test.php</file>
+    </testsuite>
     <testsuite name="Grammar\\Quantifiers\\Asterix">
       <file>tests/Grammar/Quantifiers/Asterix/Test.php</file>
     </testsuite>

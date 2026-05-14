@@ -47,10 +47,13 @@ namespace pharos\phathom
         }
 
         private function buffer(string $file, array $lines): string {
-            $lines  = $this->include($file, $lines);
-            $buffer = '';
+            $buffer   = '';
+            $position = 0;
 
-            foreach (\array_map('trim', $lines) as $line) {
+            foreach (\array_map(
+                'trim',
+                $this->include(
+                    $file, $lines)) as $lineno => $line) {
                 if (empty($line) ||
                     \str_starts_with($line, '#')) {
                     continue;
@@ -66,7 +69,9 @@ namespace pharos\phathom
                     continue;
                 }
 
-                $buffer .= ' ' . $line;
+                $append    = ' ' . $line;
+                $buffer   .= $append;
+                $position += \strlen($append);
             }
 
             return \trim($buffer);
@@ -115,6 +120,7 @@ namespace pharos\phathom
                     string $close) use($length): array {
                 $depth   = 1;
                 $content = '';
+                $start   = $position;
                 $position++;
 
                 while ($position < $length && $depth > 0) {
@@ -139,10 +145,11 @@ namespace pharos\phathom
 
                 if ($depth !== 0) {
                     throw new \Exception(
-                        "$this->file contains unmatched $open in \"$content\", missing $close");
+                        "Unmatched $open in \"$content\", ".
+                        "missing $close");
                 }
 
-                return [\trim($content), $position];
+                return [\trim($content), $position, $start];
             };
 
             while ($position < $length) {
@@ -153,42 +160,45 @@ namespace pharos\phathom
 
                 switch ($buffer[$position]) {
                     case ':':
-                        $tokens[] = [
-                            'type' =>
-                            'COLON'
+                        $tokens[]      = [
+                            'type'     => 'COLON',
+                            'position' => $position,
                         ];
                         $position++;
                         break;
 
                     case '|':
-                        $tokens[] = [
-                            'type' =>
-                            'PIPE'
+                        $tokens[]      = [
+                            'type'     => 'PIPE',
+                            'position' => $position,
                         ];
                         $position++;
                         break;
 
                     case '<':
-                        [$content, $position] = $balance($buffer, $position, '<', '>');
-                        $tokens[] = [
-                            'type' => 'PATTERN',
-                            'value' => $content
+                        [$content, $position, $start] = $balance($buffer, $position, '<', '>');
+                        $tokens[]      = [
+                            'type'     => 'PATTERN',
+                            'value'    => $content,
+                            'position' => $start,
                         ];
                         break;
 
                     case '(':
-                        [$content, $position] = $balance($buffer, $position, '(', ')');
+                        [$content, $position, $start] = $balance($buffer, $position, '(', ')');
                         $tokens[]      = [
-                            'type' => 'PAREN',
-                            'value' => $content
+                            'type'     => 'PAREN',
+                            'value'    => $content,
+                            'position' => $start,
                         ];
                         break;
 
                     case '{':
-                        [$content, $position] = $balance($buffer, $position, '{', '}');
+                        [$content, $position, $start] = $balance($buffer, $position, '{', '}');
                         $tokens[]      = [
-                            'type' => 'BRACE',
-                            'value' => $content
+                            'type'     => 'BRACE',
+                            'value'    => $content,
+                            'position' => $start,
                         ];
                         break;
 
@@ -196,6 +206,7 @@ namespace pharos\phathom
                         if (\ctype_alpha($buffer[$position]) ||
                             $buffer[$position] === '_') {
                             $ident = '';
+                            $start = $position;
                             while (($position < $length) &&
                                    (
                                         \ctype_alnum($buffer[$position]) ||
@@ -205,9 +216,10 @@ namespace pharos\phathom
                                 $ident .= $buffer[$position++];
                             }
 
-                            $tokens[] = [
-                                'type' => 'IDENT',
-                                'value' => $ident
+                            $tokens[]      = [
+                                'type'     => 'IDENT',
+                                'value'    => $ident,
+                                'position' => $start,
                             ];
 
                             /* Attach quantifier if it directly follows the identifier. */
@@ -217,13 +229,16 @@ namespace pharos\phathom
                                     $buffer[$position] === '+' ||
                                     $buffer[$position] === '?'
                                 )) {
-                                $tokens[] = [
-                                    'type' => 'QUANTIFIER',
-                                    'value' => $buffer[$position++]
+                                $tokens[]      = [
+                                    'type'     => 'QUANTIFIER',
+                                    'value'    => $buffer[$position++],
+                                    'position' => $position - 1,
                                 ];
                             }
                         } else {
-                            $position++;
+                            throw new \Exception(
+                                "Unexpected $buffer[$position] ".
+                                "expected IDENT");
                         }
                 }
             }
@@ -231,7 +246,7 @@ namespace pharos\phathom
             return $tokens;
         }
 
-        private function tokenizeSymbols(string $buffer): array {
+        private function tokenizeSymbols(string $buffer, int $base = 0): array {
             $tokens = [];
             $length = \strlen($buffer);
             $position = 0;
@@ -244,6 +259,7 @@ namespace pharos\phathom
 
                 if ($buffer[$position] === '<') {
                     $pattern = '';
+                    $start = $position;
                     $position++; // skip <
                     while ($position < $length) {
                         if ($buffer[$position] === '\\') {
@@ -259,13 +275,15 @@ namespace pharos\phathom
                             $pattern .= $buffer[$position++];
                         }
                     }
-                    $tokens[] = [
-                        'type' => 'PATTERN',
-                        'value' => $pattern
+                    $tokens[]      = [
+                        'type'     => 'PATTERN',
+                        'value'    => $pattern,
+                        'position' => $base + $start
                     ];
                 } elseif (\ctype_alpha($buffer[$position]) ||
                           $buffer[$position] === '_') {
                     $ident = '';
+                    $start = $position;
                     while (($position < $length) &&
                            (
                                 \ctype_alnum($buffer[$position]) || 
@@ -275,11 +293,14 @@ namespace pharos\phathom
                         $ident .= $buffer[$position++];
                     }
                     $tokens[] = [
-                        'type' => 'IDENT',
-                        'value' => $ident
+                        'type'     => 'IDENT',
+                        'value'    => $ident,
+                        'position' => $base + $start
                     ];
                 } else {
-                    $position++;
+                    throw new \Exception("Unexpected $buffer[$position] at ".
+                                         "character $position, ".
+                                         "expected IDENT or PATTERN");
                 }
 
                 if ($position < $length) {
@@ -302,13 +323,14 @@ namespace pharos\phathom
          *   "LEFT_BRACKET KEY RIGHT_BRACKET"  → no quantifiers
          *   "type IDENTIFIER block?"          → block has quantifier '?'
          */
-        private function parseSymbols(string $sequence): array {
+        private function parseSymbols(string $sequence, int $base): array {
             $symbols = [];
-            foreach ($this->tokenizeSymbols($sequence) as $token) {
+            foreach ($this->tokenizeSymbols($sequence, $base) as $token) {
                 $symbols[] = [
                     'name'       => $token['value'],
                     'type'       => $token['type'],
                     'quantifier' => $token['quantifier'] ?? null,
+                    'position'   => $token['position'],
                 ];
             }
             return $symbols;
@@ -367,10 +389,10 @@ namespace pharos\phathom
                             $ahead = $peek();
                             if ($ahead && $ahead['type'] === 'BRACE') {
                                 $consume();
-                                $this->actionRule($name['value'], $paren['value'], $ahead['value']);
+                                $this->actionRule($name['value'], $paren['value'], $ahead['value'], $paren['position'] + 1);
                             } else {
                                 /* Bare parens: a multi-symbol sequence without an action. */
-                                $this->sequenceRule($name['value'], $paren['value']);
+                                $this->sequenceRule($name['value'], $paren['value'], $paren['position'] + 1);
                             }
                         break;
 
@@ -389,7 +411,9 @@ namespace pharos\phathom
 
                         default:
                             throw new \Exception(
-                                "Unexpected {$next['type']} in rule '{$name['value']}'");
+                                "Unexpected {$next['type']} ".
+                                "in rule '{$name['value']}', ".
+                                "expected IDENT, PATTERN, or PAREN");
                     }
 
                     $next = $peek();
@@ -401,17 +425,17 @@ namespace pharos\phathom
             }
         }
 
-        private function actionRule(string $rule, string $expression, string $action): void {
+        private function actionRule(string $rule, string $expression, string $action, int $base): void {
             $this->rules[$rule][] = [
-                'symbols' => $this->parseSymbols($expression),
+                'symbols' => $this->parseSymbols($expression, $base),
                 'action'  => \trim($action),
             ];
         }
 
         /* Bare PAREN without BRACE: sequence rule, parsed symbol-by-symbol. */
-        private function sequenceRule(string $rule, string $expression): void {
+        private function sequenceRule(string $rule, string $expression, int $base): void {
             $this->rules[$rule][] = [
-                'symbols' => $this->parseSymbols($expression),
+                'symbols' => $this->parseSymbols($expression, $base),
                 'action'  => null,
             ];
         }
@@ -423,6 +447,7 @@ namespace pharos\phathom
                     'name'       => \trim($token['value']),
                     'type'       => $token['type'],
                     'quantifier' => $quantifier,
+                    'position'   => $token['position'],
                 ]],
                 'action' => null,
             ];
@@ -518,7 +543,7 @@ namespace pharos\phathom
                 foreach ($alternatives as $alternative) {
                     foreach ($alternative['symbols'] as $symbol) {
                         if (!\array_key_exists($symbol['name'], $this->compiled)) {
-                            switch ($symbol['type'] ?? null) {
+                            switch ($symbol['type']) {
                                 case 'PATTERN':
                                     $this->patterns[$symbol['name']] = true;
                                 break;

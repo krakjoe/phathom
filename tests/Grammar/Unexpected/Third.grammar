@@ -1,0 +1,7 @@
+lexer: ../Basic/Basic.lexer
+
+unit: (NUM) {
+    /* do nothing */
+}
+
+!

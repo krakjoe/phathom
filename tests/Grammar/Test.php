@@ -56,19 +56,6 @@ final class Test extends \PHPUnit\Framework\TestCase
         new \pharos\phathom\Grammar($empty);
     }
 
-    public function testUnexpected() : void {
-        $empty = \sprintf(
-            "%s%sUnexpected.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
-
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage(
-            "Unexpected COLON in rule 'unit'");
-
-        new \pharos\phathom\Grammar($empty);
-    }
-
     public function testUnruled() : void {
         $unruled = \sprintf(
             "%s%sUnruled.grammar",
@@ -103,7 +90,7 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
-            "$unbalanced contains unmatched { in \" { }\", missing }");
+            "Unmatched { in \" { }\", missing }");
 
         new \pharos\phathom\Grammar($unbalanced);
     }
