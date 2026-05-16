@@ -1,5 +1,0 @@
-lexer: ../Basic/Basic.lexer
-
-unit: (NUM ! NUM) {
-    /* do nothing */
-}

@@ -1,4 +1,4 @@
-lexer: ../Basic/Basic.lexer
+lexer: "../Basic/Basic.lexer"
 
 item: (ALPHA EQUALS ALPHA)
 

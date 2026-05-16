@@ -1,5 +1,4 @@
 <?php
-
 namespace pharos\phathom
 {
     final class Grammar
@@ -17,431 +16,43 @@ namespace pharos\phathom
         public function __construct(string $file) {
             $this->file = $file;
 
-            if (!\file_exists($this->file)) {
-                throw new \Exception(
-                    "$this->file does not exist");
-            }
-
-            $lines = \file($this->file);
-
-            if (\count($lines) === 0) {
-                throw new \Exception(
-                    "$this->file does not contain valid grammar (empty)");
-            }
-
-            $this->parse(
-                $this->tokenize(
-                    $this->buffer(
-                        $this->file,
-                        $lines)));
+            $lexer =
+                new Grammar\Lexer($this->file);
+            $parser = new Grammar\Parser($this);
+            $parser->parse(
+                $lexer->tokenize());
 
             if ($this->lexer === null) {
-                throw new \Exception("$this->file does not declare a lexer");
+                throw new \Exception(
+                    "$this->file does not declare a lexer");
             }
 
             if (empty($this->rules)) {
-                throw new \Exception("$this->file does not contain any rules");
+                throw new \Exception(
+                    "$this->file does not contain any rules");
             }
 
             $this->compile();
         }
 
-        private function buffer(string $file, array $lines): string {
-            $buffer   = '';
-            $position = 0;
-
-            foreach (\array_map(
-                'trim',
-                $this->include(
-                    $file, $lines)) as $lineno => $line) {
-                if (empty($line) ||
-                    \str_starts_with($line, '#')) {
-                    continue;
-                }
-
-                if (\preg_match('/^lexer:\s+(.+)/', $line, $location)) {
-                    $this->setLexer($file, \trim($location[1]));
-                    continue;
-                }
-
-                if (\preg_match('/^type:\s+(.+)/', $line, $class)) {
-                    $this->setType(\trim($class[1]));
-                    continue;
-                }
-
-                $append    = ' ' . $line;
-                $buffer   .= $append;
-                $position += \strlen($append);
-            }
-
-            return \trim($buffer);
-        }
-
-        private function include(string $file, array $lines): array {
-            $processed = [];
-
-            foreach ($lines as $line) {
-                $line = \trim($line);
-
-                if (\preg_match('/^include:\s+(.+)/', $line, $path)) {
-                    $include = \sprintf(
-                        '%s%s%s',
-                            \dirname($file),
-                            \DIRECTORY_SEPARATOR,
-                            \trim($path[1]));
-
-                    if (!\file_exists($include)) {
-                        throw new \Exception("$include does not exist");
-                    }
-
-                    if (($additional = \file($include))) {
-                        $processed = \array_merge(
-                            $processed,
-                            $this->include(
-                                $include, $additional));
-                    }
-                } else {
-                    $processed[] = $line;
-                }
-            }
-
-            return $processed;
-        }
-
-        private function tokenize(string $buffer): array {
-            $tokens   = [];
-            $length   = \strlen($buffer);
-            $position = 0;
-            $balance  = 
-                function(
-                    string $buffer,
-                    int    $position,
-                    string $open,
-                    string $close) use($length): array {
-                $depth   = 1;
-                $content = '';
-                $start   = $position;
-                $position++;
-
-                while ($position < $length && $depth > 0) {
-                    if ($buffer[$position] === '\\') {
-                        /* escape */
-                        $content .= $buffer[$position++];
-                        if ($position < $length) {
-                            $content .= $buffer[$position++];
-                        }
-                        continue;
-                    }
-
-                    if ($buffer[$position] === $open)  $depth++;
-                    if ($buffer[$position] === $close) $depth--;
-                    
-                    if ($depth > 0) {
-                        $content .= $buffer[$position];
-                    }
-                    
-                    $position++;
-                }
-
-                if ($depth !== 0) {
-                    throw new \Exception(
-                        "Unmatched $open in \"$content\", ".
-                        "missing $close");
-                }
-
-                return [\trim($content), $position, $start];
-            };
-
-            while ($position < $length) {
-                if (\ctype_space($buffer[$position])) {
-                    $position++;
-                    continue;
-                }
-
-                switch ($buffer[$position]) {
-                    case ':':
-                        $tokens[]      = [
-                            'type'     => 'COLON',
-                            'position' => $position,
-                        ];
-                        $position++;
-                        break;
-
-                    case '|':
-                        $tokens[]      = [
-                            'type'     => 'PIPE',
-                            'position' => $position,
-                        ];
-                        $position++;
-                        break;
-
-                    case '<':
-                        [$content, $position, $start] = $balance($buffer, $position, '<', '>');
-                        $tokens[]      = [
-                            'type'     => 'PATTERN',
-                            'value'    => $content,
-                            'position' => $start,
-                        ];
-                        break;
-
-                    case '(':
-                        [$content, $position, $start] = $balance($buffer, $position, '(', ')');
-                        $tokens[]      = [
-                            'type'     => 'PAREN',
-                            'value'    => $content,
-                            'position' => $start,
-                        ];
-                        break;
-
-                    case '{':
-                        [$content, $position, $start] = $balance($buffer, $position, '{', '}');
-                        $tokens[]      = [
-                            'type'     => 'BRACE',
-                            'value'    => $content,
-                            'position' => $start,
-                        ];
-                        break;
-
-                    default:
-                        if (\ctype_alpha($buffer[$position]) ||
-                            $buffer[$position] === '_') {
-                            $ident = '';
-                            $start = $position;
-                            while (($position < $length) &&
-                                   (
-                                        \ctype_alnum($buffer[$position]) ||
-                                        $buffer[$position] === '_' ||
-                                        $buffer[$position] === '\\'
-                                    )) {
-                                $ident .= $buffer[$position++];
-                            }
-
-                            $tokens[]      = [
-                                'type'     => 'IDENT',
-                                'value'    => $ident,
-                                'position' => $start,
-                            ];
-
-                            /* Attach quantifier if it directly follows the identifier. */
-                            if (($position < $length) && 
-                                (
-                                    $buffer[$position] === '*' ||
-                                    $buffer[$position] === '+' ||
-                                    $buffer[$position] === '?'
-                                )) {
-                                $tokens[]      = [
-                                    'type'     => 'QUANTIFIER',
-                                    'value'    => $buffer[$position++],
-                                    'position' => $position - 1,
-                                ];
-                            }
-                        } else {
-                            throw new \Exception(
-                                "Unexpected $buffer[$position] ".
-                                "expected IDENT");
-                        }
-                }
-            }
-
-            return $tokens;
-        }
-
-        private function tokenizeSymbols(string $buffer, int $base = 0): array {
-            $tokens = [];
-            $length = \strlen($buffer);
-            $position = 0;
-
-            while ($position < $length) {
-                if (\ctype_space($buffer[$position])) {
-                    $position++;
-                    continue;
-                }
-
-                if ($buffer[$position] === '<') {
-                    $pattern = '';
-                    $start = $position;
-                    $position++; // skip <
-                    while ($position < $length) {
-                        if ($buffer[$position] === '\\') {
-                            /* escape */
-                            $pattern .= $buffer[$position++];
-                            if ($position < $length) {
-                                $pattern .= $buffer[$position++];
-                            }
-                        } elseif ($buffer[$position] === '>') {
-                            $position++;
-                            break;
-                        } else {
-                            $pattern .= $buffer[$position++];
-                        }
-                    }
-                    $tokens[]      = [
-                        'type'     => 'PATTERN',
-                        'value'    => $pattern,
-                        'position' => $base + $start
-                    ];
-                } elseif (\ctype_alpha($buffer[$position]) ||
-                          $buffer[$position] === '_') {
-                    $ident = '';
-                    $start = $position;
-                    while (($position < $length) &&
-                           (
-                                \ctype_alnum($buffer[$position]) || 
-                                $buffer[$position] === '_' || 
-                                $buffer[$position] === '\\'
-                            )) {
-                        $ident .= $buffer[$position++];
-                    }
-                    $tokens[] = [
-                        'type'     => 'IDENT',
-                        'value'    => $ident,
-                        'position' => $base + $start
-                    ];
-                } else {
-                    throw new \Exception("Unexpected $buffer[$position] at ".
-                                         "character $position, ".
-                                         "expected IDENT or PATTERN");
-                }
-
-                if ($position < $length) {
-                    if ($buffer[$position] === '*' ||
-                        $buffer[$position] === '+' ||
-                        $buffer[$position] === '?') {
-                        $tokens[
-                            \count($tokens) - 1
-                        ]['quantifier'] = $buffer[$position++];
-                    }
-                }
-            }
-
-            return $tokens;
-        }
-
-        /* Parse a space-separated symbol sequence from a PAREN body, each symbol
-         * optionally followed by a *, +, or ? quantifier.
-         *
-         *   "LEFT_BRACKET KEY RIGHT_BRACKET"  → no quantifiers
-         *   "type IDENTIFIER block?"          → block has quantifier '?'
-         */
-        private function parseSymbols(string $sequence, int $base): array {
-            $symbols = [];
-            foreach ($this->tokenizeSymbols($sequence, $base) as $token) {
-                $symbols[] = [
-                    'name'       => $token['value'],
-                    'type'       => $token['type'],
-                    'quantifier' => $token['quantifier'] ?? null,
-                    'position'   => $token['position'],
-                ];
-            }
-            return $symbols;
-        }
-
-        /*
-         * ── Grammar file parsing ─────────────────────────────────────────────────
-         *
-         *   grammar     := rule*
-         *   rule        := IDENT COLON alternative (PIPE alternative)*
-         *   alternative := PAREN BRACE            (action:     (expr) { code })
-         *                | PAREN                  (sequence:   (A B? C*))
-         *                | IDENT QUANTIFIER?      (expression: rule[*+?])
-         *                | PATTERN QUANTIFIER?    (expression: <regex>[*+?])
-         */
-
-        private function parse(array $tokens): void {
-            $position = 0;
-            $count    = \count($tokens);
-
-            $peek = function () use (&$position, $tokens, $count): ?array {
-                return $position < $count ? $tokens[$position] : null;
-            };
-
-            $consume = function () use (&$position, $tokens, $count): ?array {
-                return $position < $count ? $tokens[$position++] : null;
-            };
-
-            $expect = function (string $type) use (&$position, &$consume): array {
-                $token = $consume();
-                if ($token === null ||
-                    $token['type'] !== $type) {
-                    $got =
-                        $token ?
-                            "{$token['type']}(" . ($token['value'] ?? '') . ")" :
-                            'EOF';
-                    throw new \Exception("Expected $type, got $got near token " . ($position - 1));
-                }
-                return $token;
-            };
-
-            while ($position < $count) {
-                $name = $expect('IDENT');
-                $expect('COLON');
-
-                while (true) {
-                    $next = $peek();
-
-                    if ($next === null) {
-                        throw new \Exception("Unexpected EOF in rule '{$name['value']}'");
-                    }
-
-                    switch ($next['type']) {
-                        case 'PAREN':
-                            $paren = $consume();
-                            $ahead = $peek();
-                            if ($ahead && $ahead['type'] === 'BRACE') {
-                                $consume();
-                                $this->actionRule($name['value'], $paren['value'], $ahead['value'], $paren['position'] + 1);
-                            } else {
-                                /* Bare parens: a multi-symbol sequence without an action. */
-                                $this->sequenceRule($name['value'], $paren['value'], $paren['position'] + 1);
-                            }
-                        break;
-
-                        case 'IDENT':
-                        case 'PATTERN':
-                            $token      = $consume();
-                            $quantifier = null;
-                            /* Consume a quantifier directly attached to this symbol. */
-                            if (($ahead = $peek()) &&
-                                ($ahead['type'] === 'QUANTIFIER')) {
-                                $quantifier =
-                                    $consume()['value'];
-                            }
-                            $this->expressionRule($name['value'], $token, $quantifier);
-                        break;
-
-                        default:
-                            throw new \Exception(
-                                "Unexpected {$next['type']} ".
-                                "in rule '{$name['value']}', ".
-                                "expected IDENT, PATTERN, or PAREN");
-                    }
-
-                    $next = $peek();
-                    if ($next === null || $next['type'] !== 'PIPE') {
-                        break;
-                    }
-                    $consume();
-                }
-            }
-        }
-
-        private function actionRule(string $rule, string $expression, string $action, int $base): void {
+        public function complexRule(string $rule, array $symbols = [], ?string $action = null): void {
             $this->rules[$rule][] = [
-                'symbols' => $this->parseSymbols($expression, $base),
-                'action'  => \trim($action),
-            ];
-        }
-
-        /* Bare PAREN without BRACE: sequence rule, parsed symbol-by-symbol. */
-        private function sequenceRule(string $rule, string $expression, int $base): void {
-            $this->rules[$rule][] = [
-                'symbols' => $this->parseSymbols($expression, $base),
-                'action'  => null,
+                'symbols' => \array_map(function($symbol) {
+                    return [
+                        'name'       => $symbol['value'],
+                        'type'       => $symbol['type'],
+                        'quantifier' => $symbol['quantifier'] ?? null,
+                        'position'   => $symbol['position'],
+                    ];
+                }, $symbols),
+                'action' => 
+                    ($action !== null) ?
+                        \trim($action) : null,
             ];
         }
 
         /* Single IDENT or PATTERN (optionally quantified). */
-        private function expressionRule(string $rule, array $token, ?string $quantifier = null): void {
+        public function expressionRule(string $rule, array $token, ?string $quantifier = null): void {
             $this->rules[$rule][] = [
                 'symbols' => [[
                     'name'       => \trim($token['value']),
@@ -795,12 +406,16 @@ namespace pharos\phathom
                 $this->bindValues($values));
         }
 
-        private function setLexer(string $grammar, string $location): void {
-            $this->lexer = new Lexer($grammar, $location);
+        public function setLexer(string $location): void {
+            $this->lexer = new Lexer($this->file, $location);
         }
 
-        private function setType(string $type): void {
+        public function setType(string $type): void {
             $this->type = $type;
+        }
+
+        public function getFile() : string {
+            return $this->file;
         }
 
         public function factory(Parser $parser): Node {

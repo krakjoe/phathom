@@ -1,5 +1,0 @@
-lexer: Basic/Basic.lexer
-
-unit: {
-    {
-}
