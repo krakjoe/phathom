@@ -1,11 +1,11 @@
-lexer: "Basic.lexer"
+lexer: "Basic.lexer";
 
-type: "\pharos\phathom\tests\Grammar\File"
+type: "\pharos\phathom\tests\Grammar\File";
 
 item:
     (ALPHA EQUALS NUM) {
         return $this->returnThings($1, $3);
-    }
+    };
 
 # Last rule is entry point if no unit specified
-_: item+
+_: item+;

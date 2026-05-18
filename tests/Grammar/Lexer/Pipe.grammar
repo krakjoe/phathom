@@ -1,4 +1,4 @@
 ident:  ident |
         <pattern> |
         ident+ |
-       (ident) { action }
+       (ident) { action };

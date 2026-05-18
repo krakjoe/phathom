@@ -1,23 +1,23 @@
-lexer: "Pattern.lexer"
+lexer: "Pattern.lexer";
 
-type: "\pharos\phathom\tests\Grammar\File"
+type: "\pharos\phathom\tests\Grammar\File";
 
-numeric: <\d+>
+numeric: <\d+>;
 
 first: (ALPHA EQUALS numeric) {
     return $this->returnThings($1, $3);
-}
+};
 
 second: (numeric EQUALS <\d+>) {
     return $this->returnThings((int) $1, (int) $3);
-}
+};
 
 third: (ALPHA EQUALS <[A-Z]>+) {
     return $this->returnThings($1, (array) $3);
-}
+};
 
 line: first  |
       second |
-      third
+      third;
 
-unit: line+
+unit: line+;

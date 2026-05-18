@@ -1,11 +1,13 @@
-lexer: "../Quantifiers.lexer"
+lexer: "../Quantifiers.lexer";
 
-type: "\pharos\phathom\tests\Grammar\File"
+type: "\pharos\phathom\tests\Grammar\File";
 
 item: 
     (ALPHA EQUALS NUM) {
         return $this->returnThings($1, $3);
     }
+;
 
 unit:
     item+
+;

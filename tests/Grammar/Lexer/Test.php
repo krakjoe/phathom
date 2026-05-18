@@ -25,8 +25,11 @@ final class Test extends \PHPUnit\Framework\TestCase
         $lexer = new \pharos\phathom\Grammar\Lexer($comment);
         $this->assertSame($lexer->tokenize(), [
             [
-                'type'     => 'EOF',
-                'position' => 9
+                'type' => 'EOF',
+                'location'     => [
+                    'path'     => $comment,
+                    'position' => 9
+                ],
             ],
         ]);
     }
@@ -41,25 +44,12 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->assertSame($lexer->tokenize(), [
             [
                 'type'     => 'EOF',
-                'position' => 10,
+                'location'     => [
+                    'path'     => $comment,
+                    'position' => 10
+                ],
             ],
         ]);
-    }
-
-    public function testListStartNotEnough() : void {
-        $list = \sprintf(
-            "%s%sListStartNotEnough.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
-
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage(
-            "Unexpected LIST_START, ".
-            "LIST_START must follow COLON, ".
-            "not enough tokens");
-
-        $lexer = new \pharos\phathom\Grammar\Lexer($list);
-        $lexer->tokenize();
     }
 
     public function testListStartNotFollowingColonOrPipe() : void {
@@ -71,8 +61,9 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
             "Unexpected LIST_START, ".
-            "LIST_START must follow COLON or PIPE, ".
-            "got IDENT");
+            "IDENT must be followed by ".
+                "COLON, PIPE, QUANTIFIER, or END, ".
+            "got LIST_START");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($list);
         $lexer->tokenize();
@@ -87,7 +78,9 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
             "Unexpected LIST_START, ".
-            "EXPRESSION may only contain IDENT or PATTERN");
+            "LIST_START must be followed by ".
+                "IDENT or PATTERN, ".
+            "got LIST_START");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($list);
         $lexer->tokenize();
@@ -101,24 +94,10 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
-            "Unterminated LIST_START, ".
-            "expected )");
-
-        $lexer = new \pharos\phathom\Grammar\Lexer($list);
-        $lexer->tokenize();
-    }
-
-    public function testListEndNotEnough() : void {
-        $list = \sprintf(
-            "%s%sListEndNotEnough.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
-
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage(
-            "Unexpected LIST_END, ".
-            "LIST_END must follow IDENT or PATTERN, ".
-            "not enough tokens");
+            "Unexpected EOF, ".
+            "IDENT must be followed by ".
+                "IDENT, PATTERN, QUANTIFIER, or LIST_END, ".
+            "got EOF");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($list);
         $lexer->tokenize();
@@ -133,8 +112,9 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
             "Unexpected LIST_END, ".
-            "LIST_END must follow IDENT or PATTERN, ".
-            "none listed");
+            "LIST_START must be followed by ".
+                "IDENT or PATTERN, ".
+            "got LIST_END");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($list);
         $lexer->tokenize();
@@ -151,51 +131,63 @@ final class Test extends \PHPUnit\Framework\TestCase
             [
                 'type'     => 'IDENT',
                 'value'    => 'ident',
-                'position' => 0,
+                'location'     => [
+                    'path'     => $list,
+                    'position' => 0
+                ],
             ],
             [
                 'type'     => 'COLON',
-                'position' => 5,
+                'location'     => [
+                    'path'     => $list,
+                    'position' => 5
+                ],
             ],
             [
                 'type'     => 'LIST_START',
-                'position' => 7,
+                'location'     => [
+                    'path'     => $list,
+                    'position' => 7
+                ],
             ],
             [
                 'type'     => 'IDENT',
                 'value'    => 'ident',
-                'position' => 8,
+                'location'     => [
+                    'path'     => $list,
+                    'position' => 8
+                ],
             ],
             [
                 'type'     => 'PATTERN',
                 'value'    => 'pattern',
-                'position' => 14,
+                'location'     => [
+                    'path'     => $list,
+                    'position' => 14
+                ],
             ],
             [
                 'type'     => 'LIST_END',
-                'position' => 23,
+                'location'     => [
+                    'path'     => $list,
+                    'position' => 23
+                ],
+            ],
+            [
+                'type'     => 'END',
+                'location'     => [
+                    'path'     => $list,
+                    'position' => 24
+                ],
             ],
             [
                 'type'     => 'EOF',
-                'position' => 24
+                'location'     => [
+                    'path'     => $list,
+                    'position' => 25
+                ],
             ],
         ]);
-    }
-
-    public function testColonNotEnough() : void {
-        $colon = \sprintf(
-            "%s%sColonNotEnough.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
-
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage(
-            "Unexpected COLON, ".
-            "COLON must follow IDENT, ".
-            "not enough tokens");
-
-        $lexer = new \pharos\phathom\Grammar\Lexer($colon);
-        $lexer->tokenize();
     }
 
     public function testColonNotFollowingIdent() : void {
@@ -207,7 +199,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
             "Unexpected COLON, ".
-            "COLON must follow IDENT, ".
+            "COLON must be followed by ".
+                "IDENT, STRING, LIST_START, or PATTERN, ".
             "got COLON");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($colon);
@@ -223,7 +216,9 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
             "Unexpected COLON, ".
-            "EXPRESSION may only contain IDENT or PATTERN");
+            "IDENT must be followed by ".
+                "IDENT, PATTERN, QUANTIFIER, or LIST_END, ".
+            "got COLON");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($colon);
         $lexer->tokenize();
@@ -239,41 +234,10 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectExceptionMessage(
             "Unexpected EOF, ".
             "COLON must be followed by ".
-                "IDENT, PATTERN, STRING, or LIST_START");
+                "IDENT, STRING, LIST_START, or PATTERN, ".
+            "got EOF");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($colon);
-        $lexer->tokenize();
-    }
-
-    public function testPipeNotEnough() : void {
-        $pipe = \sprintf(
-            "%s%sPipeNotEnough.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
-
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage(
-            "Unexpected PIPE, ".
-            "PIPE must follow IDENT, PATTERN, QUANTIFIER, LIST_END, or ACTION, ".
-            "not enough tokens");
-
-        $lexer = new \pharos\phathom\Grammar\Lexer($pipe);
-        $lexer->tokenize();
-    }
-
-    public function testPipeNotFollowing() : void {
-        $pipe = \sprintf(
-            "%s%sPipeNotFollowing.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
-
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage(
-            "Unexpected PIPE, ".
-            "PIPE must follow IDENT, PATTERN, QUANTIFIER, LIST_END, or ACTION, ".
-            "got STRING");
-
-        $lexer = new \pharos\phathom\Grammar\Lexer($pipe);
         $lexer->tokenize();
     }
 
@@ -286,7 +250,9 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
             "Unexpected PIPE, ".
-            "EXPRESSION may only contain IDENT or PATTERN");
+            "IDENT must be followed by ".
+                "IDENT, PATTERN, QUANTIFIER, or LIST_END, ".
+            "got PIPE");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($pipe);
         $lexer->tokenize();
@@ -302,7 +268,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectExceptionMessage(
             "Unexpected EOF, ".
             "PIPE must be followed by ".
-                "IDENT, PATTERN, or LIST_START");
+                "IDENT, LIST_START, or PATTERN, ".
+            "got EOF");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($pipe);
         $lexer->tokenize();
@@ -319,65 +286,115 @@ final class Test extends \PHPUnit\Framework\TestCase
             [
                 'type'     => 'IDENT',
                 'value'    => 'ident',
-                'position' => 0,
+                'location'     => [
+                    'path'     => $pipe,
+                    'position' => 0
+                ],
             ],
             [
                 'type'     => 'COLON',
-                'position' => 5,
+                'location'     => [
+                    'path'     => $pipe,
+                    'position' => 5
+                ],
             ],
             [
                 'type'     => 'IDENT',
                 'value'    => 'ident',
-                'position' => 8,
+                'location'     => [
+                    'path'     => $pipe,
+                    'position' => 8
+                ],
             ],
             [
                 'type'     => 'PIPE',
-                'position' => 14
+                'location'     => [
+                    'path'     => $pipe,
+                    'position' => 14
+                ],
             ],
             [
                 'type'     => 'PATTERN',
                 'value'    => 'pattern',
-                'position' => 24,
+                'location'     => [
+                    'path'     => $pipe,
+                    'position' => 24
+                ],
             ],
             [
                 'type'     => 'PIPE',
-                'position' => 34,
+                'location'     => [
+                    'path'     => $pipe,
+                    'position' => 34
+                ],
             ],
             [
                 'type'     => 'IDENT',
                 'value'    => 'ident',
-                'position' => 44,
+                'location'     => [
+                    'path'     => $pipe,
+                    'position' => 44
+                ],
             ],
             [
                 'type'     => 'QUANTIFIER',
                 'value'    => '+',
-                'position' => 49,
+                'location'     => [
+                    'path'     => $pipe,
+                    'position' => 49
+                ],
             ],
             [
                 'type'     => 'PIPE',
-                'position' => 51,
+                'location'     => [
+                    'path'     => $pipe,
+                    'position' => 51
+                ],
             ],
             [
                 'type'     => 'LIST_START',
-                'position' => 60,
+                'location'     => [
+                    'path'     => $pipe,
+                    'position' => 60
+                ],
             ],
             [
                 'type'     => 'IDENT',
                 'value'    => 'ident',
-                'position' => 61,
+                'location'     => [
+                    'path'     => $pipe,
+                    'position' => 61
+                ],
             ],
             [
                 'type'     => 'LIST_END',
-                'position' => 66,
+                'location'     => [
+                    'path'     => $pipe,
+                    'position' => 66
+                ],
             ],
             [
                 'type'     => 'ACTION',
                 'value'    => 'action',
-                'position' => 68
+                'location'     => [
+                    'path'     => $pipe,
+                    'position' => 68
+                ],
             ],
             [
+                'type'     => 'END',
+                'location'     => [
+                    'path'     => $pipe,
+                    'position' => 78
+                ],
+            ],
+
+            [
                 'type'     => 'EOF',
-                'position' => 79,
+                'location'     => [
+                    'path'     => $pipe,
+                    'position' => 80
+                ],
             ],
         ]);
     }
@@ -391,31 +408,44 @@ final class Test extends \PHPUnit\Framework\TestCase
         $lexer = new \pharos\phathom\Grammar\Lexer($pattern);
         $this->assertSame($lexer->tokenize(), [
             [
-                'type'     => 'PATTERN',
-                'value'    => 'pattern',
-                'position' => 0,
+                'type'     => 'IDENT',
+                'value'    => 'ident',
+                'location'     => [
+                    'path'     => $pattern,
+                    'position' => 0
+                ],
             ],
             [
+                'type'     => 'COLON',
+                'location'     => [
+                    'path'     => $pattern,
+                    'position' => 5
+                ],
+            ],
+            [
+                'type'     => 'PATTERN',
+                'value'    => 'pattern',
+                'location'     => [
+                    'path'     => $pattern,
+                    'position' => 7
+                ],
+            ],
+            [
+                'type'     => 'END',
+                'location'     => [
+                    'path'     => $pattern,
+                    'position' => 16
+                ],
+            ],
+
+            [
                 'type'     => 'EOF',
-                'position' => 9
+                'location'     => [
+                    'path'     => $pattern,
+                    'position' => 17
+                ],
             ],
         ]);
-    }
-
-    public function testActionNotEnough() : void {
-        $action = \sprintf(
-            "%s%sActionNotEnough.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
-
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage(
-            "Unexpected ACTION, ".
-            "ACTION must follow LIST_END, ".
-            "not enough tokens");
-
-        $lexer = new \pharos\phathom\Grammar\Lexer($action);
-        $lexer->tokenize();
     }
 
     public function testActionNotFollowingList() : void {
@@ -427,8 +457,9 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
             "Unexpected ACTION, ".
-            "ACTION must follow LIST_END, ".
-            "got IDENT");
+            "IDENT must be followed by ".
+                "COLON, PIPE, QUANTIFIER, or END, ".
+            "got ACTION");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($action);
         $lexer->tokenize();
@@ -445,33 +476,62 @@ final class Test extends \PHPUnit\Framework\TestCase
             [
                 'type'     => 'IDENT',
                 'value'    => 'ident',
-                'position' => 0,
+                'location'     => [
+                    'path'     => $action,
+                    'position' => 0
+                ],
             ],
             [
                 'type'     => 'COLON',
-                'position' => 5,
+                'location'     => [
+                    'path'     => $action,
+                    'position' => 5
+                ],
             ],
             [
                 'type'     => 'LIST_START',
-                'position' => 7,
+                'location'     => [
+                    'path'     => $action,
+                    'position' => 7
+                ],
             ],
             [
                 'type'     => 'IDENT',
                 'value'    => 'ident',
-                'position' => 8,
+                'location'     => [
+                    'path'     => $action,
+                    'position' => 8
+                ],
             ],
             [
                 'type'     => 'LIST_END',
-                'position' => 13,
+                'location'     => [
+                    'path'     => $action,
+                    'position' => 13
+                ],
             ],
             [
                 'type'     => 'ACTION',
                 'value'    => 'action',
-                'position' => 15,
+                'location'     => [
+                    'path'     => $action,
+                    'position' => 15
+                ],
             ],
             [
+                'type'     => 'END',
+                'location'     => [
+                    'path'     => $action,
+                    'position' => 25
+                ],
+            ],
+
+            [
                 'type'     => 'EOF',
-                'position' => 25,
+                'location'     => [
+                    'path'     => $action,
+                    'position' => 26
+                ],
             ],
         ]);
     }
@@ -485,37 +545,73 @@ final class Test extends \PHPUnit\Framework\TestCase
         $lexer = new \pharos\phathom\Grammar\Lexer($string);
         $this->assertSame($lexer->tokenize(), [
             [
-                'type'     => 'DIRECTIVE',
+                'type'     => 'IDENT',
                 'value'    => 'ident',
-                'position' => 0,
+                'location'     => [
+                    'path'     => $string,
+                    'position' => 0
+                ],
             ],
             [
                 'type'     => 'COLON',
-                'position' => 5,
+                'location'     => [
+                    'path'     => $string,
+                    'position' => 5
+                ],
             ],
             [
                 'type'     => 'STRING',
                 'value'    => "string'string",
-                'position' => 7,
+                'location'     => [
+                    'path'     => $string,
+                    'position' => 7
+                ],
+            ],
+            [
+                'type'     => 'END',
+                'location'     => [
+                    'path'     => $string,
+                    'position' => 23
+                ],
             ],
 
             [
-                'type'     => 'DIRECTIVE',
+                'type'     => 'IDENT',
                 'value'    => 'ident',
-                'position' => 24,
+                'location'     => [
+                    'path'     => $string,
+                    'position' => 25
+                ],
             ],
             [
                 'type'     => 'COLON',
-                'position' => 29,
+                'location'     => [
+                    'path'     => $string,
+                    'position' => 30
+                ],
             ],
             [
                 'type'     => 'STRING',
                 'value'    => '\n',
-                'position' => 31,
+                'location'     => [
+                    'path'     => $string,
+                    'position' => 32
+                ],
             ],
             [
+                'type'     => 'END',
+                'location'     => [
+                    'path'     => $string,
+                    'position' => 36
+                ],
+            ],
+
+            [
                 'type'     => 'EOF',
-                'position' => 35,
+                'location'     => [
+                    'path'     => $string,
+                    'position' => 37
+                ],
             ],
         ]);
     }
@@ -529,55 +625,75 @@ final class Test extends \PHPUnit\Framework\TestCase
         $lexer = new \pharos\phathom\Grammar\Lexer($string);
         $this->assertSame($lexer->tokenize(), [
             [
-                'type'     => 'DIRECTIVE',
+                'type'     => 'IDENT',
                 'value'    => 'ident',
-                'position' => 0,
+                'location'     => [
+                    'path'     => $string,
+                    'position' => 0
+                ],
             ],
             [
                 'type'     => 'COLON',
-                'position' => 5,
+                'location'     => [
+                    'path'     => $string,
+                    'position' => 5
+                ],
             ],
             [
                 'type'     => 'STRING',
                 'value'    => 'string"string',
-                'position' => 7,
+                'location'     => [
+                    'path'     => $string,
+                    'position' => 7
+                ],
+            ],
+            [
+                'type'     => 'END',
+                'location'     => [
+                    'path'     => $string,
+                    'position' => 23
+                ],
             ],
 
             [
-                'type'     => 'DIRECTIVE',
+                'type'     => 'IDENT',
                 'value'    => 'ident',
-                'position' => 24,
+                'location'     => [
+                    'path'     => $string,
+                    'position' => 25
+                ],
             ],
             [
                 'type'     => 'COLON',
-                'position' => 29,
+                'location'     => [
+                    'path'     => $string,
+                    'position' => 30
+                ],
             ],
             [
                 'type'     => 'STRING',
                 'value'    => '\n',
-                'position' => 31,
+                'location'     => [
+                    'path'     => $string,
+                    'position' => 32
+                ],
             ],
             [
+                'type'     => 'END',
+                'location'     => [
+                    'path'     => $string,
+                    'position' => 36
+                ],
+            ],
+
+            [
                 'type'     => 'EOF',
-                'position' => 35
+                'location'     => [
+                    'path'     => $string,
+                    'position' => 37
+                ],
             ],
         ]);
-    }
-
-    public function testStringNotEnough() : void {
-        $string = \sprintf(
-            "%s%sStringNotEnough.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
-
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage(
-            "Unexpected STRING, ".
-            "STRING must follow IDENT COLON, ".
-            "not enough tokens");
-
-        $lexer = new \pharos\phathom\Grammar\Lexer($string);
-        $lexer->tokenize();
     }
 
     public function testStringNotFollowingColon() : void {
@@ -588,9 +704,10 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
-            "Unexpected STRING, ".
-            "STRING must follow IDENT COLON, ".
-            "got IDENT IDENT");
+            "Unexpected IDENT, ".
+            "IDENT must be followed by ".
+                "COLON, PIPE, QUANTIFIER, or END, ".
+            "got IDENT");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($string);
         $lexer->tokenize();
@@ -604,25 +721,11 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
-            "Unterminated STRING, expected '");
+            "Unexpected unterminated STRING, ".
+            "STRING must be terminated by ', ".
+            "got STRING(string;)");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($string);
-        $lexer->tokenize();
-    }
-
-    public function testQuantifiersNotEnough() : void {
-        $quantifiers = \sprintf(
-            "%s%sQuantifiersNotEnough.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
-
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage(
-            "Unexpected QUANTIFIER, ".
-            "QUANTIFIER must follow IDENT or PATTERN, ".
-            "not enough tokens");
-
-        $lexer = new \pharos\phathom\Grammar\Lexer($quantifiers);
         $lexer->tokenize();
     }
 
@@ -635,8 +738,9 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
             "Unexpected QUANTIFIER, ".
-            "QUANTIFIER must follow IDENT or PATTERN, ".
-            "got STRING");
+            "STRING must be followed by ".
+                "END, ".
+            "got QUANTIFIER");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($quantifiers);
         $lexer->tokenize();
@@ -654,161 +758,259 @@ final class Test extends \PHPUnit\Framework\TestCase
             [
                 'type'     => 'IDENT',
                 'value'    => 'ident1',
-                'position' => 0,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 0
+                ],
             ],
             [
                 'type'     => 'COLON',
-                'position' => 6,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 6
+                ],
             ],
             [
                 'type'     => 'IDENT',
                 'value'    => 'ident1',
-                'position' => 8,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 8
+                ],
             ],
             [
                 'type'     => 'QUANTIFIER',
                 'value'    => '+',
-                'position' => 14,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 14
+                ],
+            ],
+            [
+                'type'     => 'END',
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 16
+                ],
             ],
 
             [
                 'type'     => 'IDENT',
                 'value'    => 'ident2',
-                'position' => 16,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 18
+                ],
             ],
             [
                 'type'     => 'COLON',
-                'position' => 22,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 24
+                ],
             ],
             [
                 'type'     => 'IDENT',
                 'value'    => 'ident2',
-                'position' => 24,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 26
+                ],
             ],
             [
                 'type'     => 'QUANTIFIER',
                 'value'    => '*',
-                'position' => 30,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 32
+                ],
+            ],
+            [
+                'type'     => 'END',
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 34
+                ],
             ],
 
             [
                 'type'     => 'IDENT',
                 'value'    => 'ident3',
-                'position' => 32,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 36
+                ],
             ],
             [
                 'type'     => 'COLON',
-                'position' => 38,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 42
+                ],
             ],
             [
                 'type'     => 'IDENT',
                 'value'    => 'ident3',
-                'position' => 40,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 44
+                ],
             ],
             [
                 'type'     => 'QUANTIFIER',
                 'value'    => '?',
-                'position' => 46,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 50
+                ],
+            ],
+            [
+                'type'     => 'END',
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 52
+                ],
             ],
 
             [
                 'type'     => 'IDENT',
                 'value'    => 'pattern1',
-                'position' => 49,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 55
+                ],
             ],
             [
                 'type'     => 'COLON',
-                'position' => 57,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 63
+                ],
             ],
             [
                 'type'     => 'PATTERN',
                 'value'    => 'pattern1',
-                'position' => 59,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 65
+                ],
             ],
             [
                 'type'     => 'QUANTIFIER',
                 'value'    => '+',
-                'position' => 69,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 75
+                ],
+            ],
+            [
+                'type'     => 'END',
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 77
+                ],
             ],
 
             [
                 'type'     => 'IDENT',
                 'value'    => 'pattern2',
-                'position' => 71,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 79
+                ],
             ],
             [
                 'type'     => 'COLON',
-                'position' => 79,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 87
+                ],
             ],
             [
                 'type'     => 'PATTERN',
                 'value'    => 'pattern2',
-                'position' => 81,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 89
+                ],
             ],
             [
                 'type'     => 'QUANTIFIER',
                 'value'    => '*',
-                'position' => 91,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 99
+                ],
+            ],
+            [
+                'type'     => 'END',
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 101
+                ],
             ],
 
             [
                 'type'     => 'IDENT',
                 'value'    => 'pattern3',
-                'position' => 93,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 103
+                ],
             ],
             [
                 'type'     => 'COLON',
-                'position' => 101,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 111
+                ],
             ],
             [
                 'type'     => 'PATTERN',
                 'value'    => 'pattern3',
-                'position' => 103,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 113
+                ],
             ],
             [
                 'type'     => 'QUANTIFIER',
                 'value'    => '?',
-                'position' => 113,
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 123
+                ],
             ],
+            [
+                'type'     => 'END',
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 125
+                ],
+            ],
+
             [
                 'type'     => 'EOF',
-                'position' => 114
+                'location'     => [
+                    'path'     => $quantifiers,
+                    'position' => 126
+                ],
             ],
         ]);
     }
 
-    public function testUnexpected() : void {
+    public function testUnexpectedCharacter() : void {
         $unexpected = \sprintf(
-            "%s%sUnexpected.grammar",
+            "%s%sUnexpectedCharacter.grammar",
             \dirname(__FILE__),
             \DIRECTORY_SEPARATOR);
         
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
-            "Unexpected >, expected IDENT");
+            "Unexpected character \">\", expected IDENT");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($unexpected);
         $lexer->tokenize();
-    }
-
-    public function testExhausted() : void {
-        $exhausted = \sprintf(
-            "%s%sExhausted.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
-
-        $lexer = new \pharos\phathom\Grammar\Lexer($exhausted);
-        $this->assertSame($lexer->tokenize(), [
-            [
-                'type'     => 'IDENT',
-                'value'    => 'exhaust',
-                'position' => 0,
-            ],
-            [
-                'type'     => 'EOF',
-                'position' => 7
-            ],
-        ]);
     }
 
     public function testBalancedEscapeDelimiter() : void {
@@ -822,20 +1024,39 @@ final class Test extends \PHPUnit\Framework\TestCase
             [
                 'type'     => 'IDENT',
                 'value'    => 'ident',
-                'position' => 0,
+                'location'     => [
+                    'path'     => $balance,
+                    'position' => 0
+                ],
             ],
             [
                 'type'     => 'COLON',
-                'position' => 5,
+                'location'     => [
+                    'path'     => $balance,
+                    'position' => 5
+                ],
             ],
             [
                 'type'     => 'PATTERN',
                 'value'    => 'pattern<',
-                'position' => 7,
+                'location'     => [
+                    'path'     => $balance,
+                    'position' => 7
+                ],
+            ],
+            [
+                'type'     => 'END',
+                'location'     => [
+                    'path'     => $balance,
+                    'position' => 18
+                ],
             ],
             [
                 'type'     => 'EOF',
-                'position' => 18
+                'location'     => [
+                    'path'     => $balance,
+                    'position' => 19
+                ],
             ],
         ]);
     }
@@ -851,35 +1072,71 @@ final class Test extends \PHPUnit\Framework\TestCase
             [
                 'type'     => 'IDENT',
                 'value'    => 'ident',
-                'position' => 0,
+                'location'     => [
+                    'path'     => $balance,
+                    'position' => 0
+                ],
             ],
             [
                 'type'     => 'COLON',
-                'position' => 5,
+                'location'     => [
+                    'path'     => $balance,
+                    'position' => 5
+                ],
             ],
             [
                 'type'     => 'PATTERN',
                 'value'    => 'escape\\literal',
-                'position' => 7,
+                'location'     => [
+                    'path'     => $balance,
+                    'position' => 7
+                ],
+            ],
+            [
+                'type'     => 'END',
+                'location'     => [
+                    'path'     => $balance,
+                    'position' => 23
+                ],
             ],
 
             [
                 'type'     => 'IDENT',
                 'value'    => 'ident',
-                'position' => 25,
+                'location'     => [
+                    'path'     => $balance,
+                    'position' => 26
+                ],
             ],
             [
                 'type'     => 'COLON',
-                'position' => 30,
+                'location'     => [
+                    'path'     => $balance,
+                    'position' => 31
+                ],
             ],
             [
                 'type'     => 'PATTERN',
                 'value'    => '\\',
-                'position' => 32,
+                'location'     => [
+                    'path'     => $balance,
+                    'position' => 33
+                ],
             ],
             [
+                'type'     => 'END',
+                'location'     => [
+                    'path'     => $balance,
+                    'position' => 37
+                ],
+            ],
+            
+            [
                 'type'     => 'EOF',
-                'position' => 36,
+                'location'     => [
+                    'path'     => $balance,
+                    'position' => 38
+                ],
             ],
         ]);
     }
@@ -892,9 +1149,57 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
-            "Unmatched < in \"<>\", missing >");
+            "Unexpected unbalanced <> block, missing > in \"<>;\"");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($balance);
+        $lexer->tokenize();
+    }
+
+    public function testBalancedDanglingEscape() : void {
+        $balance = \sprintf(
+            "%s%sBalancedDanglingEscape.grammar",
+            \dirname(__FILE__),
+            \DIRECTORY_SEPARATOR);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage(
+            "Unexpected escape in <> block, expected more input");
+
+        $lexer = new \pharos\phathom\Grammar\Lexer($balance);
+        $lexer->tokenize();
+    }
+
+    public function testInitialNotIdent() : void {
+        $initial = \sprintf(
+            "%s%sInitialNotIdent.grammar",
+            \dirname(__FILE__),
+            \DIRECTORY_SEPARATOR);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage(
+            "Unexpected ACTION, ".
+            "initial token must be ".
+                "IDENT, ".
+            "got ACTION");
+
+        $lexer = new \pharos\phathom\Grammar\Lexer($initial);
+        $lexer->tokenize();
+    }
+
+    public function testPrintTruncation() : void {
+        $truncation = \sprintf(
+            "%s%sPrintTruncation.grammar",
+            \dirname(__FILE__),
+            \DIRECTORY_SEPARATOR);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage(
+            "Unexpected ACTION, ".
+            "initial token must be ".
+                "IDENT, ".
+            "got ACTION(/* this must be more than 32 cha...)");
+
+        $lexer = new \pharos\phathom\Grammar\Lexer($truncation);
         $lexer->tokenize();
     }
 }

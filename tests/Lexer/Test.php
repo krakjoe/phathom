@@ -46,6 +46,7 @@ final class Test extends \PHPUnit\Framework\TestCase
     public function testSkipping() : void {
         $content = new \pharos\phathom\Lexer(
             __FILE__, "Content.lexer");
+
         $path = \sprintf(
             "%s%sSkipping.content",
             \dirname(__FILE__),
@@ -57,19 +58,35 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->assertSame($content->tokenize($file), [
             [
                 "type" => "ALPHANUM",
-                "value" => "Hello"
+                "value" => "Hello",
+                "location" => [
+                    "path"     => $path,
+                    "position" => 0,
+                ],
             ],
             [
                 "type" => "ALPHANUM",
-                "value" => "World"
+                "value" => "World",
+                "location" => [
+                    "path"     => $path,
+                    "position" => 7,
+                ],
             ],
             [
                 "type" => "ALPHANUM",
-                "value" => "Indented"
+                "value" => "Indented",
+                "location" => [
+                    "path"     => $path,
+                    "position" => 18,
+                ],
             ],
             [
                 "type" => "INTEGER",
-                "value" => "42"
+                "value" => "42",
+                "location" => [
+                    "path"     => $path,
+                    "position" => 32,
+                ],
             ]
         ]);
     }

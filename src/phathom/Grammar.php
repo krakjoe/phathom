@@ -42,7 +42,7 @@ namespace pharos\phathom
                         'name'       => $symbol['value'],
                         'type'       => $symbol['type'],
                         'quantifier' => $symbol['quantifier'] ?? null,
-                        'position'   => $symbol['position'],
+                        'location'   => $symbol['location'],
                     ];
                 }, $symbols),
                 'action' => 
@@ -58,7 +58,7 @@ namespace pharos\phathom
                     'name'       => \trim($token['value']),
                     'type'       => $token['type'],
                     'quantifier' => $quantifier,
-                    'position'   => $token['position'],
+                    'location'   => $token['location'],
                 ]],
                 'action' => null,
             ];

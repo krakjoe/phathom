@@ -1,11 +1,11 @@
-lexer: "Basic.lexer"
+lexer: "Basic.lexer";
 
-type: "\pharos\phathom\tests\Grammar\File"
+type: "\pharos\phathom\tests\Grammar\File";
 
 # comment
 
-unit: item+
+unit: item+;
 
 item: (ALPHA EQUALS NUM) {
     return $this->returnThings($1, $3);
-}
+};

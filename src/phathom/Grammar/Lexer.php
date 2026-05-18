@@ -1,20 +1,110 @@
 <?php
 namespace pharos\phathom\Grammar {
     final class Lexer {
+        private string       $path;
 
         private string|false $buffer;
         private int          $length   = 0;
         private int          $position = 0;
 
-        private bool         $listing  = false;
-        private int          $listed   = 0;
+        /**
+         * ── Grammar file ─────────────────────────────────────────────────
+         *
+         *   ident        := [^\s#:|<>(){}+*?"';]+
+         *   pattern      := '<' [^>]+ '>'
+         *   quantifier   := [+*?]
+         *   quantifiable := (ident | pattern) quantifier?
+         *   expression   := '(' quantifiable+ ')'
+         *   action       := '{' code '}'
+         *   end          := ';'
+         *   quote        := ('\'' | '"')
+         *   string       := quote [^\1]+ quote
+         *   alternative  := expression action?
+         *                 | quantifiable
+         * 
+         *   grammar      := (directive | rule)*
+         *   directive    := ident COLON string end
+         *   rule         := ident COLON alternative (PIPE alternative)* end
+         **/
 
-        public function __construct(string $file) {
-            if (!\file_exists($file)) {
-                throw new \Exception("$file does not exist");
+        /**
+         * 'TYPE' => [
+         *      'list' =>     false | [
+         *          'allow'     => [],
+         *      ],
+         *      'allow' =>     [] 
+         * ]
+         * 
+         * `list` may be array
+         * [
+         *  'allow'     => array
+         * ]
+         * 
+         * allow arrays should include token types allowed in their respective relevant position
+         **/
+        private static $specification = [
+            'LIST_START' => [
+                'list'      => false,
+                'allow'     => ['IDENT', 'PATTERN'],
+            ],
+            'LIST_END' => [
+                'list'      => false,
+                'allow'     => ['PIPE', 'ACTION', 'END'],
+            ],
+            'COLON' => [
+                'list'     => false,
+                'allow'     => ['IDENT', 'STRING', 'LIST_START', 'PATTERN'],
+            ],
+            'PIPE' => [
+                'list'      => false,
+                'allow'     => ['IDENT', 'LIST_START', 'PATTERN'],
+            ],
+            'PATTERN' => [
+                'list'      => [
+                    'allow'     => ['IDENT', 'PATTERN', 'QUANTIFIER', 'LIST_END'],
+                ],
+                'allow'     => ['QUANTIFIER', 'PIPE', 'END'],
+            ],
+            'ACTION' => [
+                'list'      => false,
+                'allow'     => ['PIPE', 'END'],
+            ],
+            'STRING' => [
+                'list'      => false,
+                'allow'     => ['END'],
+            ],
+            'QUANTIFIER' => [
+                'list'      => [
+                    'allow'     => ['IDENT', 'PATTERN', 'LIST_END'],
+                ],
+                'allow'     => ['PIPE', 'END'],
+            ],
+            'IDENT' => [
+                'list'     => [
+                    'allow'     => ['IDENT', 'PATTERN', 'QUANTIFIER', 'LIST_END'],
+                ],
+                'allow'     => ['COLON', 'PIPE', 'QUANTIFIER', 'END'],
+            ],
+            'END' => [
+                'list' => false,
+                'allow' => ['IDENT', 'EOF'],
+            ],
+            'EOF' => [
+                'list' => false,
+                'allow' => [],
+            ]
+        ];
+
+        public function __construct(string $path) {
+            $this->path = $path;
+
+            if (!\file_exists($this->path)) {
+                throw new \Exception("$this->path does not exist");
             }
 
-            $this->buffer = @\file_get_contents($file);
+            $this->buffer = 
+                @\file_get_contents(
+                    $this->path);
 
             if ($this->buffer !== false) {
                 $this->length =
@@ -52,21 +142,29 @@ namespace pharos\phathom\Grammar {
 
             while ($this->position < $this->length && $depth > 0) {
                 if ($this->buffer[$this->position] === '\\') {
-                    /* escape */
-                    if ((($this->position + 1) < $this->length)) {
-                        if ($this->buffer[$this->position + 1] === $open ||
-                            $this->buffer[$this->position + 1] === $close ||
-                            $this->buffer[$this->position + 1] === '\\') {
-                            $content .=
-                                $this->buffer[
-                                    $this->position + 1];
-                            $this->position += 2;
-                        } else {
-                            $content .=
-                                $this->buffer[
-                                    $this->position++];                        
-                        }
+                    if (($this->position + 1) >= $this->length) {
+                        throw Unexpected::escape([
+                            'path'     => $this->path,
+                            'position' => $this->position
+                        ], [
+                            'open'     => $open,
+                            'close'    => $close
+                        ]);
                     }
+
+                    if ($this->buffer[$this->position + 1] === $open ||
+                        $this->buffer[$this->position + 1] === $close ||
+                        $this->buffer[$this->position + 1] === '\\') {
+                        $content .=
+                            $this->buffer[
+                                $this->position + 1];
+                        $this->position += 2;
+                    } else {
+                        $content .= 
+                            $this->buffer[
+                                $this->position++];
+                    }
+
                     continue;
                 }
 
@@ -83,9 +181,14 @@ namespace pharos\phathom\Grammar {
             }
 
             if ($depth !== 0) {
-                throw new \Exception(
-                    "Unmatched $open in \"$content\", ".
-                    "missing $close");
+                throw Unexpected::unbalanced(
+                    \trim($content), [
+                        'path'     => $this->path,
+                        'position' => $start
+                    ], [
+                        'open'     => $open, 
+                        'close'    => $close
+                    ]);
             }
 
             return [\trim($content), $start];
@@ -131,11 +234,14 @@ namespace pharos\phathom\Grammar {
             }
 
             if (!$terminated) {
-                throw new \Exception(
-                    "Unterminated STRING, expected $delimiter");
+                throw Unexpected::unterminated(
+                    $content, [
+                        'path'     => $this->path,
+                        'position' => $start
+                    ], $delimiter);
             }
 
-            return [\trim($content), $start];
+            return [$content, $start];
         }
 
         public function scan() : bool {
@@ -150,6 +256,7 @@ namespace pharos\phathom\Grammar {
 
             switch ($this->buffer[$this->position]) {
                 case '#':
+                case ';':
                 case ':':
                 case '|':
                 case '<':
@@ -166,8 +273,49 @@ namespace pharos\phathom\Grammar {
 
             return true;
         }
+    
+        private function validate(array $tokens) : array {
+            $limit   = \count($tokens);
 
-        public function tokenize(): array {
+            if ($tokens[0]['type'] !== 'IDENT' &&
+                $tokens[0]['type'] !== 'EOF') {
+                throw Unexpected::initial($tokens[0]);
+            }
+
+            $listing    = false;
+
+            for ($position = 0;
+                 $position < $limit;
+                 $position++) {
+                $token =
+                    $tokens[$position];
+                $specification =
+                    Lexer::$specification[
+                        $token['type']];
+
+                if ($token['type'] === 'LIST_END')   $listing = false;
+
+                $rules = $listing ?
+                    $specification['list'] :
+                    $specification;
+
+                if (\count($rules['allow'])) {
+                    $next = $tokens[$position + 1];
+
+                    if (!\in_array(
+                            $next['type'], $rules['allow'], true)) {
+                        throw Unexpected::token(
+                            $token, $next, $rules['allow']);
+                    }
+                }
+
+                if ($token['type'] === 'LIST_START') $listing = true;
+            }
+
+            return $tokens;
+        }
+
+        private function collect(): array {
             $tokens   = [];
 
             while ($this->position < $this->length) {
@@ -182,128 +330,59 @@ namespace pharos\phathom\Grammar {
                     case '#':
                         [$content, $start] =
                             $this->comment();
-                        /* drop */
+                        /* intentionally ignored */
+                    break;
+
+                    case ';':
+                        $tokens[]     = [
+                            'type'     => 'END',
+                            'location' => [
+                                'path'     => $this->path,
+                                'position' => $this->position++,
+                            ],
+                        ];
                     break;
 
                     case '(':
-                        if ($this->listing) {
-                            throw new \Exception(
-                                "Unexpected LIST_START, ".
-                                "EXPRESSION may only contain IDENT or PATTERN");
-                        }
-
-                        if (\count($tokens) < 1) {
-                            throw new \Exception(
-                                "Unexpected LIST_START, ".
-                                "LIST_START must follow COLON, ".
-                                "not enough tokens");
-                        }
-
-                        $previous = $tokens[\count($tokens) - 1];
-
-                        if ($previous['type'] !== 'COLON' &&
-                            $previous['type'] !== 'PIPE') {
-                            throw new \Exception(
-                                "Unexpected LIST_START, ".
-                                "LIST_START must follow COLON or PIPE, ".
-                                "got {$previous['type']}");
-                        }
-
                         $tokens[]      = [
                             'type'     => 'LIST_START',
-                            'position' => $this->position,
+                            'location' => [
+                                'path'     => $this->path,
+                                'position' => $this->position,
+                            ],
                         ];
-
                         $this->position++;
-                        $this->listing = true;
-                        $this->listed  = 0;
                     break;
 
                     case ')':
-                        if (\count($tokens) < 1) {
-                            throw new \Exception(
-                                "Unexpected LIST_END, ".
-                                "LIST_END must follow IDENT or PATTERN, ".
-                                "not enough tokens");
-                        }
-
-                        if ($this->listed === 0) {
-                            throw new \Exception(
-                                "Unexpected LIST_END, ".
-                                "LIST_END must follow IDENT or PATTERN, ".
-                                "none listed");
-                        }
-
                         $tokens[]      = [
                             'type'     => 'LIST_END',
-                            'position' => $this->position,
+                            'location' => [
+                                'path'     => $this->path,
+                                'position' => $this->position,
+                            ],
                         ];
                         $this->position++;
-                        $this->listing = false;
-                        $this->listed  = 0;
                     break;
 
                     case ':':
-                        if (\count($tokens) < 1) {
-                            throw new \Exception(
-                                "Unexpected COLON, ".
-                                "COLON must follow IDENT, ".
-                                "not enough tokens");
-                        }
-
-                        $ident = $tokens[\count($tokens) - 1];
-
-                        if ($ident['type'] !== 'IDENT') {
-                            throw new \Exception(
-                                "Unexpected COLON, ".
-                                "COLON must follow IDENT, ".
-                                "got {$ident['type']}");
-                        }
-
-                        if ($this->listing) {
-                            throw new \Exception(
-                                "Unexpected COLON, ".
-                                "EXPRESSION may only contain IDENT or PATTERN");
-                        }
-
                         $tokens[]      = [
                             'type'     => 'COLON',
-                            'position' => $this->position,
+                            'location' => [
+                                'path'     => $this->path,
+                                'position' => $this->position,
+                            ],
                         ];
                         $this->position++;
                         break;
 
                     case '|':
-                        if (\count($tokens) < 1) {
-                            throw new \Exception(
-                                "Unexpected PIPE, ".
-                                "PIPE must follow ".
-                                    "IDENT, PATTERN, QUANTIFIER, LIST_END, or ACTION, ".
-                                "not enough tokens");
-                        }
-
-                        $previous = $tokens[\count($tokens) - 1];
-
-                        if ($previous['type'] !== 'IDENT' &&
-                            $previous['type'] !== 'PATTERN' &&
-                            $previous['type'] !== 'QUANTIFIER' &&
-                            $previous['type'] !== 'ACTION' &&
-                            $previous['type'] !== 'LIST_END') {
-                            throw new \Exception(
-                                "Unexpected PIPE, ".
-                                "PIPE must follow ".
-                                    "IDENT, PATTERN, QUANTIFIER, LIST_END, or ACTION, ".
-                                "got {$previous['type']}");
-                        }
-
-                        if ($this->listing) {
-                            throw new \Exception(
-                                "Unexpected PIPE, EXPRESSION may only contain IDENT or PATTERN");
-                        }
-
                         $tokens[]      = [
                             'type'     => 'PIPE',
-                            'position' => $this->position,
+                            'location' => [
+                                'path'     => $this->path,
+                                'position' => $this->position,
+                            ],
                         ];
                         $this->position++;
                         break;
@@ -315,39 +394,24 @@ namespace pharos\phathom\Grammar {
                         $tokens[]      = [
                             'type'     => 'PATTERN',
                             'value'    => $content,
-                            'position' => $start,
+                            'location' => [
+                                'path'     => $this->path,
+                                'position' => $start,
+                            ],
                         ];
-
-                        if ($this->listing) {
-                            $this->listed++;
-                        }
-
                         break;
 
                     case '{':
-                        if (\count($tokens) < 1) {
-                            throw new \Exception(
-                                "Unexpected ACTION, ".
-                                "ACTION must follow LIST_END, ".
-                                "not enough tokens");
-                        }
-
-                        $list = $tokens[\count($tokens) - 1];
-
-                        if ($list['type'] !== 'LIST_END') {
-                            throw new \Exception(
-                                "Unexpected ACTION, ".
-                                "ACTION must follow LIST_END, ".
-                                "got {$list['type']}");
-                        }
-
                         [$content, $start] =
                             $this->balance(
                                 '{', '}');
                         $tokens[]      = [
                             'type'     => 'ACTION',
                             'value'    => $content,
-                            'position' => $start,
+                            'location' => [
+                                'path'     => $this->path,
+                                'position' => $start,
+                            ],
                         ];
                         break;
 
@@ -357,62 +421,28 @@ namespace pharos\phathom\Grammar {
                             $this->string(
                                 $this->buffer[$this->position]);
 
-                        if (($limit = \count($tokens)) < 2) {
-                            throw new \Exception(
-                                "Unexpected STRING, ".
-                                "STRING must follow IDENT COLON, ".
-                                "not enough tokens");
-                        }
-
-                        $colon     =  $tokens[$limit - 1];
-                        $directive = &$tokens[$limit - 2];
-
-                        if ($colon['type'] !== 'COLON') {
-                            throw new \Exception(
-                                "Unexpected STRING, ".
-                                "STRING must follow IDENT COLON, ".
-                                "got {$directive['type']} {$colon['type']}");
-                        }
-
-                        $directive['type'] = 'DIRECTIVE';
-                        $directive['value'] =
-                            \strtolower(
-                                $directive['value']);
-
                         $tokens[]      = [
                             'type'     => 'STRING',
                             'value'    => $content,
-                            'position' => $start,
+                            'location' => [
+                                'path'     => $this->path,
+                                'position' => $start,
+                            ],
                         ];
                         break;
 
                     case '+':
                     case '*':
                     case '?':
-                        if (\count($tokens) < 1) {
-                            throw new \Exception(
-                                "Unexpected QUANTIFIER, ".
-                                "QUANTIFIER must follow IDENT or PATTERN, ".
-                                "not enough tokens");
-                        }
-
-                        $quantifying =
-                            $tokens[\count($tokens) - 1];
-
-                        if ($quantifying['type'] !== 'IDENT' &&
-                            $quantifying['type'] !== 'PATTERN') {
-                            throw new \Exception(
-                                "Unexpected QUANTIFIER, ".
-                                "QUANTIFIER must follow IDENT or PATTERN, ".
-                                "got {$quantifying['type']}");
-                        }
-
                         $tokens[]      = [
                             'type'     => 'QUANTIFIER',
                             'value'    => 
                                 $this->buffer[
                                     $this->position],
-                            'position' => $this->position++,
+                            'location' => [
+                                'path'     => $this->path,
+                                'position' => $this->position++,
+                            ],
                         ];
                     break;
 
@@ -430,57 +460,34 @@ namespace pharos\phathom\Grammar {
                             $tokens[]      = [
                                 'type'     => 'IDENT',
                                 'value'    => $ident,
-                                'position' => $start,
+                                'location' => [
+                                    'path'     => $this->path,
+                                    'position' => $start,
+                                ],
                             ];
-                            
-                            if ($this->listing) {
-                                $this->listed++;
-                            }
                         } else {
-                            throw new \Exception(
-                                "Unexpected {$this->buffer[$this->position]}, ".
-                                "expected IDENT");
+                            throw Unexpected::character(
+                                $this->buffer, [
+                                'path'     => $this->path,
+                                'position' => $this->position]);
                         }
                 }
             }
 
-            if ($this->listing) {
-                throw new \Exception(
-                    "Unterminated LIST_START, expected )");
-            }
-
-            if (\count($tokens)) {
-                $dangling = $tokens[
-                    \count($tokens) - 1];
-
-                if ($dangling['type'] === 'COLON') {
-                    throw new \Exception(
-                        "Unexpected EOF, ".
-                        "COLON must be followed by ".
-                            "IDENT, PATTERN, STRING, or LIST_START");
-                }
-
-                if ($dangling['type'] === 'PIPE') {
-                    throw new \Exception(
-                        "Unexpected EOF, ".
-                        "PIPE must be followed by ".
-                            "IDENT, PATTERN, or LIST_START");
-                }
-
-                if ($dangling['type'] !== 'EOF') {
-                    $tokens[]      = [
-                        'type'     => 'EOF',
-                        'position' => $this->position
-                    ];
-                }
-            } else {
-                $tokens[]      = [
-                    'type'     => 'EOF',
-                    'position' => $this->position
-                ];
-            }
+            $tokens[]      = [
+                'type'     => 'EOF',
+                'location' => [
+                    'path'     => $this->path,
+                    'position' => $this->position,
+                ],
+            ];
 
             return $tokens;
+        }
+
+        public function tokenize() : array {
+            return $this->validate(
+                $this->collect());
         }
     }
 }

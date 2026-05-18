@@ -33,7 +33,7 @@ namespace pharos\phathom\Grammar {
                         $lexer = new Lexer($path);
                         $this->parse(
                             $lexer->tokenize());
-                        $this->included[$path] = true;
+                        $this->included[$path] = $lexer;
                     }
                 break;
 
@@ -44,94 +44,26 @@ namespace pharos\phathom\Grammar {
             }
         }
 
-        private function process(array $tokens) : array {
-            $processed = [];
-            $position  = 0;
-            $count     = \count($tokens);
-
-            while ($position < $count) {
-                if ($tokens[$position]['type'] == 'DIRECTIVE') {
-                    $this->directive(
-                        $tokens[$position]['value'],
-                        $tokens[$position+2]['value']);
-                    $position += 3;
-                } else {
-                    $processed[] =
-                        $tokens[$position++];
-                }
-            }
-
-            return $processed;
-        }
-
-        /*
-         * ── Grammar file parsing ─────────────────────────────────────────────────
-         *
-         *   ident        := [^\s#:|<>(){}+*?"']+
-         *   pattern      := '<' [^>]+ '>'
-         *   quantifier   := [+*?]
-         *   quantifiable := (ident | pattern) quantifier?
-         *   expression   := '(' quantifiable+ ')'
-         *   action       := '{' code '}'
-         *   quote        := ('\'' | '"')
-         *   string       := quote [^\1]+ quote
-         *   alternative  := expression action?
-         *                 | quantifiable
-         * 
-         *   grammar      := (directive | rule)*
-         *   directive    := ident COLON string
-         *   rule         := ident COLON alternative (PIPE alternative)*
-         */
-
         public function parse(array $tokens): void {
-            $tokens   = $this->process($tokens);
             $position = 0;
             $count    = \count($tokens);
 
-            $peek = function () use (&$position, $tokens, $count): ?array {
-                $index = $position;
-                while ($index < $count) {
-                    $peeked =
-                        $tokens[$index++];
-                    if ($peeked['type'] !== 'COMMENT') {
-                        return $peeked;
-                    }
-                }
+            $eof = function() use(&$position, $tokens) : bool {
+                return ($tokens[$position]['type'] == 'EOF');
             };
 
-            $consume = function () use (&$position, $tokens, $count): ?array {
-                while ($position < $count) {
-                    $consumed =
-                        $tokens[$position++];
-                    if ($consumed['type'] !== 'COMMENT') {
-                        return $consumed;
-                    }
-                }
+            $peek = function () use (&$position, $tokens): ?array {
+                return $tokens[$position];
             };
 
-            $expect = function (string  ... $types) use (&$position, &$consume): array {
-                $token = $consume();
-                if (!\in_array($token['type'], $types)) {
-                    throw new \Exception(\sprintf(
-                        "Expected %s, got %s near token %d",
-                        \implode(
-                            ', ', $types),
-                        $token['type'],
-                        $token['position']
-                    ));
-                }
-                return $token;
+            $consume = function () use (&$position, $tokens): ?array {
+                return $tokens[$position++];
             };
 
-            while ($position < $count) {
-                $name =
-                    $expect('IDENT', 'EOF');
-
-                if ($name['type'] == 'EOF') {
-                    break;
-                }
-
-                $expect('COLON');
+            while (!$eof()) {
+                $ident =
+                    $consume(); /* IDENT */
+                $consume(); /* COLON */
 
                 while (true) {
                     $next = $peek();
@@ -165,11 +97,11 @@ namespace pharos\phathom\Grammar {
                                 $consume();
                                 $this->grammar
                                     ->complexRule(
-                                        $name['value'], $symbols, $action['value']);
+                                        $ident['value'], $symbols, $action['value']);
                             } else {
                                 $this->grammar
                                     ->complexRule(
-                                        $name['value'], $symbols);
+                                        $ident['value'], $symbols);
                             }
                             break;
 
@@ -185,16 +117,22 @@ namespace pharos\phathom\Grammar {
                                 $quantify = null;
                             }
 
-                            $this->grammar->expressionRule($name['value'], $token, $quantify);
+                            $this->grammar->expressionRule($ident['value'], $token, $quantify);
+                        break;
+
+                        case 'STRING':
+                            $string =
+                                $consume();
+                            $this->directive(
+                                $ident['value'], $string['value']);
                         break;
                     }
 
-                    $next = $peek();
-                    if ($next === null ||
-                        $next['type'] !== 'PIPE') {
+                    $next = $consume();
+
+                    if ($next['type'] === 'END') {
                         break;
                     }
-                    $consume();
                 }
             }
         }

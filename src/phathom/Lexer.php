@@ -4,26 +4,29 @@ namespace pharos\phathom
 {
     final class Lexer
     {
+        private string     $path;
         private array|bool $config;
 
         public function __construct(string $grammar, string $config) {
-            $path = \sprintf(
-                "%s%s%s",
-                \dirname($grammar),
-                \DIRECTORY_SEPARATOR,
-                $config);
+            $this->path = 
+                \sprintf(
+                    "%s%s%s",
+                    \dirname($grammar),
+                    \DIRECTORY_SEPARATOR,
+                    $config);
 
-            if (!\file_exists($path)) {
+            if (!\file_exists($this->path)) {
                 throw new \Exception(
-                    "$path does not exist");
+                    "$this->path does not exist");
             }
 
             $this->config =
-                @\parse_ini_file($path, true);
+                @\parse_ini_file(
+                    $this->path, true);
 
             if ($this->config === false) {
                 throw new \Exception(
-                    "$path does not contain valid configuration (ini syntax)");
+                    "$this->path does not contain valid configuration (ini syntax)");
             }
         }
 
@@ -41,6 +44,7 @@ namespace pharos\phathom
         public function tokenize(File $file): array {
             $tokens   = [];
             $buffer   = $file->getBuffer();
+            $path     = $file->getPath();
             $position = 0;
             $limit    = \strlen($buffer);
 
@@ -92,9 +96,13 @@ namespace pharos\phathom
                 }
 
                 if ($best !== null) {
-                    $tokens[] = [
-                        'type' => $type,
-                        'value' => $best
+                    $tokens[]      = [
+                        'type'     => $type,
+                        'value'    => $best,
+                        'location'     => [
+                            'path'     => $path,
+                            'position' => $position,
+                        ],
                     ];
                     $position += $length;
                 } else {

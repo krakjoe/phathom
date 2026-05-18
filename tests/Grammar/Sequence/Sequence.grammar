@@ -1,5 +1,5 @@
-lexer: "../Basic/Basic.lexer"
+lexer: "../Basic/Basic.lexer";
 
-item: (ALPHA EQUALS ALPHA)
+item: (ALPHA EQUALS ALPHA);
 
-unit: item*
+unit: item*;
