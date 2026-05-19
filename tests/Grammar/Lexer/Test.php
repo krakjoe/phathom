@@ -375,7 +375,7 @@ final class Test extends \PHPUnit\Framework\TestCase
             ],
             [
                 'type'     => 'ACTION',
-                'value'    => 'action',
+                'value'    => ' action ',
                 'location'     => [
                     'path'     => $pipe,
                     'position' => 68
@@ -448,6 +448,21 @@ final class Test extends \PHPUnit\Framework\TestCase
         ]);
     }
 
+    public function testPatternEmpty() : void {
+        $pattern = \sprintf(
+            "%s%sPatternEmpty.grammar",
+            \dirname(__FILE__),
+            \DIRECTORY_SEPARATOR);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage(
+            "Unexpected empty PATTERN, ".
+            "PATTERN must contain content between < and >");
+
+        $lexer = new \pharos\phathom\Grammar\Lexer($pattern);
+        $lexer->tokenize();
+    }
+
     public function testActionNotFollowingList() : void {
         $action = \sprintf(
             "%s%sActionNotFollowingList.grammar",
@@ -512,7 +527,7 @@ final class Test extends \PHPUnit\Framework\TestCase
             ],
             [
                 'type'     => 'ACTION',
-                'value'    => 'action',
+                'value'    => ' action ',
                 'location'     => [
                     'path'     => $action,
                     'position' => 15
@@ -704,10 +719,10 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
-            "Unexpected IDENT, ".
+            "Unexpected LIST_START, ".
             "IDENT must be followed by ".
                 "COLON, PIPE, QUANTIFIER, or END, ".
-            "got IDENT");
+            "got LIST_START");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($string);
         $lexer->tokenize();
@@ -722,7 +737,7 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
             "Unexpected unterminated STRING, ".
-            "STRING must be terminated by ', ".
+            "STRING started with ' must be terminated by ', ".
             "got STRING(string;)");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($string);
@@ -1149,7 +1164,10 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
-            "Unexpected unbalanced <> block, missing > in \"<>;\"");
+            "Unexpected unbalanced PATTERN, ".
+            "PATTERN started with < and terminated by >, ".
+                "may contain an unescaped <, or be missing >, ".
+            "got PATTERN(<>;)");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($balance);
         $lexer->tokenize();
@@ -1163,9 +1181,76 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
-            "Unexpected escape in <> block, expected more input");
+            "Unexpected escape in PATTERN, ".
+            "PATTERN started with < and terminated by >, ".
+                "must not end with an escape, ".
+            "expected more input");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($balance);
+        $lexer->tokenize();
+    }
+
+    public function testPriorityNotFollowingList() : void {
+        $priority = \sprintf(
+            "%s%sPriorityNotFollowingList.grammar",
+            \dirname(__FILE__),
+            \DIRECTORY_SEPARATOR);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage(
+            "Unexpected PRIORITY, ".
+            "COLON must be followed by ".
+                "IDENT, STRING, LIST_START, or PATTERN, ".
+            "got PRIORITY(42)");
+
+        $lexer = new \pharos\phathom\Grammar\Lexer($priority);
+        $lexer->tokenize();
+    }
+
+    public function testPriorityEmpty() : void {
+        $priority = \sprintf(
+            "%s%sPriorityEmpty.grammar",
+            \dirname(__FILE__),
+            \DIRECTORY_SEPARATOR);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage(
+            "Unexpected empty PRIORITY, ".
+            "PRIORITY must contain content between ".
+            "[ and ]");
+
+        $lexer = new \pharos\phathom\Grammar\Lexer($priority);
+        $lexer->tokenize();
+    }
+
+    public function testPriorityNonDigit() : void {
+        $priority = \sprintf(
+            "%s%sPriorityNonDigit.grammar",
+            \dirname(__FILE__),
+            \DIRECTORY_SEPARATOR);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage(
+            "Unexpected non-digit in PRIORITY, ".
+            "PRIORITY may only contain digits, ".
+            "got !");
+
+        $lexer = new \pharos\phathom\Grammar\Lexer($priority);
+        $lexer->tokenize();
+    }
+
+    public function testPriorityUnterminated() : void {
+        $priority = \sprintf(
+            "%s%sPriorityUnterminated.grammar",
+            \dirname(__FILE__),
+            \DIRECTORY_SEPARATOR);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage(
+            "Unexpected unterminated PRIORITY, ".
+            "PRIORITY started with [ must be terminated by ]");
+
+        $lexer = new \pharos\phathom\Grammar\Lexer($priority);
         $lexer->tokenize();
     }
 
@@ -1197,7 +1282,8 @@ final class Test extends \PHPUnit\Framework\TestCase
             "Unexpected ACTION, ".
             "initial token must be ".
                 "IDENT, ".
-            "got ACTION(/* this must be more than 32 cha...)");
+            "got ACTION(
+        /* this must be more th...)");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($truncation);
         $lexer->tokenize();

@@ -13,8 +13,9 @@ namespace pharos\phathom\Grammar {
          *   ident        := [^\s#:|<>(){}+*?"';]+
          *   pattern      := '<' [^>]+ '>'
          *   quantifier   := [+*?]
+         *   priority     := '[' [0-9]+ ']'
          *   quantifiable := (ident | pattern) quantifier?
-         *   expression   := '(' quantifiable+ ')'
+         *   expression   := '(' quantifiable+ ')' priority?
          *   action       := '{' code '}'
          *   end          := ';'
          *   quote        := ('\'' | '"')
@@ -48,6 +49,10 @@ namespace pharos\phathom\Grammar {
                 'allow'     => ['IDENT', 'PATTERN'],
             ],
             'LIST_END' => [
+                'list'      => false,
+                'allow'     => ['PRIORITY', 'PIPE', 'ACTION', 'END'],
+            ],
+            'PRIORITY' => [
                 'list'      => false,
                 'allow'     => ['PIPE', 'ACTION', 'END'],
             ],
@@ -106,10 +111,14 @@ namespace pharos\phathom\Grammar {
                 @\file_get_contents(
                     $this->path);
 
-            if ($this->buffer !== false) {
-                $this->length =
-                    \strlen($this->buffer);
+            if ($this->buffer === false) {
+                // @codeCoverageIgnoreStart
+                throw new \Exception(
+                    "Failed to read file: $this->path");
+                // @codeCoverageIgnoreEnd
             }
+
+            $this->length = \strlen($this->buffer);
         }
 
         private function comment() : array {
@@ -133,6 +142,7 @@ namespace pharos\phathom\Grammar {
         }
 
         private function balance(
+                    string $type,
                     string $open,
                     string $close): array {
             $depth   = 1;
@@ -143,7 +153,7 @@ namespace pharos\phathom\Grammar {
             while ($this->position < $this->length && $depth > 0) {
                 if ($this->buffer[$this->position] === '\\') {
                     if (($this->position + 1) >= $this->length) {
-                        throw Unexpected::escape([
+                        throw Unexpected::escape($type, [
                             'path'     => $this->path,
                             'position' => $this->position
                         ], [
@@ -182,7 +192,8 @@ namespace pharos\phathom\Grammar {
 
             if ($depth !== 0) {
                 throw Unexpected::unbalanced(
-                    \trim($content), [
+                    $type,
+                    $content, [
                         'path'     => $this->path,
                         'position' => $start
                     ], [
@@ -191,7 +202,18 @@ namespace pharos\phathom\Grammar {
                     ]);
             }
 
-            return [\trim($content), $start];
+            if (!\strlen($content)) {
+                throw Unexpected::empty(
+                    $type, [
+                        'path'     => $this->path,
+                        'position' => $start,
+                    ], [
+                        'open'     => $open,
+                        'close'    => $close,
+                    ]);
+            }
+
+            return [$content, $start];
         }
 
         private function string(string $delimiter): array {
@@ -235,10 +257,68 @@ namespace pharos\phathom\Grammar {
 
             if (!$terminated) {
                 throw Unexpected::unterminated(
+                    'STRING',
                     $content, [
                         'path'     => $this->path,
                         'position' => $start
-                    ], $delimiter);
+                    ], [
+                        'open'     => $delimiter,
+                        'close'    => $delimiter,
+                    ]);
+            }
+
+            return [$content, $start];
+        }
+
+        private function priority() : array {
+            $content = '';
+            $start   =
+                $this->position++;
+            $terminated = false;
+
+            while ($this->position < $this->length) {
+                if ($this->buffer[
+                        $this->position] === ']') {
+                    $this->position++;
+
+                    $terminated = true;
+                    break;
+                }
+
+                if (!\ctype_digit($this->buffer[$this->position])) {
+                    throw Unexpected::nondigit(
+                        'PRIORITY',
+                        $this->buffer[$this->position], [
+                            'path'     => $this->path,
+                            'position' => $this->position
+                        ]
+                    );
+                }
+
+                $content .= $this->buffer[$this->position++];
+            }
+
+            if (!$terminated) {
+                throw Unexpected::unterminated(
+                    'PRIORITY',
+                    $content, [
+                        'path'     => $this->path,
+                        'position' => $start
+                    ], [
+                        'open'    => '[',
+                        'close'   => ']',
+                    ]);
+            }
+
+            if (!\strlen($content)) {
+                throw Unexpected::empty(
+                    'PRIORITY', [
+                        'path'     => $this->path,
+                        'position' => $start,
+                    ], [
+                        'open'     => '[',
+                        'close'    => ']'
+                    ]);
             }
 
             return [$content, $start];
@@ -365,6 +445,19 @@ namespace pharos\phathom\Grammar {
                         $this->position++;
                     break;
 
+                    case '[':
+                        [$content, $start] =
+                            $this->priority();
+                        $tokens[]      = [
+                            'type'     => 'PRIORITY',
+                            'value'    => $content,
+                            'location' => [
+                                'path'     => $this->path,
+                                'position' => $start,
+                            ],
+                        ];
+                    break;
+
                     case ':':
                         $tokens[]      = [
                             'type'     => 'COLON',
@@ -389,8 +482,7 @@ namespace pharos\phathom\Grammar {
 
                     case '<':
                         [$content, $start] =
-                            $this->balance(
-                                '<', '>');
+                            $this->balance('PATTERN', '<', '>');
                         $tokens[]      = [
                             'type'     => 'PATTERN',
                             'value'    => $content,
@@ -403,8 +495,7 @@ namespace pharos\phathom\Grammar {
 
                     case '{':
                         [$content, $start] =
-                            $this->balance(
-                                '{', '}');
+                            $this->balance('ACTION', '{', '}');
                         $tokens[]      = [
                             'type'     => 'ACTION',
                             'value'    => $content,
@@ -468,8 +559,8 @@ namespace pharos\phathom\Grammar {
                         } else {
                             throw Unexpected::character(
                                 $this->buffer, [
-                                'path'     => $this->path,
-                                'position' => $this->position]);
+                                    'path'     => $this->path,
+                                    'position' => $this->position]);
                         }
                 }
             }

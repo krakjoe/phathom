@@ -45,6 +45,14 @@ namespace pharos\phathom\Grammar {
                 $token['location']['position']);
         }
 
+        public static function directive(array $token, array $allowed) : Unexpected {
+            return new self(\sprintf(
+                "Unexpected directive, expected %s, ".
+                "got %s",
+                Unexpected::explain($allowed),
+                Unexpected::print($token)));
+        }
+
         public static function initial(array $token) : Unexpected {
             return new self(\sprintf(
                 "Unexpected %s, initial token must be ".
@@ -63,26 +71,51 @@ namespace pharos\phathom\Grammar {
                 Unexpected::print($next)));
         }
 
-        public static function unterminated(string $content, array $location, string $delimiter) : Unexpected {
+        public static function nondigit(string $type, string $content, array $location) : Unexpected {
             return new self(\sprintf(
-                "Unexpected unterminated STRING, ".
-                "STRING must be terminated by %s, ".
-                "got STRING(%s) ".
+                "Unexpected non-digit in %s, " . 
+                "%s may only contain digits, " .
+                "got %s ".
                 "starting at %s:%d",
-                $delimiter,
+                $type,
+                $type,
                 $content,
                 $location['path'], $location['position']));
         }
 
-        public static function unbalanced(string $content, array $location, array $delimiters) : Unexpected {
+        public static function empty(string $type, array $location, array $delimiters) : Unexpected {
             return new self(\sprintf(
-                "Unexpected unbalanced %s%s block, ".
-                "missing %s ".
-                "in \"%s\", ".
+                "Unexpected empty %s, ".
+                "%s must contain content between %s and %s, ".
                 "starting at %s:%d",
+                $type,
+                $type, $delimiters['open'], $delimiters['close'],
+                $location['path'], $location['position']));
+        }
+
+        public static function unterminated(string $type, string $content, array $location, array $delimiters) : Unexpected {
+            return new self(\sprintf(
+                "Unexpected unterminated %s, ".
+                "%s started with %s must be terminated by %s, ".
+                "got %s(%s) ".
+                "starting at %s:%d",
+                $type,
+                $type, $delimiters['open'], $delimiters['close'],
+                $type, $content,
+                $location['path'], $location['position']));
+        }
+
+        public static function unbalanced(string $type, string $content, array $location, array $delimiters) : Unexpected {
+            return new self(\sprintf(
+                "Unexpected unbalanced %s, ".
+                "%s started with %s and terminated by %s, ".
+                    "may contain an unescaped %s, or be missing %s, " .
+                "got %s(%s), ".
+                "starting at %s:%d",
+                $type,
+                $type, $delimiters['open'], $delimiters['close'],
                 $delimiters['open'], $delimiters['close'],
-                $delimiters['close'],
-                $content,
+                $type, $content,
                 $location['path'], $location['position']));
         }
 
@@ -94,11 +127,14 @@ namespace pharos\phathom\Grammar {
                 $location['path'], $location['position']));
         }
 
-        public static function escape(array $location, array $delimiters) : Unexpected {
+        public static function escape(string $type, array $location, array $delimiters) : Unexpected {
             return new self(\sprintf(
-                "Unexpected escape in %s%s block, ".
+                "Unexpected escape in %s, ".
+                "%s started with %s and terminated by %s, ".
+                    "must not end with an escape, " .
                 "expected more input at %s:%d",
-                $delimiters['open'], $delimiters['close'],
+                $type,
+                $type, $delimiters['open'], $delimiters['close'],
                 $location['path'], $location['position']));
         }
     }

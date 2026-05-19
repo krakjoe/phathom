@@ -28,4 +28,15 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         new \pharos\phathom\Grammar($unlexed);
     }
+
+    public function testUnknownSymbol() : void {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessageMatches(
+            "/Unknown symbol 'undefined'/");
+
+        new \pharos\phathom\Grammar(\sprintf(
+            "%s%sUnknownSymbol.grammar",
+            \dirname(__FILE__),
+            \DIRECTORY_SEPARATOR));
+    }
 }

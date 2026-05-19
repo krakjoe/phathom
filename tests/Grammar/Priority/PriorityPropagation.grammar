@@ -1,0 +1,9 @@
+lexer: "PriorityPropagation.lexer";
+
+type: "\pharos\phathom\tests\Grammar\File";
+
+item: (X) [1] { return $this->returnThings(1, $1); }
+    | (X) [2] { return $this->returnThings(2, $1); }
+;
+
+unit: item+;

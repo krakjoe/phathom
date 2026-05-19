@@ -24,8 +24,10 @@ namespace pharos\phathom
                 @\file_get_contents($this->path);
 
             if ($this->buffer === false) {
+                // @codeCoverageIgnoreStart
                 throw new \Exception(
                     "Failed to read file: $this->path");
+                // @codeCoverageIgnoreEnd
             }
         }
 

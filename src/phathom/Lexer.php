@@ -30,6 +30,10 @@ namespace pharos\phathom
             }
         }
 
+        public function known(string $token): bool {
+            return isset($this->config[$token]);
+        }
+
         public function add(array $patterns): void {
             foreach ($patterns as $pattern) {
                 $this->config[$pattern] = [
@@ -70,10 +74,6 @@ namespace pharos\phathom
                         $advanced  = true;
                         break;
                     }
-                }
-
-                if ($position >= $limit) {
-                    break;
                 }
 
                 $best   = null;

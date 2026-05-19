@@ -11,14 +11,14 @@ namespace pharos\phathom\Grammar {
             $this->grammar = $grammar;
         }
 
-        private function directive(string $name, string $value) : void {
-            switch (\strtolower($name)) {
+        private function directive(array $ident, array $string) : void {
+            switch (\strtolower($ident['value'])) {
                 case "type":
-                    $this->grammar->setType($value);
+                    $this->grammar->setType($string['value']);
                 break;
 
                 case "lexer":
-                    $this->grammar->setLexer($value);
+                    $this->grammar->setLexer($string['value']);
                 break;
 
                 case "include":
@@ -26,7 +26,7 @@ namespace pharos\phathom\Grammar {
                         "%s%s%s",
                         \dirname($this->grammar->getFile()),
                         \DIRECTORY_SEPARATOR,
-                        $value
+                        $string['value']
                     );
 
                     if (!isset($this->included[$path])) {
@@ -38,9 +38,11 @@ namespace pharos\phathom\Grammar {
                 break;
 
                 default:
-                    throw new \Exception(
-                        "Unrecognized DIRECTIVE $name, ".
-                        "expected type, lexer, or include");
+                    throw Unexpected::directive(
+                        $ident, [
+                            'type',
+                            'lexer',
+                            'include']);
             }
         }
 
@@ -72,9 +74,16 @@ namespace pharos\phathom\Grammar {
                         case 'LIST_START':
                             $start   = $consume();
                             $symbols = [];
+                            $priority = false;
+
                             while (($symbol = $peek())) {
                                 if ($symbol['type'] === 'LIST_END') {
-                                    $end = $consume();
+                                    $consume();
+
+                                    if ($peek()['type'] === 'PRIORITY') {
+                                        $priority =
+                                            (int) $consume()['value'];
+                                    }
                                     break;
                                 }
 
@@ -97,11 +106,11 @@ namespace pharos\phathom\Grammar {
                                 $consume();
                                 $this->grammar
                                     ->complexRule(
-                                        $ident['value'], $symbols, $action['value']);
+                                        $ident['value'], $symbols, $priority, $action['value']);
                             } else {
                                 $this->grammar
                                     ->complexRule(
-                                        $ident['value'], $symbols);
+                                        $ident['value'], $symbols, $priority);
                             }
                             break;
 
@@ -123,8 +132,7 @@ namespace pharos\phathom\Grammar {
                         case 'STRING':
                             $string =
                                 $consume();
-                            $this->directive(
-                                $ident['value'], $string['value']);
+                            $this->directive($ident, $string);
                         break;
                     }
 

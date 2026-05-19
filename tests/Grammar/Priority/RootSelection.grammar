@@ -1,0 +1,16 @@
+lexer: "PriorityPropagation.lexer";
+
+type: "\pharos\phathom\tests\Grammar\File";
+
+# Grammar to trigger root-selection elseif (Grammar.php lines 222-226).
+# 'inner' and 'outer' both match X but with different priorities (1 and 2).
+# When inner completes, the completer advances unit@alt=0 with priority=1.
+# When outer completes, the completer advances unit@alt=1 with priority=2.
+# execute() finds unit@alt=0 first (sets root, rootPriority=1), then
+# unit@alt=1 (itemPriority=2 > 1) — hitting the elseif at lines 222-226.
+
+inner: (X) [1] { return $this->returnThings(1, $1); };
+outer: (X) [2] { return $this->returnThings(2, $1); };
+
+unit: inner
+    | outer;

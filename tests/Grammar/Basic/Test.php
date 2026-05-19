@@ -33,7 +33,7 @@ final class Test extends \PHPUnit\Framework\TestCase
 
     public function testBasicDefault() : void {
         $grammar = new \pharos\phathom\Grammar(\sprintf(
-            "%s%sDefault.grammar",
+            "%s%sBasicDefault.grammar",
             \dirname(__FILE__),
             \DIRECTORY_SEPARATOR));
         $content = \sprintf(
@@ -71,8 +71,21 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
-            "$content does not match Grammar: at 'unit'");
+            "$content does not match 'unit'");
 
         $parser->parse();
+    }
+
+    public function testBasicUnrecognizedDirective() : void {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage(
+            "Unexpected directive, expected ".
+                "type, lexer, or include, ".
+            "got IDENT(unrecognized)");
+
+        new \pharos\phathom\Grammar(\sprintf(
+            "%s%sBasicUnrecognizedDirective.grammar",
+            \dirname(__FILE__),
+            \DIRECTORY_SEPARATOR));
     }
 }
