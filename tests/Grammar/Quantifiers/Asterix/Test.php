@@ -3,33 +3,33 @@ namespace pharos\phathom\tests\Grammar\Quantifiers\Asterix;
 
 final class Test extends \PHPUnit\Framework\TestCase
 {
-    public function testAsterixZero() : void {
-        $grammar = new \pharos\phathom\Grammar(\sprintf(
-            "%s%sAsterix.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
-        $file =  new \pharos\phathom\File(\sprintf(
-            "%s%sAsterixZero.content",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
+    private \pharos\phathom\File $file;
 
-        $parser  = new \pharos\phathom\Parser($grammar, $file);
+    public function setUp() : void {
+        $this->file = new \pharos\phathom\File(__FILE__);
+    }
+
+    public function testAsterixZero() : void {
+        $file = $this->file
+            ->relative("Asterix.grammar");
+        $content = $this->file
+            ->relative("AsterixZero.content");
+
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser  = new \pharos\phathom\Parser($grammar, $content);
         $result  = $parser->parse();
 
         $this->assertSame($result->getThings(), []);
     }
 
     public function testAsterixOne() : void {
-        $grammar = new \pharos\phathom\Grammar(\sprintf(
-            "%s%sAsterix.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
-        $file =  new \pharos\phathom\File(\sprintf(
-            "%s%sAsterixOne.content",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
+        $file = $this->file
+            ->relative("Asterix.grammar");
+        $content = $this->file
+            ->relative("AsterixOne.content");
 
-        $parser  = new \pharos\phathom\Parser($grammar, $file);
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser  = new \pharos\phathom\Parser($grammar, $content);
         $result  = $parser->parse();
 
         $this->assertSame($result->getThings(), [
@@ -41,16 +41,12 @@ final class Test extends \PHPUnit\Framework\TestCase
     }
 
     public function testAsterixMore() : void {
-        $grammar = new \pharos\phathom\Grammar(\sprintf(
-            "%s%sAsterix.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
-        $file =  new \pharos\phathom\File(\sprintf(
-            "%s%sAsterixMore.content",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
-
-        $parser  = new \pharos\phathom\Parser($grammar, $file);
+        $file = $this->file
+            ->relative("Asterix.grammar");
+        $content = $this->file
+            ->relative("AsterixMore.content");
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser  = new \pharos\phathom\Parser($grammar, $content);
         $result  = $parser->parse();
 
         $this->assertSame($result->getThings(), [

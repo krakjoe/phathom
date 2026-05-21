@@ -3,24 +3,20 @@ namespace pharos\phathom
 {
     final class Grammar
     {
-        private ?string $file      = null; /* location of grammar */
-        private array   $rules     = [];   /* raw rules from grammar file parse       */
-        private array   $compiled  = [];   /* desugared rules used by the Earley loop */
-        private array   $terminals = [];   /* terminal name => true                   */
-        private array   $patterns  = [];   /* pattern terminal name => true           */
-        private array   $synthetic = [];   /* name => 'star'|'plus'|'opt'             */
-        private string  $start     = '';
-        private string  $type      = Node::class;
-        private ?Lexer  $lexer     = null;
+        public private(set) File    $file;
+        private             array   $rules     = [];   /* raw rules from grammar file parse       */
+        private             array   $compiled  = [];   /* desugared rules used by the Earley loop */
+        private             array   $terminals = [];   /* terminal name => true                   */
+        private             array   $patterns  = [];   /* pattern terminal name => true           */
+        private             array   $synthetic = [];   /* name => 'star'|'plus'|'opt'             */
+        private             string  $start     = '';
+        private             string  $type      = Node::class;
+        private             ?Lexer  $lexer     = null;
 
-        public function __construct(string $file) {
+        public function __construct(File $file) {
             $this->file = $file;
 
-            $lexer =
-                new Grammar\Lexer($this->file);
-            $parser = new Grammar\Parser($this);
-            $parser->parse(
-                $lexer->tokenize());
+            new Grammar\Parser($this);
 
             if ($this->lexer === null) {
                 throw new \Exception(
@@ -115,7 +111,7 @@ namespace pharos\phathom
                         if (!isset($synthetic[$name])) {
                             $self = [[
                                 'name'       => $name,
-                                'type'       => 'IDENT',
+                                'type'       => Grammar\Token::IDENT,
                                 'quantifier' => null
                             ]];
 
@@ -182,7 +178,7 @@ namespace pharos\phathom
                     foreach ($alternative['symbols'] as $symbol) {
                         if (!\array_key_exists($symbol['name'], $this->compiled)) {
                             switch ($symbol['type']) {
-                                case 'PATTERN':
+                                case Grammar\Token::PATTERN:
                                     $this->patterns[$symbol['name']] = true;
                                 break;
 
@@ -199,7 +195,7 @@ namespace pharos\phathom
             foreach ($this->compiled as $rule => $alternatives) {
                 foreach ($alternatives as $alternative) {
                     foreach ($alternative['symbols'] as $symbol) {
-                        if ($symbol['type'] !== 'IDENT') {
+                        if ($symbol['type'] !== Grammar\Token::IDENT) {
                             continue;
                         }
 
@@ -218,10 +214,10 @@ namespace pharos\phathom
         }
 
         public function execute(Parser $parser, Node $node): Node {
-            $file = $parser->getFile();
             $tokens =
                 $this->lexer
-                    ->tokenize($file);
+                    ->tokenize(
+                        $parser->file);
             $limit = \count($tokens);
 
             [$chart, $items] = $this->buildChart($tokens, $limit);
@@ -253,7 +249,7 @@ namespace pharos\phathom
 
             if ($root === null) {
                 throw new \Exception(
-                    "{$file->getPath()} does not match '{$this->start}' in {$this->file}");
+                    "{$parser->file} does not match '{$this->start}' in {$this->file}");
             }
 
             $this->evalItem($root, $tokens, $items, $node);
@@ -539,15 +535,12 @@ namespace pharos\phathom
         }
 
         public function setLexer(string $location): void {
-            $this->lexer = new Lexer($this->file, $location);
+            $this->lexer = new Lexer(
+                $this->file->relative($location));
         }
 
         public function setType(string $type): void {
             $this->type = $type;
-        }
-
-        public function getFile() : string {
-            return $this->file;
         }
 
         public function factory(Parser $parser): Node {

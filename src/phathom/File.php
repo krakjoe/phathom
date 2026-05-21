@@ -3,47 +3,48 @@ namespace pharos\phathom
 {
     final class File
     {
-        private string|false $path   = false;
-        private string|false $buffer = false;
+        public private(set) string $path;
+        public private(set) string|false $buffer = false;
 
         public function __construct(string $path) {
-            if (!\file_exists($path)) {
+            $realpath = \realpath($path);
+
+            if ($realpath === false) {
                 throw new \Exception(
-                    "$path does not exist");
+                    "$path cannot be found on the local filesystem");
             }
 
-            $this->path = $path;
+            $this->path = $realpath;
         }
 
-        public function buffer() : void {
+        public function contents() : string {
             if ($this->buffer !== false) {
-                return;
+                return $this->buffer;
             }
 
-            $this->buffer =
-                @\file_get_contents($this->path);
+            $buffer =
+                \file_get_contents($this->path);
 
-            if ($this->buffer === false) {
+            if ($buffer === false) {
                 // @codeCoverageIgnoreStart
                 throw new \Exception(
                     "Failed to read file: $this->path");
                 // @codeCoverageIgnoreEnd
             }
+
+            return $this->buffer = $buffer;
         }
 
-        public function buffered() : bool {
-            return $this->buffer !== false;
+        public function relative(string $path) : File {
+            return new self(\sprintf(
+                "%s%s%s",
+                \dirname($this->path),
+                \DIRECTORY_SEPARATOR,
+                $path
+            ));
         }
 
-        public function getBuffer(): string|false {
-            if (!$this->buffered()) {
-                $this->buffer();
-            }
-
-            return $this->buffer;
-        }
-
-        public function getPath() : string|false {
+        public function __toString() : string {
             return $this->path;
         }
     }

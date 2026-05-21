@@ -3,17 +3,20 @@ namespace pharos\phathom\tests\Grammar\Priority;
 
 final class Test extends \PHPUnit\Framework\TestCase
 {
-    public function testPriority() : void {
-        $grammar = new \pharos\phathom\Grammar(\sprintf(
-            "%s%sPriority.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
-        $file = new \pharos\phathom\File(\sprintf(
-            "%s%sPriority.content",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
+    private \pharos\phathom\File $file;
 
-        $parser = new \pharos\phathom\Parser($grammar, $file);
+    public function setUp() : void {
+        $this->file = new \pharos\phathom\File(__FILE__);
+    }
+
+    public function testPriority() : void {
+        $file = $this->file
+            ->relative("Priority.grammar");
+        $content = $this->file
+            ->relative("Priority.content");
+        
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser = new \pharos\phathom\Parser($grammar, $content);
         $result = $parser->parse();
 
         $this->assertSame($result->getThings(), [
@@ -25,16 +28,13 @@ final class Test extends \PHPUnit\Framework\TestCase
     }
 
     public function testPriorityPropagation() : void {
-        $grammar = new \pharos\phathom\Grammar(\sprintf(
-            "%s%sPriorityPropagation.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
-        $file = new \pharos\phathom\File(\sprintf(
-            "%s%sPriorityPropagation.content",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
-
-        $parser = new \pharos\phathom\Parser($grammar, $file);
+        $file = $this->file
+            ->relative("PriorityPropagation.grammar");
+        $content = $this->file
+            ->relative("PriorityPropagation.content");
+    
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser = new \pharos\phathom\Parser($grammar, $content);
         $result = $parser->parse();
 
         $this->assertSame($result->getThings(), [
@@ -46,16 +46,13 @@ final class Test extends \PHPUnit\Framework\TestCase
     }
 
     public function testRootSelection() : void {
-        $grammar = new \pharos\phathom\Grammar(\sprintf(
-            "%s%sRootSelection.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
-        $file = new \pharos\phathom\File(\sprintf(
-            "%s%sPriorityPropagation.content",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
-
-        $parser = new \pharos\phathom\Parser($grammar, $file);
+        $file = $this->file
+            ->relative("RootSelection.grammar");
+        $content = $this->file
+            ->relative("PriorityPropagation.content");
+        
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser = new \pharos\phathom\Parser($grammar, $content);
         $result = $parser->parse();
 
         /* The higher-priority alternative (priority 2) must win. */
@@ -72,16 +69,13 @@ final class Test extends \PHPUnit\Framework\TestCase
          * priority must floor the priority used in root selection even
          * though the synthetic __item_plus__ rule carries no priority of
          * its own. The [2] alternative must win. */
-        $grammar = new \pharos\phathom\Grammar(\sprintf(
-            "%s%sQuantifierPriority.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
-        $file = new \pharos\phathom\File(\sprintf(
-            "%s%sPriorityPropagation.content",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
-
-        $parser = new \pharos\phathom\Parser($grammar, $file);
+        $file = $this->file
+            ->relative("QuantifierPriority.grammar");
+        $content = $this->file
+            ->relative("PriorityPropagation.content");
+        
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser = new \pharos\phathom\Parser($grammar, $content);
         $result = $parser->parse();
 
         /* item's action fires first (adding [0, 'x']), then unit's action
@@ -98,16 +92,13 @@ final class Test extends \PHPUnit\Framework\TestCase
          * back for the trailing X, back['prev'] is b@dot=1 which carries
          * the priority max(a_priority=3, b_alt_priority=4)=4.  That puts a
          * non-false priority through the 'prev' branch of selectPriority. */
-        $grammar = new \pharos\phathom\Grammar(\sprintf(
-            "%s%sPrevPriority.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
-        $file = new \pharos\phathom\File(\sprintf(
-            "%s%sPrevPriority.content",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
+        $file = $this->file
+            ->relative("PrevPriority.grammar");
+        $content = $this->file
+            ->relative("PrevPriority.content");
 
-        $parser = new \pharos\phathom\Parser($grammar, $file);
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser = new \pharos\phathom\Parser($grammar, $content);
         $result = $parser->parse();
 
         /* The [4] alternative of b must win. */

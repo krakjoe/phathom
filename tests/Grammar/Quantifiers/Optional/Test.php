@@ -3,33 +3,33 @@ namespace pharos\phathom\tests\Grammar\Quantifiers\Optional;
 
 final class Test extends \PHPUnit\Framework\TestCase
 {
-    public function testOptionalZero() : void {
-        $grammar = new \pharos\phathom\Grammar(\sprintf(
-            "%s%sOptional.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
-        $file =  new \pharos\phathom\File(\sprintf(
-            "%s%sOptionalZero.content",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
+    private \pharos\phathom\File $file;
 
-        $parser  = new \pharos\phathom\Parser($grammar, $file);
+    public function setUp() : void {
+        $this->file = new \pharos\phathom\File(__FILE__);
+    }
+
+    public function testOptionalZero() : void {
+        $file = $this->file
+            ->relative("Optional.grammar");
+        $content = $this->file
+            ->relative("OptionalZero.content");
+
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser  = new \pharos\phathom\Parser($grammar, $content);
         $result  = $parser->parse();
 
         $this->assertSame($result->getThings(), []);
     }
 
     public function testOptionalOne() : void {
-        $grammar = new \pharos\phathom\Grammar(\sprintf(
-            "%s%sOptional.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
-        $file =  new \pharos\phathom\File(\sprintf(
-            "%s%sOptionalOne.content",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
+        $file = $this->file
+            ->relative("Optional.grammar");
+        $content = $this->file
+            ->relative("OptionalOne.content");
 
-        $parser  = new \pharos\phathom\Parser($grammar, $file);
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser  = new \pharos\phathom\Parser($grammar, $content);
         $result  = $parser->parse();
 
         $this->assertSame($result->getThings(), [

@@ -3,40 +3,42 @@ namespace pharos\phathom\tests\Grammar;
 
 final class Test extends \PHPUnit\Framework\TestCase
 {
+    private \pharos\phathom\File $file;
+
+    public function setUp() : void {
+        $this->file = new \pharos\phathom\File(__FILE__);
+    }
+
     public function testUnruled() : void {
-        $unruled = \sprintf(
-            "%s%sUnruled.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("Unruled.grammar");
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage(
-            "$unruled does not contain any rules");
+        $this->expectExceptionMessageMatches(
+            "/does not contain any rules/");
 
-        new \pharos\phathom\Grammar($unruled);
+        new \pharos\phathom\Grammar($file);
     }
 
     public function testUnlexed() : void {
-        $unlexed = \sprintf(
-            "%s%sUnlexed.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("Unlexed.grammar");
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage(
-            "$unlexed does not declare a lexer");
+        $this->expectExceptionMessageMatches(
+            "/does not declare a lexer/");
 
-        new \pharos\phathom\Grammar($unlexed);
+        new \pharos\phathom\Grammar($file);
     }
 
     public function testUnknownSymbol() : void {
+        $file = $this->file
+            ->relative("UnknownSymbol.grammar");
+
         $this->expectException(\Exception::class);
         $this->expectExceptionMessageMatches(
             "/Unknown symbol 'undefined'/");
 
-        new \pharos\phathom\Grammar(\sprintf(
-            "%s%sUnknownSymbol.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
+        new \pharos\phathom\Grammar($file);
     }
 }

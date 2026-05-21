@@ -10,6 +10,9 @@
     <testsuite name="Lexer">
       <file>tests/Lexer/Test.php</file>
     </testsuite>
+    <testsuite name="Grammar\Token">
+      <file>tests/Grammar/Token/Test.php</file>
+    </testsuite>
     <testsuite name="Grammar\Lexer">
       <file>tests/Grammar/Lexer/Test.php</file>
     </testsuite>

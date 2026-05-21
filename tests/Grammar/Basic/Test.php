@@ -3,17 +3,20 @@ namespace pharos\phathom\tests\Grammar\Basic;
 
 final class Test extends \PHPUnit\Framework\TestCase
 {
-    public function testBasic() : void {
-        $grammar = new \pharos\phathom\Grammar(\sprintf(
-            "%s%sBasic.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
-        $file =  new \pharos\phathom\File(\sprintf(
-            "%s%sBasic.content",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
+    private \pharos\phathom\File $file;
 
-        $parser  = new \pharos\phathom\Parser($grammar, $file);
+    public function setUp() : void {
+        $this->file = new \pharos\phathom\File(__FILE__);
+    }
+
+    public function testBasic() : void {
+        $file = $this->file
+            ->relative("Basic.grammar");
+        $content = $this->file
+            ->relative("Basic.content");
+
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser  = new \pharos\phathom\Parser($grammar, $content);
         $result  = $parser->parse();
 
         $this->assertSame($result->getThings(), [
@@ -28,21 +31,17 @@ final class Test extends \PHPUnit\Framework\TestCase
         ]);
 
         $this->assertInstanceOf(
-            \pharos\phathom\Grammar::class, $parser->getGrammar());
+            \pharos\phathom\Grammar::class, $parser->grammar);
     }
 
     public function testBasicDefault() : void {
-        $grammar = new \pharos\phathom\Grammar(\sprintf(
-            "%s%sBasicDefault.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
-        $content = \sprintf(
-            "%s%sBasic.content",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
-        $file =  new \pharos\phathom\File($content);
+        $file = $this->file
+            ->relative("BasicDefault.grammar");
+        $content = $this->file
+            ->relative("Basic.content");
 
-        $parser  = new \pharos\phathom\Parser($grammar, $file);
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser  = new \pharos\phathom\Parser($grammar, $content);
         $result  = $parser->parse();
         $this->assertSame($result->getThings(), [
             0 => [
@@ -57,35 +56,31 @@ final class Test extends \PHPUnit\Framework\TestCase
     }
 
     public function testBasicNomatch() : void {
-        $grammar = new \pharos\phathom\Grammar(\sprintf(
-            "%s%sBasic.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
-        $content = \sprintf(
-            "%s%sBasicNomatch.content",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
-        $file =  new \pharos\phathom\File($content);
+        $file = $this->file
+            ->relative("Basic.grammar");
+        $content = $this->file
+            ->relative("BasicNomatch.content");
 
-        $parser  = new \pharos\phathom\Parser($grammar, $file);
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser  = new \pharos\phathom\Parser($grammar, $content);
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage(
-            "$content does not match 'unit'");
+        $this->expectExceptionMessageMatches(
+            "/does not match 'unit'/");
 
         $parser->parse();
     }
 
     public function testBasicUnrecognizedDirective() : void {
+        $file = $this->file
+            ->relative("BasicUnrecognizedDirective.grammar");
+        
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
             "Unexpected directive, expected ".
                 "type, lexer, or include, ".
             "got IDENT(unrecognized)");
 
-        new \pharos\phathom\Grammar(\sprintf(
-            "%s%sBasicUnrecognizedDirective.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
+        new \pharos\phathom\Grammar($file);
     }
 }

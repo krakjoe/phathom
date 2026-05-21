@@ -3,21 +3,20 @@ namespace pharos\phathom\tests\Grammar\Sequence;
 
 final class Test extends \PHPUnit\Framework\TestCase
 {
-    public function testSequence() : void {
-        $sequence = \sprintf(
-            "%s%sSequence.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR,
-        );
-        $content = \sprintf(
-            "%s%sSequence.content",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR,
-        );
+    private \pharos\phathom\File $file;
 
-        $grammar = new \pharos\phathom\Grammar($sequence);
-        $file    = new \pharos\phathom\File($content);
-        $parser  = new \pharos\phathom\Parser($grammar, $file);
+    public function setUp() : void {
+        $this->file = new \pharos\phathom\File(__FILE__);
+    }
+
+    public function testSequence() : void {
+        $file = $this->file
+            ->relative("Sequence.grammar");
+        $content = $this->file
+            ->relative("Sequence.content");
+
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser  = new \pharos\phathom\Parser($grammar, $content);
 
         $this->assertInstanceOf(
             \pharos\phathom\Node::class, $parser->parse());

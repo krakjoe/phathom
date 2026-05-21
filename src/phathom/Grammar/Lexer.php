@@ -1,11 +1,12 @@
 <?php
 namespace pharos\phathom\Grammar {
-    final class Lexer {
-        private string       $path;
+    use \pharos\phathom\File;
 
-        private string|false $buffer;
-        private int          $length   = 0;
-        private int          $position = 0;
+    final class Lexer {
+        public private(set) File         $file;
+        private             string|false $buffer;
+        private             int          $length;
+        private             int          $position;
 
         /**
          * ── Grammar file ─────────────────────────────────────────────────
@@ -29,96 +30,132 @@ namespace pharos\phathom\Grammar {
          **/
 
         /**
-         * 'TYPE' => [
-         *      'list' =>     false | [
-         *          'allow'     => [],
+         * Token::TYPE => [
+         *      'list' => false | [
+         *          'allow' => [],
          *      ],
-         *      'allow' =>     [] 
+         *      'allow' => [] 
          * ]
          * 
-         * `list` may be array
-         * [
-         *  'allow'     => array
-         * ]
-         * 
-         * allow arrays should include token types allowed in their respective relevant position
+         * allow arrays should contain token types allowed in the following token
          **/
         private static $specification = [
-            'LIST_START' => [
-                'list'      => false,
-                'allow'     => ['IDENT', 'PATTERN'],
-            ],
-            'LIST_END' => [
-                'list'      => false,
-                'allow'     => ['PRIORITY', 'PIPE', 'ACTION', 'END'],
-            ],
-            'PRIORITY' => [
-                'list'      => false,
-                'allow'     => ['PIPE', 'ACTION', 'END'],
-            ],
-            'COLON' => [
-                'list'     => false,
-                'allow'     => ['IDENT', 'STRING', 'LIST_START', 'PATTERN'],
-            ],
-            'PIPE' => [
-                'list'      => false,
-                'allow'     => ['IDENT', 'LIST_START', 'PATTERN'],
-            ],
-            'PATTERN' => [
-                'list'      => [
-                    'allow'     => ['IDENT', 'PATTERN', 'QUANTIFIER', 'LIST_END'],
-                ],
-                'allow'     => ['QUANTIFIER', 'PIPE', 'END'],
-            ],
-            'ACTION' => [
-                'list'      => false,
-                'allow'     => ['PIPE', 'END'],
-            ],
-            'STRING' => [
-                'list'      => false,
-                'allow'     => ['END'],
-            ],
-            'QUANTIFIER' => [
-                'list'      => [
-                    'allow'     => ['IDENT', 'PATTERN', 'LIST_END'],
-                ],
-                'allow'     => ['PIPE', 'END'],
-            ],
-            'IDENT' => [
-                'list'     => [
-                    'allow'     => ['IDENT', 'PATTERN', 'QUANTIFIER', 'LIST_END'],
-                ],
-                'allow'     => ['COLON', 'PIPE', 'QUANTIFIER', 'END'],
-            ],
-            'END' => [
+            Token::LIST_START => [
                 'list' => false,
-                'allow' => ['IDENT', 'EOF'],
+                'allow' => [
+                    Token::IDENT,
+                    Token::PATTERN,
+                ],
             ],
-            'EOF' => [
+            Token::LIST_END => [
+                'list' => false,
+                'allow' => [
+                    Token::PRIORITY,
+                    Token::PIPE,
+                    Token::ACTION,
+                    Token::END,
+                ],
+            ],
+            Token::PRIORITY => [
+                'list' => false,
+                'allow' => [
+                    Token::PIPE,
+                    Token::ACTION,
+                    Token::END,
+                ],
+            ],
+            Token::COLON => [
+                'list' => false,
+                'allow' => [
+                    Token::IDENT,
+                    Token::STRING,
+                    Token::LIST_START,
+                    Token::PATTERN,
+                ],
+            ],
+            Token::PIPE => [
+                'list' => false,
+                'allow' => [
+                    Token::IDENT,
+                    Token::LIST_START,
+                    Token::PATTERN,
+                ],
+            ],
+            Token::PATTERN => [
+                'list' => [
+                    'allow' => [
+                        Token::IDENT,
+                        Token::PATTERN,
+                        Token::QUANTIFIER,
+                        Token::LIST_END,
+                    ],
+                ],
+                'allow' => [
+                    Token::QUANTIFIER,
+                    Token::PIPE,
+                    Token::END,
+                ],
+            ],
+            Token::ACTION => [
+                'list' => false,
+                'allow' => [
+                    Token::PIPE,
+                    Token::END,
+                ],
+            ],
+            Token::STRING => [
+                'list' => false,
+                'allow' => [
+                    Token::END,
+                ],
+            ],
+            Token::QUANTIFIER => [
+                'list' => [
+                    'allow' => [
+                        Token::IDENT,
+                        Token::PATTERN,
+                        Token::LIST_END,
+                    ],
+                ],
+                'allow' => [
+                    Token::PIPE,
+                    Token::END,
+                ],
+            ],
+            Token::IDENT => [
+                'list' => [
+                    'allow' => [
+                        Token::IDENT,
+                        Token::PATTERN,
+                        Token::QUANTIFIER,
+                        Token::LIST_END,
+                    ],
+                ],
+                'allow' => [
+                    Token::COLON,
+                    Token::PIPE,
+                    Token::QUANTIFIER,
+                    Token::END,
+                ],
+            ],
+            Token::END => [
+                'list' => false,
+                'allow' => [
+                    Token::IDENT,
+                    Token::EOF,
+                ],
+            ],
+            Token::EOF => [
                 'list' => false,
                 'allow' => [],
             ]
         ];
 
-        public function __construct(string $path) {
-            $this->path = $path;
-
-            if (!\file_exists($this->path)) {
-                throw new \Exception("$this->path does not exist");
-            }
-
-            $this->buffer = 
-                @\file_get_contents(
-                    $this->path);
-
-            if ($this->buffer === false) {
-                // @codeCoverageIgnoreStart
-                throw new \Exception(
-                    "Failed to read file: $this->path");
-                // @codeCoverageIgnoreEnd
-            }
-
-            $this->length = \strlen($this->buffer);
+        public function __construct(File $file) {
+            $this->file     = $file;
+            $this->buffer   = $this->file->contents();
+            $this->length   = \strlen($this->buffer);
+            $this->position = 0;
         }
 
         private function comment() : array {
@@ -154,7 +191,7 @@ namespace pharos\phathom\Grammar {
                 if ($this->buffer[$this->position] === '\\') {
                     if (($this->position + 1) >= $this->length) {
                         throw Unexpected::escape($type, [
-                            'path'     => $this->path,
+                            'path'     => $this->file->path,
                             'position' => $this->position
                         ], [
                             'open'     => $open,
@@ -194,7 +231,7 @@ namespace pharos\phathom\Grammar {
                 throw Unexpected::unbalanced(
                     $type,
                     $content, [
-                        'path'     => $this->path,
+                        'path'     => $this->file->path,
                         'position' => $start
                     ], [
                         'open'     => $open, 
@@ -205,7 +242,7 @@ namespace pharos\phathom\Grammar {
             if (!\strlen($content)) {
                 throw Unexpected::empty(
                     $type, [
-                        'path'     => $this->path,
+                        'path'     => $this->file->path,
                         'position' => $start,
                     ], [
                         'open'     => $open,
@@ -257,9 +294,9 @@ namespace pharos\phathom\Grammar {
 
             if (!$terminated) {
                 throw Unexpected::unterminated(
-                    'STRING',
+                    Token::STRING,
                     $content, [
-                        'path'     => $this->path,
+                        'path'     => $this->file->path,
                         'position' => $start
                     ], [
                         'open'     => $delimiter,
@@ -287,9 +324,9 @@ namespace pharos\phathom\Grammar {
 
                 if (!\ctype_digit($this->buffer[$this->position])) {
                     throw Unexpected::nondigit(
-                        'PRIORITY',
+                        Token::PRIORITY,
                         $this->buffer[$this->position], [
-                            'path'     => $this->path,
+                            'path'     => $this->file->path,
                             'position' => $this->position
                         ]
                     );
@@ -300,9 +337,9 @@ namespace pharos\phathom\Grammar {
 
             if (!$terminated) {
                 throw Unexpected::unterminated(
-                    'PRIORITY',
+                    Token::PRIORITY,
                     $content, [
-                        'path'     => $this->path,
+                        'path'     => $this->file->path,
                         'position' => $start
                     ], [
                         'open'    => '[',
@@ -312,8 +349,8 @@ namespace pharos\phathom\Grammar {
 
             if (!\strlen($content)) {
                 throw Unexpected::empty(
-                    'PRIORITY', [
-                        'path'     => $this->path,
+                    Token::PRIORITY, [
+                        'path'     => $this->file->path,
                         'position' => $start,
                     ], [
                         'open'     => '[',
@@ -357,12 +394,12 @@ namespace pharos\phathom\Grammar {
         private function validate(array $tokens) : array {
             $limit   = \count($tokens);
 
-            if ($tokens[0]['type'] !== 'IDENT' &&
-                $tokens[0]['type'] !== 'EOF') {
+            if ($tokens[0]['type'] !== Token::IDENT &&
+                $tokens[0]['type'] !== Token::EOF) {
                 throw Unexpected::initial($tokens[0]);
             }
 
-            $listing    = false;
+            $listing = false;
 
             for ($position = 0;
                  $position < $limit;
@@ -373,7 +410,7 @@ namespace pharos\phathom\Grammar {
                     Lexer::$specification[
                         $token['type']];
 
-                if ($token['type'] === 'LIST_END')   $listing = false;
+                if ($token['type'] === Token::LIST_END)   $listing = false;
 
                 $rules = $listing ?
                     $specification['list'] :
@@ -389,7 +426,7 @@ namespace pharos\phathom\Grammar {
                     }
                 }
 
-                if ($token['type'] === 'LIST_START') $listing = true;
+                if ($token['type'] === Token::LIST_START) $listing = true;
             }
 
             return $tokens;
@@ -415,9 +452,9 @@ namespace pharos\phathom\Grammar {
 
                     case ';':
                         $tokens[]     = [
-                            'type'     => 'END',
+                            'type'     => Token::END,
                             'location' => [
-                                'path'     => $this->path,
+                                'path'     => $this->file->path,
                                 'position' => $this->position++,
                             ],
                         ];
@@ -425,9 +462,9 @@ namespace pharos\phathom\Grammar {
 
                     case '(':
                         $tokens[]      = [
-                            'type'     => 'LIST_START',
+                            'type'     => Token::LIST_START,
                             'location' => [
-                                'path'     => $this->path,
+                                'path'     => $this->file->path,
                                 'position' => $this->position,
                             ],
                         ];
@@ -436,9 +473,9 @@ namespace pharos\phathom\Grammar {
 
                     case ')':
                         $tokens[]      = [
-                            'type'     => 'LIST_END',
+                            'type'     => Token::LIST_END,
                             'location' => [
-                                'path'     => $this->path,
+                                'path'     => $this->file->path,
                                 'position' => $this->position,
                             ],
                         ];
@@ -449,10 +486,10 @@ namespace pharos\phathom\Grammar {
                         [$content, $start] =
                             $this->priority();
                         $tokens[]      = [
-                            'type'     => 'PRIORITY',
+                            'type'     => Token::PRIORITY,
                             'value'    => $content,
                             'location' => [
-                                'path'     => $this->path,
+                                'path'     => $this->file->path,
                                 'position' => $start,
                             ],
                         ];
@@ -460,9 +497,9 @@ namespace pharos\phathom\Grammar {
 
                     case ':':
                         $tokens[]      = [
-                            'type'     => 'COLON',
+                            'type'     => Token::COLON,
                             'location' => [
-                                'path'     => $this->path,
+                                'path'     => $this->file->path,
                                 'position' => $this->position,
                             ],
                         ];
@@ -471,9 +508,9 @@ namespace pharos\phathom\Grammar {
 
                     case '|':
                         $tokens[]      = [
-                            'type'     => 'PIPE',
+                            'type'     => Token::PIPE,
                             'location' => [
-                                'path'     => $this->path,
+                                'path'     => $this->file->path,
                                 'position' => $this->position,
                             ],
                         ];
@@ -482,12 +519,12 @@ namespace pharos\phathom\Grammar {
 
                     case '<':
                         [$content, $start] =
-                            $this->balance('PATTERN', '<', '>');
+                            $this->balance(Token::PATTERN, '<', '>');
                         $tokens[]      = [
-                            'type'     => 'PATTERN',
+                            'type'     => Token::PATTERN,
                             'value'    => $content,
                             'location' => [
-                                'path'     => $this->path,
+                                'path'     => $this->file->path,
                                 'position' => $start,
                             ],
                         ];
@@ -495,12 +532,12 @@ namespace pharos\phathom\Grammar {
 
                     case '{':
                         [$content, $start] =
-                            $this->balance('ACTION', '{', '}');
+                            $this->balance(Token::ACTION, '{', '}');
                         $tokens[]      = [
-                            'type'     => 'ACTION',
+                            'type'     => Token::ACTION,
                             'value'    => $content,
                             'location' => [
-                                'path'     => $this->path,
+                                'path'     => $this->file->path,
                                 'position' => $start,
                             ],
                         ];
@@ -513,10 +550,10 @@ namespace pharos\phathom\Grammar {
                                 $this->buffer[$this->position]);
 
                         $tokens[]      = [
-                            'type'     => 'STRING',
+                            'type'     => Token::STRING,
                             'value'    => $content,
                             'location' => [
-                                'path'     => $this->path,
+                                'path'     => $this->file->path,
                                 'position' => $start,
                             ],
                         ];
@@ -526,12 +563,12 @@ namespace pharos\phathom\Grammar {
                     case '*':
                     case '?':
                         $tokens[]      = [
-                            'type'     => 'QUANTIFIER',
+                            'type'     => Token::QUANTIFIER,
                             'value'    => 
                                 $this->buffer[
                                     $this->position],
                             'location' => [
-                                'path'     => $this->path,
+                                'path'     => $this->file->path,
                                 'position' => $this->position++,
                             ],
                         ];
@@ -549,26 +586,26 @@ namespace pharos\phathom\Grammar {
                             }
 
                             $tokens[]      = [
-                                'type'     => 'IDENT',
+                                'type'     => Token::IDENT,
                                 'value'    => $ident,
                                 'location' => [
-                                    'path'     => $this->path,
+                                    'path'     => $this->file->path,
                                     'position' => $start,
                                 ],
                             ];
                         } else {
                             throw Unexpected::character(
                                 $this->buffer, [
-                                    'path'     => $this->path,
+                                    'path'     => $this->file->path,
                                     'position' => $this->position]);
                         }
                 }
             }
 
             $tokens[]      = [
-                'type'     => 'EOF',
+                'type'     => Token::EOF,
                 'location' => [
-                    'path'     => $this->path,
+                    'path'     => $this->file->path,
                     'position' => $this->position,
                 ],
             ];

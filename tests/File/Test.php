@@ -17,39 +17,18 @@ final class Test extends \PHPUnit\Framework\TestCase
             \DIRECTORY_SEPARATOR);
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage(
-            "$nonexistent does not exist");
+        $this->expectExceptionMessageMatches(
+            "/cannot be found on the local filesystem/");
 
         new \pharos\phathom\File($nonexistent);
-    }
-
-    public function testBuffering() : void {
-        $file = new \pharos\phathom\File(__FILE__);
-
-        $this->assertFalse($file->buffered());
-
-        $file->buffer();
-
-        $this->assertTrue($file->buffered());
-        $this->assertNotEmpty($file->getBuffer());
-    }
-
-    public function testFetching() : void {
-        $file = new \pharos\phathom\File(__FILE__);
-        $this->assertFalse($file->buffered());
-        $this->assertNotEmpty($file->getBuffer());
-        $this->assertTrue($file->buffered());
     }
 
     public function testCaching() : void {
         $file = new \pharos\phathom\File(__FILE__);
 
-        $file->buffer();
-        $first  = $file->getBuffer();
-        $file->buffer();
-        $second = $file->getBuffer();
-
-        $this->assertSame($first, $second);
+        $this->assertSame(
+            $file->contents(),
+            $file->contents());
     }
 
     public function testEmptiness() : void {
@@ -57,7 +36,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $meta      = \stream_get_meta_data($temporary);
         $file = new \pharos\phathom\File($meta['uri']);
 
-        $buffer = $file->getBuffer();
+        $buffer =
+            $file->contents();
         $this->assertEmpty($buffer);
         $this->assertTrue($buffer !== false);
     }
@@ -65,6 +45,6 @@ final class Test extends \PHPUnit\Framework\TestCase
     public function testPath() : void {
         $file = new \pharos\phathom\File(__FILE__);
 
-        $this->assertEquals(__FILE__, $file->getPath());
+        $this->assertEquals(__FILE__, $file->path);
     }
 }

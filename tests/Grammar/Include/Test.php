@@ -3,17 +3,20 @@ namespace pharos\phathom\tests\Grammar\Include;
 
 final class Test extends \PHPUnit\Framework\TestCase
 {
-    public function testInclude() : void {
-        $grammar = new \pharos\phathom\Grammar(\sprintf(
-            "%s%sInclude.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
-        $file =  new \pharos\phathom\File(\sprintf(
-            "%s%sInclude.content",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
+    private \pharos\phathom\File $file;
 
-        $parser  = new \pharos\phathom\Parser($grammar, $file);
+    public function setUp() : void {
+        $this->file = new \pharos\phathom\File(__FILE__);
+    }
+
+    public function testInclude() : void {        
+        $file = $this->file
+            ->relative("Include.grammar");
+        $content = $this->file
+            ->relative("Include.content");
+
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser  = new \pharos\phathom\Parser($grammar, $content);
         $result  = $parser->parse();
         $this->assertSame($result->getThings(), [
             0 => [
@@ -23,20 +26,27 @@ final class Test extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testIncludeError() : void {
-        $nonexistent = \sprintf(
-            "%s%sNonexistent.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR
-        );
+    public function testDuplicateError() : void {
+        $file = $this->file
+            ->relative("Duplicate.grammar");
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage(
-            "$nonexistent does not exist");
+        $this->expectExceptionMessageMatches(
+            "/Unexpected duplicate include at .*:105, ".
+            ".*Snippet\.grammar already included at .*:77/");
 
-        new \pharos\phathom\Grammar(\sprintf(
-            "%s%sError.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
+        new \pharos\phathom\Grammar($file);    
+    }
+
+    public function testRecursionError() : void {
+        $file = $this->file
+            ->relative("Recursion.grammar");
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessageMatches(
+            "/Unexpected duplicate include at .*:77, ".
+            ".*Recursion.grammar already included at .*Recursion.grammar:0/");
+
+        new \pharos\phathom\Grammar($file);  
     }
 }

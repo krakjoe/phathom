@@ -4,11 +4,28 @@ namespace pharos\phathom\Grammar {
     use \pharos\phathom\Grammar;
 
     final class Parser {
-        private Grammar $grammar;
-        private array $included = [];
+        public private(set) Grammar $grammar;
+        private             array   $included = [];
 
-        public function __construct(Grammar $grammar) {
+        public function __construct(
+            Grammar $grammar
+        ) {
             $this->grammar = $grammar;
+
+            $file =
+                $this->grammar->file;
+            $lexer = new Lexer($file);
+
+            $this->included[$file->path] = [
+                'location' => [
+                    'path' => $file->path,
+                    'position' => 0,
+                ],
+                'lexer' => $lexer
+            ];
+
+            $this->parse(
+                $lexer->tokenize());
         }
 
         private function directive(array $ident, array $string) : void {
@@ -22,19 +39,28 @@ namespace pharos\phathom\Grammar {
                 break;
 
                 case "include":
-                    $path = \sprintf(
-                        "%s%s%s",
-                        \dirname($this->grammar->getFile()),
-                        \DIRECTORY_SEPARATOR,
-                        $string['value']
-                    );
+                    $file =
+                        $this->grammar
+                            ->file
+                            ->relative(
+                                $string['value']);
 
-                    if (!isset($this->included[$path])) {
-                        $lexer = new Lexer($path);
-                        $this->parse(
-                            $lexer->tokenize());
-                        $this->included[$path] = $lexer;
+                    if (isset($this->included[$file->path])) {
+                        throw Unexpected::include(
+                            $ident,
+                            $string['value'],
+                            $this->included[
+                                $file->path
+                            ]['location']);
                     }
+
+                    $lexer = new Lexer($file);
+                    $this->parse(
+                        $lexer->tokenize());
+                    $this->included[$file->path] = [
+                        'location' => $ident['location'],
+                        'lexer'    => $lexer
+                    ];
                 break;
 
                 default:
@@ -46,12 +72,12 @@ namespace pharos\phathom\Grammar {
             }
         }
 
-        public function parse(array $tokens): void {
+        private function parse(array $tokens): void {
             $position = 0;
             $count    = \count($tokens);
 
             $eof = function() use(&$position, $tokens) : bool {
-                return ($tokens[$position]['type'] == 'EOF');
+                return ($tokens[$position]['type'] == Token::EOF);
             };
 
             $peek = function () use (&$position, $tokens): ?array {
@@ -71,28 +97,28 @@ namespace pharos\phathom\Grammar {
                     $next = $peek();
 
                     switch ($next['type']) {
-                        case 'LIST_START':
+                        case Token::LIST_START:
                             $start   = $consume();
                             $symbols = [];
                             $priority = false;
 
                             while (($symbol = $peek())) {
-                                if ($symbol['type'] === 'LIST_END') {
+                                if ($symbol['type'] === Token::LIST_END) {
                                     $consume();
 
-                                    if ($peek()['type'] === 'PRIORITY') {
+                                    if ($peek()['type'] === Token::PRIORITY) {
                                         $priority =
                                             (int) $consume()['value'];
                                     }
                                     break;
                                 }
 
-                                if ($symbol['type'] === 'IDENT' ||
-                                    $symbol['type'] === 'PATTERN') {
+                                if ($symbol['type'] === Token::IDENT ||
+                                    $symbol['type'] === Token::PATTERN) {
                                     $symbol =
                                         $consume();
                                     $quantify = $peek();
-                                    if ($quantify['type'] === 'QUANTIFIER') {
+                                    if ($quantify['type'] === Token::QUANTIFIER) {
                                         $symbol['quantifier'] =
                                             $consume()['value'];
                                     }
@@ -102,7 +128,7 @@ namespace pharos\phathom\Grammar {
                             }
 
                             $action = $peek();
-                            if ($action['type'] === 'ACTION') {
+                            if ($action['type'] === Token::ACTION) {
                                 $consume();
                                 $this->grammar
                                     ->complexRule(
@@ -114,11 +140,11 @@ namespace pharos\phathom\Grammar {
                             }
                             break;
 
-                        case 'IDENT':
-                        case 'PATTERN':
+                        case Token::IDENT:
+                        case Token::PATTERN:
                             $token    = $consume();
                             $quantify = $peek();
-                            if ($quantify['type'] === 'QUANTIFIER') {
+                            if ($quantify['type'] === Token::QUANTIFIER) {
                                 $quantify =
                                     $consume()
                                         ['value'];
@@ -129,7 +155,7 @@ namespace pharos\phathom\Grammar {
                             $this->grammar->expressionRule($ident['value'], $token, $quantify);
                         break;
 
-                        case 'STRING':
+                        case Token::STRING:
                             $string =
                                 $consume();
                             $this->directive($ident, $string);
@@ -138,7 +164,7 @@ namespace pharos\phathom\Grammar {
 
                     $next = $consume();
 
-                    if ($next['type'] === 'END') {
+                    if ($next['type'] === Token::END) {
                         break;
                     }
                 }

@@ -3,31 +3,22 @@ namespace pharos\phathom\tests\Grammar\Lexer;
 
 final class Test extends \PHPUnit\Framework\TestCase
 {
-    public function testNonExistent() : void {
-        $nonexistent = \sprintf(
-            "%s%sNonexistent.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
-        
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage(
-            "$nonexistent does not exist");
+    private \pharos\phathom\File $file;
 
-        new \pharos\phathom\Grammar\Lexer($nonexistent);
+    public function setUp() : void {
+        $this->file = new \pharos\phathom\File(__FILE__);
     }
 
     public function testComment() : void {
-        $comment = \sprintf(
-            "%s%sComment.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("Comment.grammar");
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($comment);
         $this->assertSame($lexer->tokenize(), [
             [
-                'type' => 'EOF',
+                'type' => \pharos\phathom\Grammar\Token::EOF,
                 'location'     => [
-                    'path'     => $comment,
+                    'path'     => $file->path,
                     'position' => 9
                 ],
             ],
@@ -35,17 +26,15 @@ final class Test extends \PHPUnit\Framework\TestCase
     }
 
     public function testCommentWithNewLine() : void {
-        $comment = \sprintf(
-            "%s%sCommentWithNewline.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("CommentWithNewline.grammar");
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($comment);
         $this->assertSame($lexer->tokenize(), [
             [
-                'type'     => 'EOF',
+                'type'     => \pharos\phathom\Grammar\Token::EOF,
                 'location'     => [
-                    'path'     => $comment,
+                    'path'     => $file->path,
                     'position' => 10
                 ],
             ],
@@ -53,10 +42,8 @@ final class Test extends \PHPUnit\Framework\TestCase
     }
 
     public function testListStartNotFollowingColonOrPipe() : void {
-        $list = \sprintf(
-            "%s%sListStartNotFollowingColonOrPipe.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("ListStartNotFollowingColonOrPipe.grammar");
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
@@ -65,15 +52,13 @@ final class Test extends \PHPUnit\Framework\TestCase
                 "COLON, PIPE, QUANTIFIER, or END, ".
             "got LIST_START");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($list);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
     public function testListStartNotAllowedInList() : void {
-        $list = \sprintf(
-            "%s%sListStartNotAllowedInList.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("ListStartNotAllowedInList.grammar");
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
@@ -82,15 +67,13 @@ final class Test extends \PHPUnit\Framework\TestCase
                 "IDENT or PATTERN, ".
             "got LIST_START");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($list);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
     public function testListStartNotTerminated() : void {
-        $list = \sprintf(
-            "%s%sListStartNotTerminated.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("ListStartNotTerminated.grammar");
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
@@ -99,15 +82,13 @@ final class Test extends \PHPUnit\Framework\TestCase
                 "IDENT, PATTERN, QUANTIFIER, or LIST_END, ".
             "got EOF");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($list);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
     public function testListEndEmpty() : void {
-        $list = \sprintf(
-            "%s%sListEndEmpty.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("ListEndEmpty.grammar");
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
@@ -116,74 +97,72 @@ final class Test extends \PHPUnit\Framework\TestCase
                 "IDENT or PATTERN, ".
             "got LIST_END");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($list);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
     public function testList() : void {
-        $list = \sprintf(
-            "%s%sList.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("List.grammar");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($list);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $this->assertSame($lexer->tokenize(), [
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'ident',
                 'location'     => [
-                    'path'     => $list,
+                    'path'     => $file->path,
                     'position' => 0
                 ],
             ],
             [
-                'type'     => 'COLON',
+                'type'     => \pharos\phathom\Grammar\Token::COLON,
                 'location'     => [
-                    'path'     => $list,
+                    'path'     => $file->path,
                     'position' => 5
                 ],
             ],
             [
-                'type'     => 'LIST_START',
+                'type'     => \pharos\phathom\Grammar\Token::LIST_START,
                 'location'     => [
-                    'path'     => $list,
+                    'path'     => $file->path,
                     'position' => 7
                 ],
             ],
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'ident',
                 'location'     => [
-                    'path'     => $list,
+                    'path'     => $file->path,
                     'position' => 8
                 ],
             ],
             [
-                'type'     => 'PATTERN',
+                'type'     => \pharos\phathom\Grammar\Token::PATTERN,
                 'value'    => 'pattern',
                 'location'     => [
-                    'path'     => $list,
+                    'path'     => $file->path,
                     'position' => 14
                 ],
             ],
             [
-                'type'     => 'LIST_END',
+                'type'     => \pharos\phathom\Grammar\Token::LIST_END,
                 'location'     => [
-                    'path'     => $list,
+                    'path'     => $file->path,
                     'position' => 23
                 ],
             ],
             [
-                'type'     => 'END',
+                'type'     => \pharos\phathom\Grammar\Token::END,
                 'location'     => [
-                    'path'     => $list,
+                    'path'     => $file->path,
                     'position' => 24
                 ],
             ],
             [
-                'type'     => 'EOF',
+                'type'     => \pharos\phathom\Grammar\Token::EOF,
                 'location'     => [
-                    'path'     => $list,
+                    'path'     => $file->path,
                     'position' => 25
                 ],
             ],
@@ -191,10 +170,8 @@ final class Test extends \PHPUnit\Framework\TestCase
     }
 
     public function testColonNotFollowingIdent() : void {
-        $colon = \sprintf(
-            "%s%sColonNotFollowingIdent.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("ColonNotFollowingIdent.grammar");
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
@@ -203,15 +180,13 @@ final class Test extends \PHPUnit\Framework\TestCase
                 "IDENT, STRING, LIST_START, or PATTERN, ".
             "got COLON");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($colon);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
     public function testColonNotAllowedInList() : void {
-        $colon = \sprintf(
-            "%s%sColonNotAllowedInList.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("ColonNotAllowedInList.grammar");
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
@@ -220,15 +195,13 @@ final class Test extends \PHPUnit\Framework\TestCase
                 "IDENT, PATTERN, QUANTIFIER, or LIST_END, ".
             "got COLON");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($colon);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
     public function testColonNotAllowedToDangle() : void {
-        $colon = \sprintf(
-            "%s%sColonNotAllowedToDangle.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("ColonNotAllowedToDangle.grammar");
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
@@ -237,15 +210,13 @@ final class Test extends \PHPUnit\Framework\TestCase
                 "IDENT, STRING, LIST_START, or PATTERN, ".
             "got EOF");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($colon);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
     public function testPipeNotAllowedInList() : void {
-        $pipe = \sprintf(
-            "%s%sPipeNotAllowedInList.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("PipeNotAllowedInList.grammar");
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
@@ -254,15 +225,13 @@ final class Test extends \PHPUnit\Framework\TestCase
                 "IDENT, PATTERN, QUANTIFIER, or LIST_END, ".
             "got PIPE");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($pipe);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
     public function testPipeNotAllowedToDangle() : void {
-        $pipe = \sprintf(
-            "%s%sPipeNotAllowedToDangle.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("PipeNotAllowedToDangle.grammar");
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
@@ -271,128 +240,126 @@ final class Test extends \PHPUnit\Framework\TestCase
                 "IDENT, LIST_START, or PATTERN, ".
             "got EOF");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($pipe);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
     public function testPipe() : void {
-        $pipe = \sprintf(
-            "%s%sPipe.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("Pipe.grammar");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($pipe);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $this->assertSame($lexer->tokenize(), [
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'ident',
                 'location'     => [
-                    'path'     => $pipe,
+                    'path'     => $file->path,
                     'position' => 0
                 ],
             ],
             [
-                'type'     => 'COLON',
+                'type'     => \pharos\phathom\Grammar\Token::COLON,
                 'location'     => [
-                    'path'     => $pipe,
+                    'path'     => $file->path,
                     'position' => 5
                 ],
             ],
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'ident',
                 'location'     => [
-                    'path'     => $pipe,
+                    'path'     => $file->path,
                     'position' => 8
                 ],
             ],
             [
-                'type'     => 'PIPE',
+                'type'     => \pharos\phathom\Grammar\Token::PIPE,
                 'location'     => [
-                    'path'     => $pipe,
+                    'path'     => $file->path,
                     'position' => 14
                 ],
             ],
             [
-                'type'     => 'PATTERN',
+                'type'     => \pharos\phathom\Grammar\Token::PATTERN,
                 'value'    => 'pattern',
                 'location'     => [
-                    'path'     => $pipe,
+                    'path'     => $file->path,
                     'position' => 24
                 ],
             ],
             [
-                'type'     => 'PIPE',
+                'type'     => \pharos\phathom\Grammar\Token::PIPE,
                 'location'     => [
-                    'path'     => $pipe,
+                    'path'     => $file->path,
                     'position' => 34
                 ],
             ],
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'ident',
                 'location'     => [
-                    'path'     => $pipe,
+                    'path'     => $file->path,
                     'position' => 44
                 ],
             ],
             [
-                'type'     => 'QUANTIFIER',
+                'type'     => \pharos\phathom\Grammar\Token::QUANTIFIER,
                 'value'    => '+',
                 'location'     => [
-                    'path'     => $pipe,
+                    'path'     => $file->path,
                     'position' => 49
                 ],
             ],
             [
-                'type'     => 'PIPE',
+                'type'     => \pharos\phathom\Grammar\Token::PIPE,
                 'location'     => [
-                    'path'     => $pipe,
+                    'path'     => $file->path,
                     'position' => 51
                 ],
             ],
             [
-                'type'     => 'LIST_START',
+                'type'     => \pharos\phathom\Grammar\Token::LIST_START,
                 'location'     => [
-                    'path'     => $pipe,
+                    'path'     => $file->path,
                     'position' => 60
                 ],
             ],
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'ident',
                 'location'     => [
-                    'path'     => $pipe,
+                    'path'     => $file->path,
                     'position' => 61
                 ],
             ],
             [
-                'type'     => 'LIST_END',
+                'type'     => \pharos\phathom\Grammar\Token::LIST_END,
                 'location'     => [
-                    'path'     => $pipe,
+                    'path'     => $file->path,
                     'position' => 66
                 ],
             ],
             [
-                'type'     => 'ACTION',
+                'type'     => \pharos\phathom\Grammar\Token::ACTION,
                 'value'    => ' action ',
                 'location'     => [
-                    'path'     => $pipe,
+                    'path'     => $file->path,
                     'position' => 68
                 ],
             ],
             [
-                'type'     => 'END',
+                'type'     => \pharos\phathom\Grammar\Token::END,
                 'location'     => [
-                    'path'     => $pipe,
+                    'path'     => $file->path,
                     'position' => 78
                 ],
             ],
 
             [
-                'type'     => 'EOF',
+                'type'     => \pharos\phathom\Grammar\Token::EOF,
                 'location'     => [
-                    'path'     => $pipe,
+                    'path'     => $file->path,
                     'position' => 80
                 ],
             ],
@@ -400,48 +367,46 @@ final class Test extends \PHPUnit\Framework\TestCase
     }
 
     public function testPattern() : void {
-        $pattern = \sprintf(
-            "%s%sPattern.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("Pattern.grammar");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($pattern);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $this->assertSame($lexer->tokenize(), [
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'ident',
                 'location'     => [
-                    'path'     => $pattern,
+                    'path'     => $file->path,
                     'position' => 0
                 ],
             ],
             [
-                'type'     => 'COLON',
+                'type'     => \pharos\phathom\Grammar\Token::COLON,
                 'location'     => [
-                    'path'     => $pattern,
+                    'path'     => $file->path,
                     'position' => 5
                 ],
             ],
             [
-                'type'     => 'PATTERN',
+                'type'     => \pharos\phathom\Grammar\Token::PATTERN,
                 'value'    => 'pattern',
                 'location'     => [
-                    'path'     => $pattern,
+                    'path'     => $file->path,
                     'position' => 7
                 ],
             ],
             [
-                'type'     => 'END',
+                'type'     => \pharos\phathom\Grammar\Token::END,
                 'location'     => [
-                    'path'     => $pattern,
+                    'path'     => $file->path,
                     'position' => 16
                 ],
             ],
 
             [
-                'type'     => 'EOF',
+                'type'     => \pharos\phathom\Grammar\Token::EOF,
                 'location'     => [
-                    'path'     => $pattern,
+                    'path'     => $file->path,
                     'position' => 17
                 ],
             ],
@@ -449,25 +414,21 @@ final class Test extends \PHPUnit\Framework\TestCase
     }
 
     public function testPatternEmpty() : void {
-        $pattern = \sprintf(
-            "%s%sPatternEmpty.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("PatternEmpty.grammar");
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
             "Unexpected empty PATTERN, ".
             "PATTERN must contain content between < and >");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($pattern);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
     public function testActionNotFollowingList() : void {
-        $action = \sprintf(
-            "%s%sActionNotFollowingList.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("ActionNotFollowingList.grammar");
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
@@ -476,75 +437,73 @@ final class Test extends \PHPUnit\Framework\TestCase
                 "COLON, PIPE, QUANTIFIER, or END, ".
             "got ACTION");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($action);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
     public function testAction() : void {
-        $action = \sprintf(
-            "%s%sAction.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("Action.grammar");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($action);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $this->assertSame($lexer->tokenize(), [
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'ident',
                 'location'     => [
-                    'path'     => $action,
+                    'path'     => $file->path,
                     'position' => 0
                 ],
             ],
             [
-                'type'     => 'COLON',
+                'type'     => \pharos\phathom\Grammar\Token::COLON,
                 'location'     => [
-                    'path'     => $action,
+                    'path'     => $file->path,
                     'position' => 5
                 ],
             ],
             [
-                'type'     => 'LIST_START',
+                'type'     => \pharos\phathom\Grammar\Token::LIST_START,
                 'location'     => [
-                    'path'     => $action,
+                    'path'     => $file->path,
                     'position' => 7
                 ],
             ],
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'ident',
                 'location'     => [
-                    'path'     => $action,
+                    'path'     => $file->path,
                     'position' => 8
                 ],
             ],
             [
-                'type'     => 'LIST_END',
+                'type'     => \pharos\phathom\Grammar\Token::LIST_END,
                 'location'     => [
-                    'path'     => $action,
+                    'path'     => $file->path,
                     'position' => 13
                 ],
             ],
             [
-                'type'     => 'ACTION',
+                'type'     => \pharos\phathom\Grammar\Token::ACTION,
                 'value'    => ' action ',
                 'location'     => [
-                    'path'     => $action,
+                    'path'     => $file->path,
                     'position' => 15
                 ],
             ],
             [
-                'type'     => 'END',
+                'type'     => \pharos\phathom\Grammar\Token::END,
                 'location'     => [
-                    'path'     => $action,
+                    'path'     => $file->path,
                     'position' => 25
                 ],
             ],
 
             [
-                'type'     => 'EOF',
+                'type'     => \pharos\phathom\Grammar\Token::EOF,
                 'location'     => [
-                    'path'     => $action,
+                    'path'     => $file->path,
                     'position' => 26
                 ],
             ],
@@ -552,79 +511,77 @@ final class Test extends \PHPUnit\Framework\TestCase
     }
 
     public function testStringSingleQuoted() : void {
-        $string = \sprintf(
-            "%s%sStringSingleQuoted.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("StringSingleQuoted.grammar");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($string);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $this->assertSame($lexer->tokenize(), [
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'ident',
                 'location'     => [
-                    'path'     => $string,
+                    'path'     => $file->path,
                     'position' => 0
                 ],
             ],
             [
-                'type'     => 'COLON',
+                'type'     => \pharos\phathom\Grammar\Token::COLON,
                 'location'     => [
-                    'path'     => $string,
+                    'path'     => $file->path,
                     'position' => 5
                 ],
             ],
             [
-                'type'     => 'STRING',
+                'type'     => \pharos\phathom\Grammar\Token::STRING,
                 'value'    => "string'string",
                 'location'     => [
-                    'path'     => $string,
+                    'path'     => $file->path,
                     'position' => 7
                 ],
             ],
             [
-                'type'     => 'END',
+                'type'     => \pharos\phathom\Grammar\Token::END,
                 'location'     => [
-                    'path'     => $string,
+                    'path'     => $file->path,
                     'position' => 23
                 ],
             ],
 
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'ident',
                 'location'     => [
-                    'path'     => $string,
+                    'path'     => $file->path,
                     'position' => 25
                 ],
             ],
             [
-                'type'     => 'COLON',
+                'type'     => \pharos\phathom\Grammar\Token::COLON,
                 'location'     => [
-                    'path'     => $string,
+                    'path'     => $file->path,
                     'position' => 30
                 ],
             ],
             [
-                'type'     => 'STRING',
+                'type'     => \pharos\phathom\Grammar\Token::STRING,
                 'value'    => '\n',
                 'location'     => [
-                    'path'     => $string,
+                    'path'     => $file->path,
                     'position' => 32
                 ],
             ],
             [
-                'type'     => 'END',
+                'type'     => \pharos\phathom\Grammar\Token::END,
                 'location'     => [
-                    'path'     => $string,
+                    'path'     => $file->path,
                     'position' => 36
                 ],
             ],
 
             [
-                'type'     => 'EOF',
+                'type'     => \pharos\phathom\Grammar\Token::EOF,
                 'location'     => [
-                    'path'     => $string,
+                    'path'     => $file->path,
                     'position' => 37
                 ],
             ],
@@ -632,79 +589,77 @@ final class Test extends \PHPUnit\Framework\TestCase
     }
 
     public function testStringDoubleQuoted() : void {
-        $string = \sprintf(
-            "%s%sStringDoubleQuoted.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("StringDoubleQuoted.grammar");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($string);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $this->assertSame($lexer->tokenize(), [
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'ident',
                 'location'     => [
-                    'path'     => $string,
+                    'path'     => $file->path,
                     'position' => 0
                 ],
             ],
             [
-                'type'     => 'COLON',
+                'type'     => \pharos\phathom\Grammar\Token::COLON,
                 'location'     => [
-                    'path'     => $string,
+                    'path'     => $file->path,
                     'position' => 5
                 ],
             ],
             [
-                'type'     => 'STRING',
+                'type'     => \pharos\phathom\Grammar\Token::STRING,
                 'value'    => 'string"string',
                 'location'     => [
-                    'path'     => $string,
+                    'path'     => $file->path,
                     'position' => 7
                 ],
             ],
             [
-                'type'     => 'END',
+                'type'     => \pharos\phathom\Grammar\Token::END,
                 'location'     => [
-                    'path'     => $string,
+                    'path'     => $file->path,
                     'position' => 23
                 ],
             ],
 
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'ident',
                 'location'     => [
-                    'path'     => $string,
+                    'path'     => $file->path,
                     'position' => 25
                 ],
             ],
             [
-                'type'     => 'COLON',
+                'type'     => \pharos\phathom\Grammar\Token::COLON,
                 'location'     => [
-                    'path'     => $string,
+                    'path'     => $file->path,
                     'position' => 30
                 ],
             ],
             [
-                'type'     => 'STRING',
+                'type'     => \pharos\phathom\Grammar\Token::STRING,
                 'value'    => '\n',
                 'location'     => [
-                    'path'     => $string,
+                    'path'     => $file->path,
                     'position' => 32
                 ],
             ],
             [
-                'type'     => 'END',
+                'type'     => \pharos\phathom\Grammar\Token::END,
                 'location'     => [
-                    'path'     => $string,
+                    'path'     => $file->path,
                     'position' => 36
                 ],
             ],
 
             [
-                'type'     => 'EOF',
+                'type'     => \pharos\phathom\Grammar\Token::EOF,
                 'location'     => [
-                    'path'     => $string,
+                    'path'     => $file->path,
                     'position' => 37
                 ],
             ],
@@ -712,10 +667,8 @@ final class Test extends \PHPUnit\Framework\TestCase
     }
 
     public function testStringNotFollowingColon() : void {
-        $string = \sprintf(
-            "%s%sStringNotFollowingColon.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("StringNotFollowingColon.grammar");
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
@@ -724,15 +677,13 @@ final class Test extends \PHPUnit\Framework\TestCase
                 "COLON, PIPE, QUANTIFIER, or END, ".
             "got LIST_START");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($string);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
     public function testStringNotTerminated() : void {
-        $string = \sprintf(
-            "%s%sStringNotTerminated.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("StringNotTerminated.grammar");
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
@@ -740,15 +691,13 @@ final class Test extends \PHPUnit\Framework\TestCase
             "STRING started with ' must be terminated by ', ".
             "got STRING(string;)");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($string);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
     public function testQuantifierNotFollowingQuantifiable() : void {
-        $quantifiers = \sprintf(
-            "%s%sQuantifiersNotFollowingQuantifiable.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("QuantifiersNotFollowingQuantifiable.grammar");
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
@@ -757,257 +706,255 @@ final class Test extends \PHPUnit\Framework\TestCase
                 "END, ".
             "got QUANTIFIER");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($quantifiers);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
     public function testQuantifiers() : void {
-        $quantifiers = \sprintf(
-            "%s%sQuantifiers.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("Quantifiers.grammar");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($quantifiers);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
 
         $this->assertSame($lexer->tokenize(), [
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'ident1',
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 0
                 ],
             ],
             [
-                'type'     => 'COLON',
+                'type'     => \pharos\phathom\Grammar\Token::COLON,
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 6
                 ],
             ],
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'ident1',
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 8
                 ],
             ],
             [
-                'type'     => 'QUANTIFIER',
+                'type'     => \pharos\phathom\Grammar\Token::QUANTIFIER,
                 'value'    => '+',
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 14
                 ],
             ],
             [
-                'type'     => 'END',
+                'type'     => \pharos\phathom\Grammar\Token::END,
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 16
                 ],
             ],
 
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'ident2',
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 18
                 ],
             ],
             [
-                'type'     => 'COLON',
+                'type'     => \pharos\phathom\Grammar\Token::COLON,
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 24
                 ],
             ],
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'ident2',
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 26
                 ],
             ],
             [
-                'type'     => 'QUANTIFIER',
+                'type'     => \pharos\phathom\Grammar\Token::QUANTIFIER,
                 'value'    => '*',
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 32
                 ],
             ],
             [
-                'type'     => 'END',
+                'type'     => \pharos\phathom\Grammar\Token::END,
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 34
                 ],
             ],
 
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'ident3',
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 36
                 ],
             ],
             [
-                'type'     => 'COLON',
+                'type'     => \pharos\phathom\Grammar\Token::COLON,
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 42
                 ],
             ],
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'ident3',
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 44
                 ],
             ],
             [
-                'type'     => 'QUANTIFIER',
+                'type'     => \pharos\phathom\Grammar\Token::QUANTIFIER,
                 'value'    => '?',
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 50
                 ],
             ],
             [
-                'type'     => 'END',
+                'type'     => \pharos\phathom\Grammar\Token::END,
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 52
                 ],
             ],
 
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'pattern1',
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 55
                 ],
             ],
             [
-                'type'     => 'COLON',
+                'type'     => \pharos\phathom\Grammar\Token::COLON,
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 63
                 ],
             ],
             [
-                'type'     => 'PATTERN',
+                'type'     => \pharos\phathom\Grammar\Token::PATTERN,
                 'value'    => 'pattern1',
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 65
                 ],
             ],
             [
-                'type'     => 'QUANTIFIER',
+                'type'     => \pharos\phathom\Grammar\Token::QUANTIFIER,
                 'value'    => '+',
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 75
                 ],
             ],
             [
-                'type'     => 'END',
+                'type'     => \pharos\phathom\Grammar\Token::END,
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 77
                 ],
             ],
 
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'pattern2',
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 79
                 ],
             ],
             [
-                'type'     => 'COLON',
+                'type'     => \pharos\phathom\Grammar\Token::COLON,
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 87
                 ],
             ],
             [
-                'type'     => 'PATTERN',
+                'type'     => \pharos\phathom\Grammar\Token::PATTERN,
                 'value'    => 'pattern2',
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 89
                 ],
             ],
             [
-                'type'     => 'QUANTIFIER',
+                'type'     => \pharos\phathom\Grammar\Token::QUANTIFIER,
                 'value'    => '*',
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 99
                 ],
             ],
             [
-                'type'     => 'END',
+                'type'     => \pharos\phathom\Grammar\Token::END,
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 101
                 ],
             ],
 
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'pattern3',
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 103
                 ],
             ],
             [
-                'type'     => 'COLON',
+                'type'     => \pharos\phathom\Grammar\Token::COLON,
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 111
                 ],
             ],
             [
-                'type'     => 'PATTERN',
+                'type'     => \pharos\phathom\Grammar\Token::PATTERN,
                 'value'    => 'pattern3',
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 113
                 ],
             ],
             [
-                'type'     => 'QUANTIFIER',
+                'type'     => \pharos\phathom\Grammar\Token::QUANTIFIER,
                 'value'    => '?',
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 123
                 ],
             ],
             [
-                'type'     => 'END',
+                'type'     => \pharos\phathom\Grammar\Token::END,
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 125
                 ],
             ],
 
             [
-                'type'     => 'EOF',
+                'type'     => \pharos\phathom\Grammar\Token::EOF,
                 'location'     => [
-                    'path'     => $quantifiers,
+                    'path'     => $file->path,
                     'position' => 126
                 ],
             ],
@@ -1015,61 +962,57 @@ final class Test extends \PHPUnit\Framework\TestCase
     }
 
     public function testUnexpectedCharacter() : void {
-        $unexpected = \sprintf(
-            "%s%sUnexpectedCharacter.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("UnexpectedCharacter.grammar");
         
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
             "Unexpected character \">\", expected IDENT");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($unexpected);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
     public function testBalancedEscapeDelimiter() : void {
-        $balance = \sprintf(
-            "%s%sBalancedEscapeDelimiter.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("BalancedEscapeDelimiter.grammar");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($balance);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $this->assertSame($lexer->tokenize(), [
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'ident',
                 'location'     => [
-                    'path'     => $balance,
+                    'path'     => $file->path,
                     'position' => 0
                 ],
             ],
             [
-                'type'     => 'COLON',
+                'type'     => \pharos\phathom\Grammar\Token::COLON,
                 'location'     => [
-                    'path'     => $balance,
+                    'path'     => $file->path,
                     'position' => 5
                 ],
             ],
             [
-                'type'     => 'PATTERN',
+                'type'     => \pharos\phathom\Grammar\Token::PATTERN,
                 'value'    => 'pattern<',
                 'location'     => [
-                    'path'     => $balance,
+                    'path'     => $file->path,
                     'position' => 7
                 ],
             ],
             [
-                'type'     => 'END',
+                'type'     => \pharos\phathom\Grammar\Token::END,
                 'location'     => [
-                    'path'     => $balance,
+                    'path'     => $file->path,
                     'position' => 18
                 ],
             ],
             [
-                'type'     => 'EOF',
+                'type'     => \pharos\phathom\Grammar\Token::EOF,
                 'location'     => [
-                    'path'     => $balance,
+                    'path'     => $file->path,
                     'position' => 19
                 ],
             ],
@@ -1077,79 +1020,77 @@ final class Test extends \PHPUnit\Framework\TestCase
     }
 
     public function testBalancedEscapeLiteral() : void {
-        $balance = \sprintf(
-            "%s%sBalancedEscapeLiteral.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("BalancedEscapeLiteral.grammar");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($balance);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $this->assertSame($lexer->tokenize(), [
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'ident',
                 'location'     => [
-                    'path'     => $balance,
+                    'path'     => $file->path,
                     'position' => 0
                 ],
             ],
             [
-                'type'     => 'COLON',
+                'type'     => \pharos\phathom\Grammar\Token::COLON,
                 'location'     => [
-                    'path'     => $balance,
+                    'path'     => $file->path,
                     'position' => 5
                 ],
             ],
             [
-                'type'     => 'PATTERN',
+                'type'     => \pharos\phathom\Grammar\Token::PATTERN,
                 'value'    => 'escape\\literal',
                 'location'     => [
-                    'path'     => $balance,
+                    'path'     => $file->path,
                     'position' => 7
                 ],
             ],
             [
-                'type'     => 'END',
+                'type'     => \pharos\phathom\Grammar\Token::END,
                 'location'     => [
-                    'path'     => $balance,
+                    'path'     => $file->path,
                     'position' => 23
                 ],
             ],
 
             [
-                'type'     => 'IDENT',
+                'type'     => \pharos\phathom\Grammar\Token::IDENT,
                 'value'    => 'ident',
                 'location'     => [
-                    'path'     => $balance,
+                    'path'     => $file->path,
                     'position' => 26
                 ],
             ],
             [
-                'type'     => 'COLON',
+                'type'     => \pharos\phathom\Grammar\Token::COLON,
                 'location'     => [
-                    'path'     => $balance,
+                    'path'     => $file->path,
                     'position' => 31
                 ],
             ],
             [
-                'type'     => 'PATTERN',
+                'type'     => \pharos\phathom\Grammar\Token::PATTERN,
                 'value'    => '\\',
                 'location'     => [
-                    'path'     => $balance,
+                    'path'     => $file->path,
                     'position' => 33
                 ],
             ],
             [
-                'type'     => 'END',
+                'type'     => \pharos\phathom\Grammar\Token::END,
                 'location'     => [
-                    'path'     => $balance,
+                    'path'     => $file->path,
                     'position' => 37
                 ],
             ],
             
             [
-                'type'     => 'EOF',
+                'type'     => \pharos\phathom\Grammar\Token::EOF,
                 'location'     => [
-                    'path'     => $balance,
+                    'path'     => $file->path,
                     'position' => 38
                 ],
             ],
@@ -1157,10 +1098,8 @@ final class Test extends \PHPUnit\Framework\TestCase
     }
 
     public function testBalancedUnmatched() : void {
-        $balance = \sprintf(
-            "%s%sBalancedUnmatched.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("BalancedUnmatched.grammar");
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
@@ -1169,15 +1108,13 @@ final class Test extends \PHPUnit\Framework\TestCase
                 "may contain an unescaped <, or be missing >, ".
             "got PATTERN(<>;)");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($balance);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
     public function testBalancedDanglingEscape() : void {
-        $balance = \sprintf(
-            "%s%sBalancedDanglingEscape.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("BalancedDanglingEscape.grammar");
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
@@ -1186,15 +1123,13 @@ final class Test extends \PHPUnit\Framework\TestCase
                 "must not end with an escape, ".
             "expected more input");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($balance);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
     public function testPriorityNotFollowingList() : void {
-        $priority = \sprintf(
-            "%s%sPriorityNotFollowingList.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("PriorityNotFollowingList.grammar");
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
@@ -1203,15 +1138,13 @@ final class Test extends \PHPUnit\Framework\TestCase
                 "IDENT, STRING, LIST_START, or PATTERN, ".
             "got PRIORITY(42)");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($priority);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
     public function testPriorityEmpty() : void {
-        $priority = \sprintf(
-            "%s%sPriorityEmpty.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("PriorityEmpty.grammar");
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
@@ -1219,15 +1152,13 @@ final class Test extends \PHPUnit\Framework\TestCase
             "PRIORITY must contain content between ".
             "[ and ]");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($priority);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
     public function testPriorityNonDigit() : void {
-        $priority = \sprintf(
-            "%s%sPriorityNonDigit.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("PriorityNonDigit.grammar");
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
@@ -1235,30 +1166,26 @@ final class Test extends \PHPUnit\Framework\TestCase
             "PRIORITY may only contain digits, ".
             "got !");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($priority);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
     public function testPriorityUnterminated() : void {
-        $priority = \sprintf(
-            "%s%sPriorityUnterminated.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("PriorityUnterminated.grammar");
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
             "Unexpected unterminated PRIORITY, ".
             "PRIORITY started with [ must be terminated by ]");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($priority);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
     public function testInitialNotIdent() : void {
-        $initial = \sprintf(
-            "%s%sInitialNotIdent.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("InitialNotIdent.grammar");
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
@@ -1267,15 +1194,13 @@ final class Test extends \PHPUnit\Framework\TestCase
                 "IDENT, ".
             "got ACTION");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($initial);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
     public function testPrintTruncation() : void {
-        $truncation = \sprintf(
-            "%s%sPrintTruncation.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR);
+        $file = $this->file
+            ->relative("PrintTruncation.grammar");
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
@@ -1285,7 +1210,7 @@ final class Test extends \PHPUnit\Framework\TestCase
             "got ACTION(
         /* this must be more th...)");
 
-        $lexer = new \pharos\phathom\Grammar\Lexer($truncation);
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 }

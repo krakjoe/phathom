@@ -4,29 +4,16 @@ namespace pharos\phathom
 {
     final class Lexer
     {
-        private string     $path;
         private array|bool $config;
 
-        public function __construct(string $grammar, string $config) {
-            $this->path = 
-                \sprintf(
-                    "%s%s%s",
-                    \dirname($grammar),
-                    \DIRECTORY_SEPARATOR,
-                    $config);
-
-            if (!\file_exists($this->path)) {
-                throw new \Exception(
-                    "$this->path does not exist");
-            }
-
+        public function __construct(File $file) {
             $this->config =
-                @\parse_ini_file(
-                    $this->path, true);
+                @\parse_ini_string(
+                    $file->contents(), true);
 
             if ($this->config === false) {
                 throw new \Exception(
-                    "$this->path does not contain valid configuration (ini syntax)");
+                    "$file does not contain valid configuration (ini syntax)");
             }
         }
 
@@ -47,8 +34,7 @@ namespace pharos\phathom
 
         public function tokenize(File $file): array {
             $tokens   = [];
-            $buffer   = $file->getBuffer();
-            $path     = $file->getPath();
+            $buffer   = $file->contents();
             $position = 0;
             $limit    = \strlen($buffer);
 
@@ -100,7 +86,7 @@ namespace pharos\phathom
                         'type'     => $type,
                         'value'    => $best,
                         'location'     => [
-                            'path'     => $path,
+                            'path'     => $file->path,
                             'position' => $position,
                         ],
                     ];

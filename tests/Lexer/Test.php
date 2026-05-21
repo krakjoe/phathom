@@ -3,49 +3,47 @@ namespace pharos\phathom\tests\Lexer;
 
 final class Test extends \PHPUnit\Framework\TestCase
 {
+    private \pharos\phathom\File $file;
+
+    public function setUp() : void {
+        $this->file = new \pharos\phathom\File(__FILE__);
+    }
+
     public function testConstructorNonExistent() : void {
-        $nonexistent = \sprintf(
-            "%s%sNonexistent.lexer",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR,
-        );
-
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage(
-            "$nonexistent does not exist");
+        $this->expectExceptionMessageMatches(
+            "/cannot be found on the local filesystem/");
 
-        new \pharos\phathom\Lexer(__FILE__, "Nonexistent.lexer");
+        new \pharos\phathom\Lexer(
+            $this->file->relative("NonExistent.lexer"));
     }
 
     public function testConstructorMalformed() : void {
-        $malformed = \sprintf(
-            "%s%sMalformed.lexer",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR,
-        );
-
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage(
-            "$malformed does not contain valid configuration (ini syntax)");
+        $this->expectExceptionMessageMatches(
+            "/does not contain valid configuration \(ini syntax\)/");
 
-        new \pharos\phathom\Lexer(__FILE__, "Malformed.lexer");
+        new \pharos\phathom\Lexer(
+            $this->file->relative("Malformed.lexer"));
     }
 
     public function testConstructorContent() : void {
-        $lexer = new \pharos\phathom\Lexer(__FILE__, "Content.lexer");
+        $lexer = new \pharos\phathom\Lexer(
+            $this->file->relative("Content.lexer"));
 
         $this->assertInstanceOf(\pharos\phathom\Lexer::class, $lexer);
     }
 
     public function testConstructorEmpty() : void {
-        $empty = new \pharos\phathom\Lexer(__FILE__, "Empty.lexer");
+        $empty = new \pharos\phathom\Lexer(
+            $this->file->relative("Empty.lexer"));
 
         $this->assertInstanceOf(\pharos\phathom\Lexer::class, $empty);
     }
 
     public function testSkipping() : void {
         $content = new \pharos\phathom\Lexer(
-            __FILE__, "Content.lexer");
+            $this->file->relative("Content.lexer"));
 
         $path = \sprintf(
             "%s%sSkipping.content",

@@ -3,17 +3,20 @@ namespace pharos\phathom\tests\Grammar\Pattern;
 
 final class Test extends \PHPUnit\Framework\TestCase
 {
-    public function testPattern() : void {
-        $grammar = new \pharos\phathom\Grammar(\sprintf(
-            "%s%sPattern.grammar",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
-        $file =  new \pharos\phathom\File(\sprintf(
-            "%s%sPattern.content",
-            \dirname(__FILE__),
-            \DIRECTORY_SEPARATOR));
+    private \pharos\phathom\File $file;
 
-        $parser  = new \pharos\phathom\Parser($grammar, $file);
+    public function setUp() : void {
+        $this->file = new \pharos\phathom\File(__FILE__);
+    }
+
+    public function testPattern() : void {
+        $file = $this->file
+            ->relative("Pattern.grammar");
+        $content = $this->file
+            ->relative("Pattern.content");
+
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser  = new \pharos\phathom\Parser($grammar, $content);
         $result  = $parser->parse();
 
         $this->assertSame($result->getThings(), [
