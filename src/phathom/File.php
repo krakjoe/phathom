@@ -4,7 +4,7 @@ namespace pharos\phathom
     final class File
     {
         public private(set) string $path;
-        public private(set) string|false $buffer = false;
+        private             string|false $buffer = false;
 
         public function __construct(string $path) {
             $realpath = \realpath($path);
