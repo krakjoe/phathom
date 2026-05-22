@@ -9,8 +9,8 @@ namespace pharos\phathom\Grammar {
             private array $chart,
             private array $items) {}
 
-        private function evalItem(int $itemId, array $tokens, array $items, Node $node): mixed {
-            $item = $items[$itemId];
+        private function evalItem(int $itemId, array $tokens, Node $node): mixed {
+            $item = $this->items[$itemId];
             $alt  = $this->rules[$item['rule']][$item['alt']];
 
             $synthesized =
@@ -21,8 +21,7 @@ namespace pharos\phathom\Grammar {
                 return $synthesized ? [] : null;
             }
 
-            $values = $this->collectValues(
-                $itemId, $tokens, $items, $node);
+            $values = $this->collectValues($itemId, $tokens, $node);
 
             if ($alt['action'] !== null) {
                 $method =
@@ -49,9 +48,9 @@ namespace pharos\phathom\Grammar {
             return \count($values) === 1 ? $values[0] : $values;
         }
 
-        private function selectPriority(array $back, array $items) : int {
+        private function selectPriority(array $back) : int {
             if (isset($back['child'])) {
-                $priority = $items[$back['child']]['priority'];
+                $priority = $this->items[$back['child']]['priority'];
 
                 if ($priority !== false) {
                     return $priority;
@@ -60,7 +59,7 @@ namespace pharos\phathom\Grammar {
                 return \PHP_INT_MIN;
             }
 
-            $priority = $items[$back['prev']]['priority'];
+            $priority = $this->items[$back['prev']]['priority'];
 
             if ($priority !== false) {
                 return $priority;
@@ -69,17 +68,14 @@ namespace pharos\phathom\Grammar {
             return \PHP_INT_MIN;
         }
 
-        private function selectBack(array $backs, array $items) : array {
+        private function selectBack(array $backs) : array {
             $selected = $backs[0];
 
-            $best =
-                $this->selectPriority(
-                    $selected, $items);
+            $best = $this->selectPriority($selected);
 
             foreach ($backs as $back) {
                 $priority =
-                    $this->selectPriority(
-                        $back, $items);
+                    $this->selectPriority($back);
 
                 if ($priority > $best) {
                     $selected = $back;
@@ -90,8 +86,8 @@ namespace pharos\phathom\Grammar {
             return $selected;
         }
 
-        private function collectValues(int $itemId, array $tokens, array $items, Node $node): array {
-            $item     = $items[$itemId];
+        private function collectValues(int $itemId, array $tokens, Node $node): array {
+            $item     = $this->items[$itemId];
             $alt      = $this->rules[$item['rule']][$item['alt']];
             $nSymbols = \count($alt['symbols']);
 
@@ -104,7 +100,7 @@ namespace pharos\phathom\Grammar {
             for ($pos = $nSymbols - 1; $pos >= 0; $pos--) {
                 $back =
                     $this->selectBack(
-                        $items[$cur]['backs'], $items);
+                        $this->items[$cur]['backs']);
                 $backs[$pos] = $back;
                 $cur         = $back['prev'];
             }
@@ -118,7 +114,7 @@ namespace pharos\phathom\Grammar {
                         $tokens[$back['token']]['type']
                     ) : $this->evalItem(
                             $back['child'],
-                            $tokens, $items, $node);
+                            $tokens, $node);
             }
 
             return $values;
@@ -157,7 +153,6 @@ namespace pharos\phathom\Grammar {
             $this->evalItem(
                 $root,
                 $tokens,
-                $this->items,
                 $node);
 
             return $node;
