@@ -9,13 +9,13 @@ namespace pharos\phathom
             public private(set) File    $file) {
         }
 
-        public function parse() : Node {
-            $node =
+        public function parse() : Context {
+            $context =
                 $this->grammar
                     ->factory($this);
 
             return $this->grammar
-                ->execute($this, $node);
+                ->execute($context);
         }
     }
 }

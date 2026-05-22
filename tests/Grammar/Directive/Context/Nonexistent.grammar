@@ -1,0 +1,3 @@
+lexer: "../../Basic/Basic.lexer";
+
+context: "\not\found\class";

@@ -6,14 +6,15 @@ namespace pharos\phathom
     {
         private array|bool $config;
 
-        public function __construct(File $file) {
+        public function __construct(
+            public private(set) File $file) {
             $this->config =
                 @\parse_ini_string(
-                    $file->contents(), true);
+                    $this->file->contents(), true);
 
             if ($this->config === false) {
                 throw new \Exception(
-                    "$file does not contain valid configuration (ini syntax)");
+                    "$this->file does not contain valid configuration (ini syntax)");
             }
         }
 
@@ -32,7 +33,7 @@ namespace pharos\phathom
             }
         }
 
-        public function tokenize(File $file): array {
+        public function tokenize(File $file, string $class = Token::class): array {
             $tokens   = [];
             $buffer   = $file->contents();
             $position = 0;

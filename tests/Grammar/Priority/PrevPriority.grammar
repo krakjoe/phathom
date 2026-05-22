@@ -1,6 +1,6 @@
 lexer: "PriorityPropagation.lexer";
 
-type: "\pharos\phathom\tests\Grammar\File";
+context: "\pharos\phathom\tests\Grammar\File";
 
 # a completes with priority 3, which flows into b's intermediate item.
 # When collectValues walks b's token-back for the trailing X, the prev

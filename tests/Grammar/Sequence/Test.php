@@ -19,6 +19,6 @@ final class Test extends \PHPUnit\Framework\TestCase
         $parser  = new \pharos\phathom\Parser($grammar, $content);
 
         $this->assertInstanceOf(
-            \pharos\phathom\Node::class, $parser->parse());
+            \pharos\phathom\Context::class, $parser->parse());
     }
 }

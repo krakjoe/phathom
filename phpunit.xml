@@ -13,17 +13,28 @@
     <testsuite name="Grammar\Token">
       <file>tests/Grammar/Token/Test.php</file>
     </testsuite>
+
+    <testsuite name="Grammar\Directive\Lexer">
+      <file>tests/Grammar/Directive/Lexer/Test.php</file>
+    </testsuite>
+
+    <testsuite name="Grammar\Directive\Context">
+      <file>tests/Grammar/Directive/Context/Test.php</file>
+    </testsuite>
+
+    <testsuite name="Grammar\\Directive\Include">
+      <file>tests/Grammar/Directive/Include/Test.php</file>
+    </testsuite>
+
     <testsuite name="Grammar\Lexer">
       <file>tests/Grammar/Lexer/Test.php</file>
     </testsuite>
+
     <testsuite name="Grammar">
       <file>tests/Grammar/Test.php</file>
     </testsuite>
     <testsuite name="Grammar\\Basic">
       <file>tests/Grammar/Basic/Test.php</file>
-    </testsuite>
-    <testsuite name="Grammar\\Include">
-      <file>tests/Grammar/Include/Test.php</file>
     </testsuite>
     <testsuite name="Grammar\\Pipe">
       <file>tests/Grammar/Pipe/Test.php</file>

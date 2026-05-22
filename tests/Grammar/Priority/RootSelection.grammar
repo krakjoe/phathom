@@ -1,6 +1,6 @@
 lexer: "PriorityPropagation.lexer";
 
-type: "\pharos\phathom\tests\Grammar\File";
+context: "\pharos\phathom\tests\Grammar\File";
 
 # Grammar to trigger root-selection elseif (Grammar.php lines 222-226).
 # 'inner' and 'outer' both match X but with different priorities (1 and 2).

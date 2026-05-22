@@ -1,5 +1,0 @@
-lexer: "../Basic/Basic.lexer";
-
-type: "\pharos\phathom\tests\Grammar\File";
-
-include: "Snippet.grammar";

@@ -30,12 +30,12 @@ namespace pharos\phathom\Grammar {
 
         private function directive(array $ident, array $string) : void {
             switch (\strtolower($ident['value'])) {
-                case "type":
-                    $this->grammar->setType($string['value']);
-                break;
-
                 case "lexer":
                     $this->grammar->setLexer($string['value']);
+                break;
+
+                case "context":
+                    $this->grammar->setContext($string['value']);
                 break;
 
                 case "include":
@@ -66,8 +66,8 @@ namespace pharos\phathom\Grammar {
                 default:
                     throw Unexpected::directive(
                         $ident, [
-                            'type',
                             'lexer',
+                            'context',
                             'include']);
             }
         }

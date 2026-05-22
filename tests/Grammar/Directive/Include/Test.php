@@ -1,5 +1,5 @@
 <?php
-namespace pharos\phathom\tests\Grammar\Include;
+namespace pharos\phathom\tests\Grammar\Directive\Include;
 
 final class Test extends \PHPUnit\Framework\TestCase
 {
@@ -32,8 +32,8 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessageMatches(
-            "/Unexpected duplicate include at .*:105, ".
-            ".*Snippet\.grammar already included at .*:77/");
+            "/Unexpected duplicate include at .*:111, ".
+            ".*Snippet\.grammar already included at .*:83/");
 
         new \pharos\phathom\Grammar($file);    
     }
@@ -44,7 +44,7 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessageMatches(
-            "/Unexpected duplicate include at .*:77, ".
+            "/Unexpected duplicate include at .*:83, ".
             ".*Recursion.grammar already included at .*Recursion.grammar:0/");
 
         new \pharos\phathom\Grammar($file);  

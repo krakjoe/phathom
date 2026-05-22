@@ -78,7 +78,7 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
             "Unexpected directive, expected ".
-                "type, lexer, or include, ".
+                "lexer, context, or include, ".
             "got IDENT(unrecognized)");
 
         new \pharos\phathom\Grammar($file);

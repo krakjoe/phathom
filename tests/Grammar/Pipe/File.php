@@ -1,7 +1,7 @@
 <?php
 namespace pharos\phathom\tests\Grammar\Pipe {
 
-    class File extends \pharos\phathom\Node {
+    class File extends \pharos\phathom\Context {
 
         public function section($name) : mixed {
             $this->section = $name;

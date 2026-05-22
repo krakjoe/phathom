@@ -1,6 +1,6 @@
 <?php
 namespace pharos\phathom\Grammar {
-    use \pharos\phathom\Node;
+    use \pharos\phathom\Context;
 
     final class Evaluator {
         public function __construct(
@@ -9,7 +9,7 @@ namespace pharos\phathom\Grammar {
             private array $chart,
             private array $items) {}
 
-        private function evalItem(int $itemId, array $tokens, Node $node): mixed {
+        private function evalItem(Context $context, int $itemId, array $tokens): mixed {
             $item = $this->items[$itemId];
             $alt  = $this->rules[$item['rule']][$item['alt']];
 
@@ -21,7 +21,7 @@ namespace pharos\phathom\Grammar {
                 return $synthesized ? [] : null;
             }
 
-            $values = $this->collectValues($itemId, $tokens, $node);
+            $values = $this->collectValues($context, $itemId, $tokens);
 
             if ($alt['action'] !== null) {
                 $method =
@@ -29,7 +29,7 @@ namespace pharos\phathom\Grammar {
                         '__action_%s_%d__',
                         $item['rule'],
                         $item['alt']);
-                return $node->$method(...$values);
+                return $context->$method(...$values);
             }
 
             switch ($synthesized) {
@@ -86,7 +86,7 @@ namespace pharos\phathom\Grammar {
             return $selected;
         }
 
-        private function collectValues(int $itemId, array $tokens, Node $node): array {
+        private function collectValues(Context $context, int $itemId, array $tokens): array {
             $item     = $this->items[$itemId];
             $alt      = $this->rules[$item['rule']][$item['alt']];
             $nSymbols = \count($alt['symbols']);
@@ -113,14 +113,15 @@ namespace pharos\phathom\Grammar {
                         $tokens[$back['token']]['value'] ??
                         $tokens[$back['token']]['type']
                     ) : $this->evalItem(
+                            $context,
                             $back['child'],
-                            $tokens, $node);
+                            $tokens);
             }
 
             return $values;
         }
 
-        public function enter(string $start, array $tokens, int $limit, Node $node) : Node|false {
+        public function enter(Context $context, string $start, array $tokens, int $limit) : bool {
             $root     = null;
             $rootPriority = false;
 
@@ -150,12 +151,9 @@ namespace pharos\phathom\Grammar {
                 return false;
             }
 
-            $this->evalItem(
-                $root,
-                $tokens,
-                $node);
+            $this->evalItem($context, $root, $tokens);
 
-            return $node;
+            return true;
         }
     }
 }

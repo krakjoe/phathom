@@ -1,4 +1,4 @@
 <?php
 namespace pharos\phathom\tests {
-    class File extends \pharos\phathom\Node {}
+    class File extends \pharos\phathom\Context {}
 }

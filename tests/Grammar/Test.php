@@ -9,17 +9,6 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->file = new \pharos\phathom\File(__FILE__);
     }
 
-    public function testUnruled() : void {
-        $file = $this->file
-            ->relative("Unruled.grammar");
-
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessageMatches(
-            "/does not contain any rules/");
-
-        new \pharos\phathom\Grammar($file);
-    }
-
     public function testUnlexed() : void {
         $file = $this->file
             ->relative("Unlexed.grammar");
@@ -31,6 +20,17 @@ final class Test extends \PHPUnit\Framework\TestCase
         new \pharos\phathom\Grammar($file);
     }
 
+    public function testUnruled() : void {
+        $file = $this->file
+            ->relative("Unruled.grammar");
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessageMatches(
+            "/does not declare any rules/");
+
+        new \pharos\phathom\Grammar($file);
+    }
+
     public function testUnknownSymbol() : void {
         $file = $this->file
             ->relative("UnknownSymbol.grammar");
@@ -38,17 +38,6 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessageMatches(
             "/Unknown symbol 'undefined'/");
-
-        new \pharos\phathom\Grammar($file);
-    }
-
-    public function testUntyped() : void {
-        $file = $this->file
-            ->relative("Untyped.grammar");
-
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessageMatches(
-            "/does not declare a type/");
 
         new \pharos\phathom\Grammar($file);
     }

@@ -3,19 +3,18 @@ namespace pharos\phathom
 {
     final class Grammar
     {
-        public private(set) File    $file;
-        private             string  $assets;
+        private             ?Lexer  $lexer     = null;
+        private             ?string $context   = null;
+
         private             array   $rules     = [];   /* raw rules from grammar file parse       */
         private             array   $compiled  = [];   /* desugared rules used by the Earley loop */
         private             array   $terminals = [];   /* terminal name => true                   */
         private             array   $patterns  = [];   /* pattern terminal name => true           */
         private             array   $synthetic = [];   /* name => 'star'|'plus'|'opt'             */
-        private             ?string $start     = null;
-        private             ?string $type      = null;
-        private             ?Lexer  $lexer     = null;
+        private             string  $start;            /* name of starting rule, unit or last */
 
-        public function __construct(File $file) {
-            $this->file = $file;
+        public function __construct(
+            public private(set) File $file) {
 
             new Grammar\Parser($this);
 
@@ -24,14 +23,14 @@ namespace pharos\phathom
                     "$this->file does not declare a lexer");
             }
 
-            if ($this->type === null) {
+            if ($this->context === null) {
                 throw new \Exception(
-                    "$this->file does not declare a type");
+                    "$this->file does not declare a context");
             }
 
             if (empty($this->rules)) {
                 throw new \Exception(
-                    "$this->file does not contain any rules");
+                    "$this->file does not declare any rules");
             }
 
             $this->compile();
@@ -80,20 +79,20 @@ namespace pharos\phathom
                 $this->patterns
             ] = $compiler->compile();
 
-            $this->type = (string)
+            $this->context = (string)
                 new Grammar\Generator(
-                    $this->type, $this->compiled);
+                    $this->context, $this->compiled);
 
             $this->start = isset($this->rules['unit'])
                 ? 'unit'
                 : \array_key_last($this->rules);
         }
 
-        public function execute(Parser $parser, Node $node): Node {
+        public function execute(Context $context): Context {
             $tokens =
                 $this->lexer
                     ->tokenize(
-                        $parser->file);
+                        $context->parser->file);
             $limit = \count($tokens);
 
             $builder =
@@ -113,26 +112,48 @@ namespace pharos\phathom
                     $chart, $items);
 
             if (!$evaluator->enter(
-                    $this->start, $tokens, $limit, $node)) {
+                    $context, $this->start, $tokens, $limit)) {
                 throw new \Exception(
-                    "{$parser->file} does not match ".
+                    "{$context->parser->file} does not match ".
                         "'{$this->start}' in {$this->file}");
             }
 
-            return $node;
+            return $context;
         }
 
         public function setLexer(string $location): void {
+            if ($this->lexer !== null) {
+                throw new \Exception(
+                    "lexer already declared as {$this->lexer->file}");
+            }
+
             $this->lexer = new Lexer(
                 $this->file->relative($location));
         }
 
-        public function setType(string $type): void {
-            $this->type = $type;
+        public function setContext(string $context): void {
+            if ($this->context !== null) {
+                throw new \Exception(
+                    "context already declared as {$this->context}");
+            }
+
+            $parents = @\class_parents($context);
+
+            if ($parents === false) {
+                throw new \Exception(
+                    "{$context} does not exist, it must be autoloadable");
+            }
+
+            if (!\in_array(Context::class, $parents)) {
+                throw new \Exception(
+                    "{$context} does not extend \\pharos\\phathom\\Context");
+            }
+
+            $this->context = $context;
         }
 
-        public function factory(Parser $parser): Node {
-            return new $this->type($parser);
+        public function factory(Parser $parser): Context {
+            return new $this->context($parser);
         }
     }
 }
