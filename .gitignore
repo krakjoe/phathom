@@ -1,0 +1,7 @@
+assets/
+coverage/
+vendor/
+
+.phpunit.cache/
+
+composer.lock
