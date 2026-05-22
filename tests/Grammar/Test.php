@@ -41,4 +41,15 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         new \pharos\phathom\Grammar($file);
     }
+
+    public function testUntyped() : void {
+        $file = $this->file
+            ->relative("Untyped.grammar");
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessageMatches(
+            "/does not declare a type/");
+
+        new \pharos\phathom\Grammar($file);
+    }
 }

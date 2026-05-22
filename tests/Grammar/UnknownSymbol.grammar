@@ -1,2 +1,5 @@
 lexer: "Basic/Basic.lexer";
+
+type: "\pharos\phathom\tests\File";
+
 unit: (undefined);

@@ -152,7 +152,7 @@ namespace pharos\phathom\Grammar {
                                 $quantify = null;
                             }
 
-                            $this->grammar->expressionRule($ident['value'], $token, $quantify);
+                            $this->grammar->simpleRule($ident['value'], $token, $quantify);
                         break;
 
                         case Token::STRING:

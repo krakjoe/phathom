@@ -1,0 +1,1 @@
+This folder is required, do not delete, and make sure it's writable.

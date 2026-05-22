@@ -1,5 +1,7 @@
 lexer: "../Basic/Basic.lexer";
 
+type: "\pharos\phathom\tests\Grammar\File";
+
 item: (ALPHA EQUALS ALPHA);
 
 unit: item*;
