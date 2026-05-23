@@ -2,6 +2,7 @@
 namespace pharos\phathom\Grammar {
     use \pharos\phathom\File;
     use \pharos\phathom\Grammar;
+    use \pharos\phathom\Assets;
 
     use \pharos\phathom\Exception;
     use \pharos\phathom\Exception\IO as IOException;
@@ -11,28 +12,22 @@ namespace pharos\phathom\Grammar {
         public private(set) string|false $symbol = false;
 
         public function __construct(
-            private ?File  $assets,
-            private string $type,
-            private array  $rules) {
+            private ?Assets $assets,
+            private string  $type,
+            private array   $rules) {
 
             if ($this->assets === null) {
                 $self = new \pharos\phathom\File(__FILE__);
 
                 try {
-                    $this->assets =
+                    $default =
                         $self->relative(
                             "../../../assets");
+                    $this->assets = new Assets($default);
                 } catch(IOException $ex) {
                     throw new Exception(
                         "could not find the default assets directory");
                 }
-            }
-
-            if (!$this->assets->writable()) {
-                // @codeCoverageIgnoreStart
-                throw new IOException(
-                    "{$this->assets} is not writable");
-                // @codeCoverageIgnoreEnd
             }
         }
 
@@ -59,74 +54,66 @@ namespace pharos\phathom\Grammar {
             return [implode(", ", $parameters), $action];
         }
 
+        private function compileClassMeta() : array {
+            $class = \sprintf(
+                "__%s__",
+                \md5(
+                    \json_encode(
+                        $this->rules)));
+            return [
+                $class,
+                \sprintf(
+                    "%s.php", $class),
+                \sprintf(
+                    "\pharos\phathom\assets\%s", $class)];
+        }
+
         private function compileClass() : string {
             if ($this->symbol !== false) {
                 return $this->symbol;
             }
 
-            $symbol =
-                \sprintf(
-                    "__%s__",
-                    \md5(
-                        \json_encode(
-                            $this->rules)));
+            [$class, $file, $symbol] =
+                $this->compileClassMeta();
 
-            $file =
-                \sprintf(
-                    "%s.php", $symbol);
+            $generate = function() use(&$class) {
+                $result = [
+                    "<?php",
+                    \sprintf("namespace pharos\phathom\assets;")
+                ];
 
-            $this->symbol =
-                \sprintf(
-                    "pharos\phathom\assets\%s", $symbol);
+                $result[] =
+                    \sprintf(
+                        "final class %s extends %s {",
+                    $class,
+                    $this->type);
 
-            try {
-                $this->asset =
-                    $this->assets
-                        ->relative($file);
-                // @codeCoverageIgnoreStart
-                require_once(
-                    (string) $this->asset);
-                return $this->symbol;
-                // @codeCoverageIgnoreEnd
-            } catch (IOException $ex) {
-                /* continue, regenerate cache */
-            }
-
-            $class = [
-                "<?php",
-                \sprintf("namespace pharos\phathom\assets;")
-            ];
-
-            $class[] =
-                \sprintf(
-                    "final class %s extends %s {",
-                $symbol,
-                $this->type);
-
-            foreach ($this->rules as $name => $rule) {
-                foreach ($rule as $index => $alternative) {
-                    if ($alternative['action']) {
-                        $class[] = \sprintf(
-                            "\tpublic function __action_%s_%d__(%s) : mixed {\n".
-                                    "\t\t%s\n".
-                            "\t}",
-                            $name,
-                            $index,
-                            ... $this->compileAction(
-                                    $alternative));
+                foreach ($this->rules as $name => $rule) {
+                    foreach ($rule as $index => $alternative) {
+                        if ($alternative['action']) {
+                            $result[] = \sprintf(
+                                "\tpublic function __action_%s_%d__(%s) : mixed {\n".
+                                        "\t\t%s\n".
+                                "\t}",
+                                $name,
+                                $index,
+                                ... $this->compileAction(
+                                        $alternative));
+                        }
                     }
                 }
-            }
 
-            $class[] = "}";
+                $result[] = "}";
+
+                return \implode("\n", $result);
+            };
 
             $this->asset =
-                $this->assets->put(
-                    $file,
-                    \implode(
-                        "\n", $class));
+                $this->assets
+                    ->entry($symbol, $generate);
+            $this->symbol = $symbol;
 
-            require_once(
+           require_once(
                 (string) $this->asset);
             return $this->symbol;
         }

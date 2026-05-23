@@ -5,7 +5,12 @@ namespace pharos\phathom
 
     final class File
     {
+        const int REGULAR   = 1;
+        const int DIRECTORY = 2;
+
         public private(set) string $path;
+        public private(set) int    $kind;
+
         private             string|false $buffer = false;
 
         public function __construct(string $path) {
@@ -17,6 +22,14 @@ namespace pharos\phathom
             }
 
             $this->path = $realpath;
+
+            if (\is_dir($this->path)) {
+                $this->kind =
+                    FILE::DIRECTORY;
+            } else {
+                $this->kind =
+                    FILE::REGULAR;
+            }
         }
 
         public function contents() : string {
@@ -25,26 +38,7 @@ namespace pharos\phathom
             }
 
             // @codeCoverageIgnoreStart
-            if (!($handle = \fopen($this->path, "r"))) {
-                throw new IOException(
-                    "{$this->path} cannot be opened for reading");
-            }
-            
-            if (\flock($handle, \LOCK_SH) !== true) {
-                throw new IOException(
-                    "{$this->path} cannot be locked for reading");
-            }
-
-            $this->buffer =
-                \stream_get_contents(
-                    $handle);
-
-            if (\flock($handle, \LOCK_UN) !== true) {
-                throw new IOException(
-                    "{$this->path} cannot be unlocked after reading");
-            }
-
-            \fclose($handle);
+            $this->buffer = @\file_get_contents($this->path);
 
             if ($this->buffer === false) {
                 throw new IOException(
@@ -58,7 +52,8 @@ namespace pharos\phathom
         public function relative(string $path) : self {
             return new self(\sprintf(
                 "%s%s%s",
-                \dirname($this->path),
+                $this->kind == FILE::DIRECTORY ?
+                    $this->path : \dirname($this->path),
                 \DIRECTORY_SEPARATOR,
                 $path
             ));
@@ -69,7 +64,7 @@ namespace pharos\phathom
         }
 
         public function put(string $relative, string $contents) : self {
-            if (!\is_dir($this->path)) {
+            if ($this->kind != FILE::DIRECTORY) {
                 throw new IOException(
                     "{$this->path} is not a directory");
             }
@@ -87,34 +82,12 @@ namespace pharos\phathom
                 \DIRECTORY_SEPARATOR,
                 $relative);
 
-            $handle =
-                \fopen(
-                    $path, 
-                "w");
-
-            if ($handle === false) {
-                // @codeCoverageIgnoreStart
-                throw new IOException(
-                    "cannot open {$path} for writing");
-                // @codeCoverageIgnoreEnd
-            }
-
-            if (\flock($handle, \LOCK_EX, $blocking) !== true) {
-                // @codeCoverageIgnoreStart
-                throw new IOException(
-                    "cannot lock {$path} for writing");
-                // @codeCoverageIgnoreEnd
-            }
-
-            if (\fwrite($handle, $contents) != \strlen($contents)) {
+            if (\file_put_contents($path, $contents) === false) {
                 // @codeCoverageIgnoreStart
                 throw new IOException(
                     "cannot write {$path}, write failed");
                 // @codeCoverageIgnoreEnd
             }
-
-            \flock($handle, \LOCK_UN);
-            \fclose($handle);
 
             return new self($path);
         }

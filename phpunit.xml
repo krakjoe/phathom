@@ -8,6 +8,10 @@
     <testsuite name="File">
       <file>tests/File/Test.php</file>
     </testsuite>
+    <testsuite name="Lock">
+      <file>tests/Lock/Test.php</file>
+    </testsuite>
+
     <testsuite name="Lexer">
       <file>tests/Lexer/Test.php</file>
     </testsuite>

@@ -28,6 +28,11 @@ namespace pharos\phathom\tests\Grammar\Generator {
 
         public function tearDown() : void {
             \mkdir($this->default);
+            \touch(\sprintf(
+                "%s%s.guard",
+                $this->default,
+                \DIRECTORY_SEPARATOR,
+            ));
         }
 
         public function testExpectations() : void {
