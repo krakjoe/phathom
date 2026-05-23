@@ -10,7 +10,7 @@ final class Test extends \PHPUnit\Framework\TestCase
     }
 
     public function testConstructorMalformed() : void {
-        $this->expectException(\pharos\phathom\Exception::class);
+        $this->expectException(\pharos\phathom\Exception\IO::class);
         $this->expectExceptionMessageMatches(
             "/does not contain valid configuration \(ini syntax\)/");
 

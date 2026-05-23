@@ -2,7 +2,7 @@
 
 namespace pharos\phathom
 {
-    use \pharos\phathom\Exception;
+    use \pharos\phathom\Exception\IO as IOException;
     use \pharos\phathom\Exception\Unexpected as UnexpectedException;
 
     final class Lexer
@@ -16,7 +16,7 @@ namespace pharos\phathom
                     $this->file->contents(), true);
 
             if ($this->config === false) {
-                throw new Exception(
+                throw new IOException(
                     "$this->file does not contain valid configuration (ini syntax)");
             }
         }
