@@ -16,18 +16,13 @@ namespace pharos\phathom {
                 ->acquire();
 
             try {
+                $file = \sprintf("%s.php", $symbol);
                 try {
                     $result = $this->directory
-                        ->relative(
-                            \sprintf(
-                                "%s/%s.php",
-                                $this->directory,
-                                $symbol));
+                        ->relative($file);
                 } catch (IOException $ex) {
                     $result = $this->directory
-                        ->put(\sprintf(
-                            "%s.php", $symbol),
-                            $generate());
+                        ->put($file, $generate());
                 }
             } finally {
                 $this->lock
