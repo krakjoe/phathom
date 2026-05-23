@@ -47,4 +47,14 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals(__FILE__, $file->path);
     }
+
+    public function testPutOnNonDirectory() : void {
+        $file = new \pharos\phathom\File(__FILE__);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessageMatches(
+            "/is not a directory/");
+        
+        $file->put("relative", "contents");
+    }
 }

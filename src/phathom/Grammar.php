@@ -14,7 +14,8 @@ namespace pharos\phathom
         private             string  $start;            /* name of starting rule, unit or last */
 
         public function __construct(
-            public private(set) File $file) {
+            public private(set)  File $file,
+            public private(set) ?File $assets = null) {
 
             new Grammar\Parser($this);
 
@@ -81,7 +82,9 @@ namespace pharos\phathom
 
             $this->context = (string)
                 new Grammar\Generator(
-                    $this->context, $this->compiled);
+                    $this->assets,
+                    $this->context,
+                    $this->compiled);
 
             $this->start = isset($this->rules['unit'])
                 ? 'unit'

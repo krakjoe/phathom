@@ -1,11 +1,37 @@
 <?php
 namespace pharos\phathom\Grammar {
+    use \pharos\phathom\File;
     use \pharos\phathom\Grammar;
 
     final class Generator {
+        public private(set) File         $asset;
+        public private(set) string|false $symbol = false;
+
         public function __construct(
+            private ?File  $assets,
             private string $type,
-            private array $rules) {}
+            private array  $rules) {
+
+            if ($this->assets === null) {
+                $self = new \pharos\phathom\File(__FILE__);
+
+                try {
+                    $this->assets =
+                        $self->relative(
+                            "../../../assets");
+                } catch(\Exception $ex) {
+                    throw new \Exception(
+                        "could not find the default assets directory");
+                }
+            }
+
+            if (!$this->assets->writable()) {
+                // @codeCoverageIgnoreStart
+                throw new \Exception(
+                    "{$this->assets} is not writable");
+                // @codeCoverageIgnoreEnd
+            }
+        }
 
         private function compileAction(array $alternative) : array {
             $parameters = [];
@@ -31,18 +57,20 @@ namespace pharos\phathom\Grammar {
         }
 
         private function compileClass() : string {
+            if ($this->symbol !== false) {
+                return $this->symbol;
+            }
+
             $symbol =
                 \sprintf(
                     "__%s__",
                     \md5(
                         \json_encode(
                             $this->rules)));
-            $path = \sprintf("assets/%s.php", $symbol);
 
-            if (\file_exists($path)) {
-                return \sprintf(
+            $this->symbol =
+                \sprintf(
                     "pharos\phathom\assets\%s", $symbol);
-            }
 
             $class = [
                 "<?php",
@@ -72,11 +100,16 @@ namespace pharos\phathom\Grammar {
 
             $class[] = "}";
 
-            file_put_contents(
-                $path, \implode("\n", $class));
+            $this->asset =
+                $this->assets->put(
+                    \sprintf(
+                        "%s.php", $symbol),
+                    \implode(
+                        "\n", $class));
 
-            return \sprintf(
-                "pharos\phathom\assets\%s", $symbol);
+            require_once(
+                (string) $this->asset);
+            return $this->symbol;
         }
 
         public function __toString() : string {

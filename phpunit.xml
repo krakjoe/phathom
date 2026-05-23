@@ -2,6 +2,7 @@
 <phpunit colors="true"
          bootstrap="vendor/autoload.php"
          displayDetailsOnTestsThatTriggerWarnings="true"
+         displayDetailsOnTestsThatTriggerDeprecations="true"
          cacheDirectory=".phpunit.cache">
   <testsuites>
     <testsuite name="File">
@@ -22,8 +23,13 @@
       <file>tests/Grammar/Directive/Context/Test.php</file>
     </testsuite>
 
-    <testsuite name="Grammar\\Directive\Include">
+    <testsuite name="Grammar\Directive\Include">
       <file>tests/Grammar/Directive/Include/Test.php</file>
+    </testsuite>
+
+    <testsuite name="Grammar\Generator">
+      <file>tests/Grammar/Generator/TestNoAssets.php</file>
+      <file>tests/Grammar/Generator/TestAssets.php</file>
     </testsuite>
 
     <testsuite name="Grammar\Lexer">
@@ -33,28 +39,28 @@
     <testsuite name="Grammar">
       <file>tests/Grammar/Test.php</file>
     </testsuite>
-    <testsuite name="Grammar\\Basic">
+    <testsuite name="Grammar\Basic">
       <file>tests/Grammar/Basic/Test.php</file>
     </testsuite>
-    <testsuite name="Grammar\\Pipe">
+    <testsuite name="Grammar\Pipe">
       <file>tests/Grammar/Pipe/Test.php</file>
     </testsuite>
-    <testsuite name="Grammar\\Sequence">
+    <testsuite name="Grammar\Sequence">
       <file>tests/Grammar/Sequence/Test.php</file>
     </testsuite>
-    <testsuite name="Grammar\\Pattern">
+    <testsuite name="Grammar\Pattern">
       <file>tests/Grammar/Pattern/Test.php</file>
     </testsuite>
-    <testsuite name="Grammar\\Priority">
+    <testsuite name="Grammar\Priority">
       <file>tests/Grammar/Priority/Test.php</file>
     </testsuite>
-    <testsuite name="Grammar\\Quantifiers\\Asterix">
+    <testsuite name="Grammar\Quantifiers\Asterix">
       <file>tests/Grammar/Quantifiers/Asterix/Test.php</file>
     </testsuite>
-    <testsuite name="Grammar\\Quantifiers\\Plus">
+    <testsuite name="Grammar\Quantifiers\Plus">
       <file>tests/Grammar/Quantifiers/Plus/Test.php</file>
     </testsuite>
-    <testsuite name="Grammar\\Quantifiers\\Optional">
+    <testsuite name="Grammar\Quantifiers\Optional">
       <file>tests/Grammar/Quantifiers/Optional/Test.php</file>
     </testsuite>
   </testsuites>

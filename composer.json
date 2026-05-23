@@ -3,8 +3,7 @@
     "description": "An Earley parsing engine for phathoming things",
     "autoload": {
         "psr-4": {
-            "pharos\\phathom\\assets\\": "assets/",
-            "pharos\\phathom\\":         "src/phathom/"
+            "pharos\\phathom\\": "src/phathom/"
         }
     },
     "autoload-dev": {
