@@ -13,7 +13,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("Duplicate.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessageMatches(
             "/already declared/");
 

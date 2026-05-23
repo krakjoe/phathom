@@ -3,6 +3,9 @@ namespace pharos\phathom\Grammar {
     use \pharos\phathom\File;
     use \pharos\phathom\Grammar;
 
+    use \pharos\phathom\Exception;
+    use \pharos\phathom\Exception\IO as IOException;
+
     final class Generator {
         public private(set) File         $asset;
         public private(set) string|false $symbol = false;
@@ -19,15 +22,15 @@ namespace pharos\phathom\Grammar {
                     $this->assets =
                         $self->relative(
                             "../../../assets");
-                } catch(\Exception $ex) {
-                    throw new \Exception(
+                } catch(IOException $ex) {
+                    throw new Exception(
                         "could not find the default assets directory");
                 }
             }
 
             if (!$this->assets->writable()) {
                 // @codeCoverageIgnoreStart
-                throw new \Exception(
+                throw new IOException(
                     "{$this->assets} is not writable");
                 // @codeCoverageIgnoreEnd
             }
@@ -68,9 +71,26 @@ namespace pharos\phathom\Grammar {
                         \json_encode(
                             $this->rules)));
 
+            $file =
+                \sprintf(
+                    "%s.php", $symbol);
+
             $this->symbol =
                 \sprintf(
                     "pharos\phathom\assets\%s", $symbol);
+
+            try {
+                $this->asset =
+                    $this->assets
+                        ->relative($file);
+                // @codeCoverageIgnoreStart
+                require_once(
+                    (string) $this->asset);
+                return $this->symbol;
+                // @codeCoverageIgnoreEnd
+            } catch (IOException $ex) {
+                /* continue, regenerate cache */
+            }
 
             $class = [
                 "<?php",
@@ -102,8 +122,7 @@ namespace pharos\phathom\Grammar {
 
             $this->asset =
                 $this->assets->put(
-                    \sprintf(
-                        "%s.php", $symbol),
+                    $file,
                     \implode(
                         "\n", $class));
 

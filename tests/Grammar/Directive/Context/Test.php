@@ -13,7 +13,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("Undeclared.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Undeclared::class);
         $this->expectExceptionMessageMatches(
             "/does not declare a context/");
 
@@ -24,7 +25,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("Nonexistent.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessageMatches(
             "/does not exist/");
 
@@ -35,7 +37,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("Inheritance.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessageMatches(
             "/does not extend/");
 
@@ -46,7 +49,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("Duplicate.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessageMatches(
             "/already declared/");
 

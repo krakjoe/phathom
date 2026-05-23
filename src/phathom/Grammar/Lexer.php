@@ -1,6 +1,8 @@
 <?php
 namespace pharos\phathom\Grammar {
     use \pharos\phathom\File;
+    
+    use \pharos\phathom\Exception\Unexpected as UnexpectedException;
 
     final class Lexer {
         public private(set) File         $file;
@@ -190,7 +192,7 @@ namespace pharos\phathom\Grammar {
             while ($this->position < $this->length && $depth > 0) {
                 if ($this->buffer[$this->position] === '\\') {
                     if (($this->position + 1) >= $this->length) {
-                        throw Unexpected::escape($type, [
+                        throw UnexpectedException::escape($type, [
                             'path'     => $this->file->path,
                             'position' => $this->position
                         ], [
@@ -228,7 +230,7 @@ namespace pharos\phathom\Grammar {
             }
 
             if ($depth !== 0) {
-                throw Unexpected::unbalanced(
+                throw UnexpectedException::unbalanced(
                     $type,
                     $content, [
                         'path'     => $this->file->path,
@@ -240,7 +242,7 @@ namespace pharos\phathom\Grammar {
             }
 
             if (!\strlen($content)) {
-                throw Unexpected::empty(
+                throw UnexpectedException::empty(
                     $type, [
                         'path'     => $this->file->path,
                         'position' => $start,
@@ -293,7 +295,7 @@ namespace pharos\phathom\Grammar {
             }
 
             if (!$terminated) {
-                throw Unexpected::unterminated(
+                throw UnexpectedException::unterminated(
                     Token::STRING,
                     $content, [
                         'path'     => $this->file->path,
@@ -323,7 +325,7 @@ namespace pharos\phathom\Grammar {
                 }
 
                 if (!\ctype_digit($this->buffer[$this->position])) {
-                    throw Unexpected::nondigit(
+                    throw UnexpectedException::nondigit(
                         Token::PRIORITY,
                         $this->buffer[$this->position], [
                             'path'     => $this->file->path,
@@ -336,7 +338,7 @@ namespace pharos\phathom\Grammar {
             }
 
             if (!$terminated) {
-                throw Unexpected::unterminated(
+                throw UnexpectedException::unterminated(
                     Token::PRIORITY,
                     $content, [
                         'path'     => $this->file->path,
@@ -348,7 +350,7 @@ namespace pharos\phathom\Grammar {
             }
 
             if (!\strlen($content)) {
-                throw Unexpected::empty(
+                throw UnexpectedException::empty(
                     Token::PRIORITY, [
                         'path'     => $this->file->path,
                         'position' => $start,
@@ -396,7 +398,7 @@ namespace pharos\phathom\Grammar {
 
             if ($tokens[0]['type'] !== Token::IDENT &&
                 $tokens[0]['type'] !== Token::EOF) {
-                throw Unexpected::initial($tokens[0]);
+                throw UnexpectedException::initial($tokens[0]);
             }
 
             $listing = false;
@@ -421,7 +423,7 @@ namespace pharos\phathom\Grammar {
 
                     if (!\in_array(
                             $next['type'], $rules['allow'], true)) {
-                        throw Unexpected::token(
+                        throw UnexpectedException::token(
                             $token, $next, $rules['allow']);
                     }
                 }
@@ -594,10 +596,11 @@ namespace pharos\phathom\Grammar {
                                 ],
                             ];
                         } else {
-                            throw Unexpected::character(
+                            throw UnexpectedException::character(
                                 $this->buffer, [
                                     'path'     => $this->file->path,
-                                    'position' => $this->position]);
+                                    'position' => $this->position
+                                ], ['IDENT']);
                         }
                 }
             }

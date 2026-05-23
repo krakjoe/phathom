@@ -16,7 +16,7 @@ final class Test extends \PHPUnit\Framework\TestCase
             \dirname(__FILE__),
             \DIRECTORY_SEPARATOR);
 
-        $this->expectException(\Exception::class);
+        $this->expectException(\pharos\phathom\Exception\IO::class);
         $this->expectExceptionMessageMatches(
             "/cannot be found on the local filesystem/");
 
@@ -51,7 +51,7 @@ final class Test extends \PHPUnit\Framework\TestCase
     public function testPutOnNonDirectory() : void {
         $file = new \pharos\phathom\File(__FILE__);
 
-        $this->expectException(\Exception::class);
+        $this->expectException(\pharos\phathom\Exception\IO::class);
         $this->expectExceptionMessageMatches(
             "/is not a directory/");
         

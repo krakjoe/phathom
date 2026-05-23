@@ -1,6 +1,8 @@
 <?php
-namespace pharos\phathom\Grammar {
-    final class Unexpected extends \Exception {
+namespace pharos\phathom\Exception {
+    use \pharos\phathom\Grammar\Token;
+
+    final class Unexpected extends \pharos\phathom\Exception {
 
         private static function explain(array $options) : string {
             $options = \array_map(function($option) {
@@ -134,11 +136,12 @@ namespace pharos\phathom\Grammar {
                 $location['path'], $location['position']));
         }
 
-        public static function character(string $buffer, array $location) : Unexpected {
+        public static function character(string $buffer, array $location, array $rules) : Unexpected {
             return new self(\sprintf(
                 "Unexpected character \"%s\", ".
-                "expected IDENT at %s:%d",
+                "expected %s at %s:%d",
                 $buffer[$location['position']],
+                Unexpected::explain($rules),
                 $location['path'], $location['position']));
         }
 

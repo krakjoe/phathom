@@ -13,7 +13,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("Unlexed.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Undeclared::class);
         $this->expectExceptionMessageMatches(
             "/does not declare a lexer/");
 
@@ -24,20 +25,22 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("Unruled.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Undeclared::class);
         $this->expectExceptionMessageMatches(
             "/does not declare any rules/");
 
         new \pharos\phathom\Grammar($file);
     }
 
-    public function testUnknownSymbol() : void {
+    public function testUndefined() : void {
         $file = $this->file
-            ->relative("UnknownSymbol.grammar");
+            ->relative("Undefined.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Undefined::class);
         $this->expectExceptionMessageMatches(
-            "/Unknown symbol 'undefined'/");
+            "/Undefined symbol 'undefined'/");
 
         new \pharos\phathom\Grammar($file);
     }

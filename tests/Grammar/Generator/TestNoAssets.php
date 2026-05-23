@@ -31,7 +31,8 @@ namespace pharos\phathom\tests\Grammar\Generator {
         }
 
         public function testExpectations() : void {
-            $this->expectException(\Exception::class);
+            $this->expectException(
+                \pharos\phathom\Exception::class);
             $this->expectExceptionMessageMatches(
                 "/could not find the default assets directory/");
             new \pharos\phathom\Grammar\Generator(null, "\stdClass", []);

@@ -1,6 +1,10 @@
 <?php
 namespace pharos\phathom
 {
+    use \pharos\phathom\Exception\Undeclared as UndeclaredException;
+    use \pharos\phathom\Exception\Execute    as ExecuteException;
+    use \pharos\phathom\Exception\Directive  as DirectiveException;
+
     final class Grammar
     {
         private             ?Lexer  $lexer     = null;
@@ -20,17 +24,17 @@ namespace pharos\phathom
             new Grammar\Parser($this);
 
             if ($this->lexer === null) {
-                throw new \Exception(
+                throw new UndeclaredException(
                     "$this->file does not declare a lexer");
             }
 
             if ($this->context === null) {
-                throw new \Exception(
+                throw new UndeclaredException(
                     "$this->file does not declare a context");
             }
 
             if (empty($this->rules)) {
-                throw new \Exception(
+                throw new UndeclaredException(
                     "$this->file does not declare any rules");
             }
 
@@ -116,7 +120,7 @@ namespace pharos\phathom
 
             if (!$evaluator->enter(
                     $context, $this->start, $tokens, $limit)) {
-                throw new \Exception(
+                throw new ExecuteException(
                     "{$context->parser->file} does not match ".
                         "'{$this->start}' in {$this->file}");
             }
@@ -126,7 +130,7 @@ namespace pharos\phathom
 
         public function setLexer(string $location): void {
             if ($this->lexer !== null) {
-                throw new \Exception(
+                throw new DirectiveException(
                     "lexer already declared as {$this->lexer->file}");
             }
 
@@ -136,19 +140,19 @@ namespace pharos\phathom
 
         public function setContext(string $context): void {
             if ($this->context !== null) {
-                throw new \Exception(
+                throw new DirectiveException(
                     "context already declared as {$this->context}");
             }
 
             $parents = @\class_parents($context);
 
             if ($parents === false) {
-                throw new \Exception(
+                throw new DirectiveException(
                     "{$context} does not exist, it must be autoloadable");
             }
 
             if (!\in_array(Context::class, $parents)) {
-                throw new \Exception(
+                throw new DirectiveException(
                     "{$context} does not extend \\pharos\\phathom\\Context");
             }
 

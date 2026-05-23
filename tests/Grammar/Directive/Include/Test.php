@@ -30,7 +30,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("Duplicate.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessageMatches(
             "/Unexpected duplicate include at .*:111, ".
             ".*Snippet\.grammar already included at .*:83/");
@@ -42,7 +43,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("Recursion.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessageMatches(
             "/Unexpected duplicate include at .*:83, ".
             ".*Recursion.grammar already included at .*Recursion.grammar:0/");

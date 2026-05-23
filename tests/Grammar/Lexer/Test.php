@@ -45,7 +45,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("ListStartNotFollowingColonOrPipe.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected LIST_START, ".
             "IDENT must be followed by ".
@@ -60,7 +61,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("ListStartNotAllowedInList.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected LIST_START, ".
             "LIST_START must be followed by ".
@@ -75,7 +77,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("ListStartNotTerminated.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected EOF, ".
             "IDENT must be followed by ".
@@ -90,7 +93,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("ListEndEmpty.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected LIST_END, ".
             "LIST_START must be followed by ".
@@ -173,7 +177,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("ColonNotFollowingIdent.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected COLON, ".
             "COLON must be followed by ".
@@ -188,7 +193,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("ColonNotAllowedInList.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected COLON, ".
             "IDENT must be followed by ".
@@ -203,7 +209,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("ColonNotAllowedToDangle.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected EOF, ".
             "COLON must be followed by ".
@@ -218,7 +225,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("PipeNotAllowedInList.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected PIPE, ".
             "IDENT must be followed by ".
@@ -233,7 +241,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("PipeNotAllowedToDangle.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected EOF, ".
             "PIPE must be followed by ".
@@ -417,7 +426,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("PatternEmpty.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected empty PATTERN, ".
             "PATTERN must contain content between < and >");
@@ -430,7 +440,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("ActionNotFollowingList.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected ACTION, ".
             "IDENT must be followed by ".
@@ -670,7 +681,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("StringNotFollowingColon.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected LIST_START, ".
             "IDENT must be followed by ".
@@ -685,7 +697,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("StringNotTerminated.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected unterminated STRING, ".
             "STRING started with ' must be terminated by ', ".
@@ -699,7 +712,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("QuantifiersNotFollowingQuantifiable.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected QUANTIFIER, ".
             "STRING must be followed by ".
@@ -965,7 +979,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("UnexpectedCharacter.grammar");
         
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected character \">\", expected IDENT");
 
@@ -1101,7 +1116,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("BalancedUnmatched.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected unbalanced PATTERN, ".
             "PATTERN started with < and terminated by >, ".
@@ -1116,7 +1132,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("BalancedDanglingEscape.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected escape in PATTERN, ".
             "PATTERN started with < and terminated by >, ".
@@ -1131,7 +1148,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("PriorityNotFollowingList.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected PRIORITY, ".
             "COLON must be followed by ".
@@ -1146,7 +1164,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("PriorityEmpty.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected empty PRIORITY, ".
             "PRIORITY must contain content between ".
@@ -1160,7 +1179,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("PriorityNonDigit.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected non-digit in PRIORITY, ".
             "PRIORITY may only contain digits, ".
@@ -1174,7 +1194,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("PriorityUnterminated.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected unterminated PRIORITY, ".
             "PRIORITY started with [ must be terminated by ]");
@@ -1187,7 +1208,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("InitialNotIdent.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected ACTION, ".
             "initial token must be ".
@@ -1202,7 +1224,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("PrintTruncation.grammar");
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected ACTION, ".
             "initial token must be ".

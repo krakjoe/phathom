@@ -1,7 +1,7 @@
 <?php
 namespace pharos\phathom\Grammar {
-
     use \pharos\phathom\Grammar;
+    use \pharos\phathom\Exception\Unexpected as UnexpectedException;
 
     final class Parser {
         public private(set) Grammar $grammar;
@@ -46,7 +46,7 @@ namespace pharos\phathom\Grammar {
                                 $string['value']);
 
                     if (isset($this->included[$file->path])) {
-                        throw Unexpected::include(
+                        throw UnexpectedException::include(
                             $ident,
                             $string['value'],
                             $this->included[
@@ -64,7 +64,7 @@ namespace pharos\phathom\Grammar {
                 break;
 
                 default:
-                    throw Unexpected::directive(
+                    throw UnexpectedException::directive(
                         $ident, [
                             'lexer',
                             'context',

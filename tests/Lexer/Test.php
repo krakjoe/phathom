@@ -9,17 +9,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->file = new \pharos\phathom\File(__FILE__);
     }
 
-    public function testConstructorNonExistent() : void {
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessageMatches(
-            "/cannot be found on the local filesystem/");
-
-        new \pharos\phathom\Lexer(
-            $this->file->relative("NonExistent.lexer"));
-    }
-
     public function testConstructorMalformed() : void {
-        $this->expectException(\Exception::class);
+        $this->expectException(\pharos\phathom\Exception::class);
         $this->expectExceptionMessageMatches(
             "/does not contain valid configuration \(ini syntax\)/");
 

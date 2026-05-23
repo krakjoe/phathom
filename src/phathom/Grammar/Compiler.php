@@ -3,6 +3,8 @@ namespace pharos\phathom\Grammar {
     use \pharos\phathom\File;
     use \pharos\phathom\Lexer;
 
+    use \pharos\phathom\Exception\Undefined as UndefinedException;
+
     final class Compiler {
         private array  $synthetic = [];
         private array  $terminals = [];
@@ -118,8 +120,8 @@ namespace pharos\phathom\Grammar {
 
                 default:
                     if (!$this->lexer->known($symbol['name'])) {
-                        throw new \Exception(
-                            "Unknown symbol '{$symbol['name']}' "
+                        throw new UndefinedException(
+                            "Undefined symbol '{$symbol['name']}' "
                                 ."at '{$rule}' in {$this->file}");
                     }
 

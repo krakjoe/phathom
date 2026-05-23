@@ -2,6 +2,9 @@
 
 namespace pharos\phathom
 {
+    use \pharos\phathom\Exception;
+    use \pharos\phathom\Exception\Unexpected as UnexpectedException;
+
     final class Lexer
     {
         private array|bool $config;
@@ -13,7 +16,7 @@ namespace pharos\phathom
                     $this->file->contents(), true);
 
             if ($this->config === false) {
-                throw new \Exception(
+                throw new Exception(
                     "$this->file does not contain valid configuration (ini syntax)");
             }
         }
@@ -93,7 +96,11 @@ namespace pharos\phathom
                     ];
                     $position += $length;
                 } else {
-                    $position++;
+                    throw UnexpectedException::character(
+                        $buffer, [
+                            'path'     => $file->path,
+                            'position' => $position
+                        ], \array_keys($this->config));
                 }
             }
 

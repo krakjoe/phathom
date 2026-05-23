@@ -64,7 +64,25 @@ final class Test extends \PHPUnit\Framework\TestCase
         $grammar = new \pharos\phathom\Grammar($file);
         $parser  = new \pharos\phathom\Parser($grammar, $content);
 
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
+        $this->expectExceptionMessageMatches(
+            "/Unexpected character \";\"/");
+
+        $parser->parse();
+    }
+
+    public function testBasicNoparse() : void {
+        $file = $this->file
+            ->relative("Basic.grammar");
+        $content = $this->file
+            ->relative("BasicNoparse.content");
+
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser  = new \pharos\phathom\Parser($grammar, $content);
+
+        $this->expectException(
+            \pharos\phathom\Exception\Execute::class);
         $this->expectExceptionMessageMatches(
             "/does not match 'unit'/");
 
@@ -75,7 +93,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("BasicUnrecognizedDirective.grammar");
         
-        $this->expectException(\Exception::class);
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected directive, expected ".
                 "lexer, context, or include, ".
