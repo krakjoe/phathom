@@ -60,12 +60,9 @@ namespace pharos\phathom\Grammar {
                 \md5(
                     \json_encode(
                         $this->rules)));
-            return [
-                $class,
-                \sprintf(
-                    "%s.php", $class),
-                \sprintf(
-                    "\pharos\phathom\assets\%s", $class)];
+            $symbol = \sprintf(
+                "\pharos\phathom\assets\%s", $class);
+            return [$class, $symbol];
         }
 
         private function compileClass() : string {
@@ -73,7 +70,7 @@ namespace pharos\phathom\Grammar {
                 return $this->symbol;
             }
 
-            [$class, $file, $symbol] =
+            [$class, $symbol] =
                 $this->compileClassMeta();
 
             $generate = function() use(&$class) {
@@ -110,7 +107,7 @@ namespace pharos\phathom\Grammar {
 
             $this->asset =
                 $this->assets
-                    ->entry($symbol, $generate);
+                    ->entry($class, $generate);
             $this->symbol = $symbol;
 
            require_once(
