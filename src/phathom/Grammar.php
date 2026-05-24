@@ -61,7 +61,7 @@ namespace pharos\phathom
         public function simpleRule(string $rule, array $token, ?string $quantifier = null): void {
             $this->rules[$rule][] = [
                 'symbols' => [[
-                    'name'       => \trim($token['value']),
+                    'name'       => $token['value'],
                     'type'       => $token['type'],
                     'quantifier' => $quantifier,
                     'location'   => $token['location'],
