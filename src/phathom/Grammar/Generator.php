@@ -110,7 +110,7 @@ namespace pharos\phathom\Grammar {
                     ->entry($class, $generate);
             $this->symbol = $symbol;
 
-           require_once(
+            require_once(
                 (string) $this->asset);
             return $this->symbol;
         }

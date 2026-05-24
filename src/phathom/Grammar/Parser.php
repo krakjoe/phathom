@@ -55,12 +55,14 @@ namespace pharos\phathom\Grammar {
                     }
 
                     $lexer = new Lexer($file);
-                    $this->parse(
-                        $lexer->tokenize());
+
                     $this->included[$file->path] = [
                         'location' => $ident['location'],
                         'lexer'    => $lexer
                     ];
+
+                    $this->parse(
+                        $lexer->tokenize());
                 break;
 
                 default:
