@@ -147,10 +147,10 @@ lexer token would be overly general.  Patterns become anonymous tokens added to 
 lexer at compile time.
 
 ```
-numeric: <\d+> ;
+numeric: </\d+/> ;
 
-line: (ALPHA EQUALS <\d+>)     { return $this->pair($1, (int) $3); }
-    | (ALPHA EQUALS <[A-Z]>+)  { return $this->pair($1, (array) $3); }
+line: (ALPHA EQUALS </\d+/>)     { return $this->pair($1, (int) $3); }
+    | (ALPHA EQUALS </[A-Z]/>+)  { return $this->pair($1, (array) $3); }
     ;
 ```
 
