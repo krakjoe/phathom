@@ -285,3 +285,5 @@ disk as a compiled asset and executed during parsing.
 
 **Grammar files must come from trusted sources and be treated as executable code.
 Never parse grammars from untrusted input.**
+
+*See [ASSETS.md](ASSETS.md)*
