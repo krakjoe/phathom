@@ -1,5 +1,7 @@
 <?php
 namespace pharos\phathom\tests\Assets {
+    use \pharos\phathom\Exception\IO as IOException;
+
     class Test extends \PHPUnit\Framework\TestCase {
         private \pharos\phathom\Assets $assets;
 
