@@ -102,4 +102,33 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         new \pharos\phathom\Grammar($file);
     }
+
+    public function testBasicSerialization() : void {
+        $file = $this->file
+            ->relative("Basic.grammar");
+        $content = $this->file
+            ->relative("Basic.content");
+
+        $object = new \pharos\phathom\Grammar($file);
+
+        $grammar = \unserialize(
+            \serialize($object));
+
+        $parser  = new \pharos\phathom\Parser($grammar, $content);
+        $result  = $parser->parse();
+
+        $this->assertSame($result->getThings(), [
+            0 => [
+                0 => "one",
+                1 => "42"
+            ],
+            1 => [
+                0 => "two",
+                1 => "24"
+            ]
+        ]);
+
+        $this->assertInstanceOf(
+            \pharos\phathom\Grammar::class, $parser->grammar);
+    }
 }

@@ -8,6 +8,7 @@ namespace pharos\phathom
     final class Grammar
     {
         private             ?Lexer  $lexer     = null;
+        private             ?string $abstract  = null;
         private             ?string $context   = null;
 
         private             array   $rules     = [];   /* raw rules from grammar file parse       */
@@ -18,8 +19,8 @@ namespace pharos\phathom
         private             string  $start;            /* name of starting rule, unit or last */
 
         public function __construct(
-            public private(set)  File $file,
-            public private(set) ?File $assets = null) {
+            public private(set)  File   $file,
+            public private(set) ?Assets $assets = null) {
 
             new Grammar\Parser($this);
 
@@ -28,7 +29,7 @@ namespace pharos\phathom
                     "$this->file does not declare a lexer");
             }
 
-            if ($this->context === null) {
+            if ($this->abstract === null) {
                 throw new UndeclaredException(
                     "$this->file does not declare a context");
             }
@@ -87,7 +88,7 @@ namespace pharos\phathom
             $this->context = (string)
                 new Grammar\Generator(
                     $this->assets,
-                    $this->context,
+                    $this->abstract,
                     $this->compiled);
 
             $this->start = isset($this->rules['unit'])
@@ -138,29 +139,55 @@ namespace pharos\phathom
                 $this->file->relative($location));
         }
 
-        public function setContext(string $context): void {
-            if ($this->context !== null) {
+        public function setContext(string $abstract): void {
+            if ($this->abstract !== null) {
                 throw new DirectiveException(
-                    "context already declared as {$this->context}");
+                    "context already declared as {$this->abstract}");
             }
 
-            $parents = @\class_parents($context);
+            $parents = @\class_parents($abstract);
 
             if ($parents === false) {
                 throw new DirectiveException(
-                    "{$context} does not exist, it must be autoloadable");
+                    "{$abstract} does not exist, it must be autoloadable");
             }
 
             if (!\in_array(Context::class, $parents)) {
                 throw new DirectiveException(
-                    "{$context} does not extend \\pharos\\phathom\\Context");
+                    "{$abstract} does not extend \\pharos\\phathom\\Context");
             }
 
-            $this->context = $context;
+            $this->abstract = $abstract;
         }
 
         public function factory(Parser $parser): Context {
             return new $this->context($parser);
+        }
+
+        public function __serialize() : array {
+            return [
+                'file'      => $this->file,
+                'assets'    => $this->assets,
+                'lexer'     => $this->lexer,
+                'abstract'  => $this->abstract,
+                'compiled'  => $this->compiled,
+                'synthetic' => $this->synthetic,
+                'terminals' => $this->terminals,
+                'patterns'  => $this->patterns,
+                'start'     => $this->start,
+            ];
+        }
+
+        public function __unserialize(array $array) : void {
+            foreach ($array as $member => $value) {
+                $this->$member = $value;
+            }
+
+            $this->context = (string)
+                new Grammar\Generator(
+                    $this->assets,
+                    $this->abstract,
+                    $this->compiled);
         }
     }
 }

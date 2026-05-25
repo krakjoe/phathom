@@ -57,4 +57,15 @@ final class Test extends \PHPUnit\Framework\TestCase
         
         $file->put("relative", "contents");
     }
+
+    public function testSerialization() : void {
+        $file = new \pharos\phathom\File(__FILE__);
+        $file->contents();
+
+        $object = \unserialize(
+            \serialize($file));
+
+        $this->assertSame($object->kind,
+            \pharos\phathom\FILE::REGULAR);
+    }
 }

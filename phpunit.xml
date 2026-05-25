@@ -11,6 +11,9 @@
     <testsuite name="Lock">
       <file>tests/Lock/Test.php</file>
     </testsuite>
+    <testsuite name="Assets">
+      <file>tests/Assets/Test.php</file>
+    </testsuite>
 
     <testsuite name="Lexer">
       <file>tests/Lexer/Test.php</file>

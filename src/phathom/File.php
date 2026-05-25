@@ -92,6 +92,19 @@ namespace pharos\phathom
             return new self($path);
         }
 
+        public function __serialize() : array {
+            return [
+                'path' => $this->path,
+                'kind' => $this->kind
+            ];
+        }
+
+        public function __unserialize(array $array) : void {
+            foreach ($array as $member => $value) {
+                $this->$member = $value;
+            }
+        }
+
         public function __toString() : string {
             return $this->path;
         }

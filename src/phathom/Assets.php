@@ -30,6 +30,20 @@ namespace pharos\phathom {
             }
             return $result;
         }
+
+        public function __serialize() : array {
+            return [
+                'directory' => $this->directory,
+            ];
+        }
+
+        public function __unserialize(array $array) : void {
+            foreach ($array as $member => $value) {
+                $this->$member = $value;
+            }
+
+            $this->lock = new Lock($this->directory);
+        }
     }
 }
 ?>
