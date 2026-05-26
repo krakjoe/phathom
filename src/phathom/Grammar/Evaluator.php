@@ -35,11 +35,12 @@ namespace pharos\phathom\Grammar {
             switch ($synthesized) {
                 case 'star':
                 case 'plus':
-                    $list =
-                        \is_array($values[0]) ?
-                            $values[0] : [];
-                    $list[] = end($values);
-                    return $list;
+                    if (\count($alt['symbols']) === 2) {
+                        $list   = $values[0];
+                        $list[] = $values[1];
+                        return $list;
+                    }
+                    return [$values[0]];
 
                 case 'opt':
                     return $values[0];
