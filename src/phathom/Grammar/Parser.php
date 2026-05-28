@@ -1,6 +1,7 @@
 <?php
 namespace pharos\phathom\Grammar {
     use \pharos\phathom\Grammar;
+
     use \pharos\phathom\Exception\Unexpected as UnexpectedException;
 
     final class Parser {
@@ -28,14 +29,24 @@ namespace pharos\phathom\Grammar {
                 $lexer->tokenize());
         }
 
-        private function directive(array $ident, array $string) : void {
-            switch (\strtolower($ident['value'])) {
+        private function directive(Token $ident, Token $string) : void {
+            switch (\strtolower($ident->value)) {
                 case "lexer":
-                    $this->grammar->setLexer($string['value']);
+                    $this->grammar->setLexer($string->value);
+                break;
+
+                case "token":
+                    $this->grammar->setAbstract(
+                        'token',
+                        $string->value,
+                        '\pharos\phathom\Token');
                 break;
 
                 case "context":
-                    $this->grammar->setContext($string['value']);
+                    $this->grammar->setAbstract(
+                        'context',
+                        $string->value,
+                        '\pharos\phathom\Context');
                 break;
 
                 case "include":
@@ -43,12 +54,12 @@ namespace pharos\phathom\Grammar {
                         $this->grammar
                             ->file
                             ->relative(
-                                $string['value']);
+                                $string->value);
 
                     if (isset($this->included[$file->path])) {
                         throw UnexpectedException::include(
                             $ident,
-                            $string['value'],
+                            $string->value,
                             $this->included[
                                 $file->path
                             ]['location']);
@@ -57,7 +68,7 @@ namespace pharos\phathom\Grammar {
                     $lexer = new Lexer($file);
 
                     $this->included[$file->path] = [
-                        'location' => $ident['location'],
+                        'location' => $ident->location,
                         'lexer'    => $lexer
                     ];
 
@@ -69,6 +80,7 @@ namespace pharos\phathom\Grammar {
                     throw UnexpectedException::directive(
                         $ident, [
                             'lexer',
+                            'token',
                             'context',
                             'include']);
             }
@@ -79,14 +91,14 @@ namespace pharos\phathom\Grammar {
             $count    = \count($tokens);
 
             $eof = function() use(&$position, $tokens) : bool {
-                return ($tokens[$position]['type'] == Token::EOF);
+                return ($tokens[$position]->type == Token::EOF);
             };
 
-            $peek = function () use (&$position, $tokens): ?array {
+            $peek = function () use (&$position, $tokens): ?Token {
                 return $tokens[$position];
             };
 
-            $consume = function () use (&$position, $tokens): ?array {
+            $consume = function () use (&$position, $tokens): ?Token {
                 return $tokens[$position++];
             };
 
@@ -96,77 +108,87 @@ namespace pharos\phathom\Grammar {
                 $consume(); /* COLON */
 
                 while (true) {
-                    $next = $peek();
-
-                    switch ($next['type']) {
+                    switch ($peek()->type) {
                         case Token::LIST_START:
-                            $start   = $consume();
+                            $consume(); /* LIST_START */
                             $symbols = [];
                             $priority = false;
 
-                            while (($symbol = $peek())) {
-                                if ($symbol['type'] === Token::LIST_END) {
-                                    $consume();
+                            while (($listing = $peek())) {
+                                if ($listing->type === Token::LIST_END) {
+                                    $consume(); /* LIST_END */
 
-                                    if ($peek()['type'] === Token::PRIORITY) {
+                                    if ($peek()->type === Token::PRIORITY) {
                                         $priority =
-                                            (int) $consume()['value'];
+                                            (int) $consume() /* PRIORITY */
+                                                ->value;
                                     }
                                     break;
                                 }
 
-                                if ($symbol['type'] === Token::IDENT ||
-                                    $symbol['type'] === Token::PATTERN) {
-                                    $symbol =
-                                        $consume();
-                                    $quantify = $peek();
-                                    if ($quantify['type'] === Token::QUANTIFIER) {
-                                        $symbol['quantifier'] =
-                                            $consume()['value'];
+                                if ($listing->type === Token::IDENT ||
+                                    $listing->type === Token::PATTERN) {
+                                    $consume(); /* IDENT | PATTERN */
+
+                                    if ($peek()->type == Token::QUANTIFIER) {
+                                        $quantify =
+                                            $consume()
+                                                ->value; /* QUANTIFIER */
+                                    } else {
+                                        $quantify = null;
                                     }
-                                    $symbols[] = $symbol;
+
+                                    $symbols[] = new Symbol(
+                                        $listing->type,
+                                        $listing->value,
+                                        $listing->location,
+                                        Quantifier::from($quantify));
                                     continue;
                                 }
                             }
 
-                            $action = $peek();
-                            if ($action['type'] === Token::ACTION) {
-                                $consume();
+                            if ($peek()->type === Token::ACTION) {
+                                $action = 
+                                    $consume(); /* ACTION */
                                 $this->grammar
                                     ->complexRule(
-                                        $ident['value'], $symbols, $priority, $action['value']);
+                                        $ident->value, $symbols, $priority, $action->value);
                             } else {
                                 $this->grammar
                                     ->complexRule(
-                                        $ident['value'], $symbols, $priority);
+                                        $ident->value, $symbols, $priority);
                             }
                             break;
 
                         case Token::IDENT:
                         case Token::PATTERN:
-                            $token    = $consume();
-                            $quantify = $peek();
-                            if ($quantify['type'] === Token::QUANTIFIER) {
+                            $token = $consume(); /* IDENT | PATTERN */
+                            if ($peek()->type === Token::QUANTIFIER) {
                                 $quantify =
-                                    $consume()
-                                        ['value'];
+                                    $consume() /* QUANTIFIER */
+                                        ->value;
                             } else {
                                 $quantify = null;
                             }
 
-                            $this->grammar->simpleRule($ident['value'], $token, $quantify);
+                            $this->grammar->simpleRule(
+                                $ident->value,
+                                new Symbol(
+                                    $token->type,
+                                    $token->value,
+                                    $token->location,
+                                    Quantifier::from($quantify)));
                         break;
 
                         case Token::STRING:
                             $string =
-                                $consume();
+                                $consume(); /* STRING */
                             $this->directive($ident, $string);
                         break;
                     }
 
-                    $next = $consume();
-
-                    if ($next['type'] === Token::END) {
+                    if ($consume() /* END | PIPE */
+                            ->type === Token::END) {
                         break;
                     }
                 }

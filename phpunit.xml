@@ -26,6 +26,10 @@
       <file>tests/Grammar/Directive/Lexer/Test.php</file>
     </testsuite>
 
+    <testsuite name="Grammar\Directive\Token">
+      <file>tests/Grammar/Directive/Token/Test.php</file>
+    </testsuite>
+
     <testsuite name="Grammar\Directive\Context">
       <file>tests/Grammar/Directive/Context/Test.php</file>
     </testsuite>

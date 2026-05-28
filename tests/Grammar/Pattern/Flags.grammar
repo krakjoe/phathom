@@ -6,15 +6,15 @@ ICASE:   </[a-z]/i>;
 NUMERIC: </\d+/>;
 
 first: (ALPHA EQUALS NUMERIC) {
-    return $this->returnThings($1, $3);
+    return $this->returnThings((string) $1, (string) $3);
 };
 
 second: (NUMERIC EQUALS NUMERIC) {
-    return $this->returnThings((int) $1, (int) $3);
+    return $this->returnThings((int) (string) $1, (int) (string) $3);
 };
 
 third: (ALPHA EQUALS ICASE+) {
-    return $this->returnThings($1, (array) $3);
+    return $this->returnThings((string) $1, array_map('strval', $3));
 };
 
 line: first  |

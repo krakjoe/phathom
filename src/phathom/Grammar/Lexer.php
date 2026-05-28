@@ -396,8 +396,8 @@ namespace pharos\phathom\Grammar {
         private function validate(array $tokens) : array {
             $limit   = \count($tokens);
 
-            if ($tokens[0]['type'] !== Token::IDENT &&
-                $tokens[0]['type'] !== Token::EOF) {
+            if ($tokens[0]->type !== Token::IDENT &&
+                $tokens[0]->type !== Token::EOF) {
                 throw UnexpectedException::initial($tokens[0]);
             }
 
@@ -410,9 +410,9 @@ namespace pharos\phathom\Grammar {
                     $tokens[$position];
                 $specification =
                     Lexer::$specification[
-                        $token['type']];
+                        $token->type];
 
-                if ($token['type'] === Token::LIST_END)   $listing = false;
+                if ($token->type === Token::LIST_END)   $listing = false;
 
                 $rules = $listing ?
                     $specification['list'] :
@@ -422,13 +422,13 @@ namespace pharos\phathom\Grammar {
                     $next = $tokens[$position + 1];
 
                     if (!\in_array(
-                            $next['type'], $rules['allow'], true)) {
+                            $next->type, $rules['allow'], true)) {
                         throw UnexpectedException::token(
                             $token, $next, $rules['allow']);
                     }
                 }
 
-                if ($token['type'] === Token::LIST_START) $listing = true;
+                if ($token->type === Token::LIST_START) $listing = true;
             }
 
             return $tokens;
@@ -453,96 +453,73 @@ namespace pharos\phathom\Grammar {
                     break;
 
                     case ';':
-                        $tokens[]     = [
-                            'type'     => Token::END,
-                            'location' => [
+                        $tokens[] = new Token(
+                            Token::END, [
                                 'path'     => $this->file->path,
                                 'position' => $this->position++,
-                            ],
-                        ];
+                            ]);
                     break;
 
                     case '(':
-                        $tokens[]      = [
-                            'type'     => Token::LIST_START,
-                            'location' => [
+                        $tokens[] = new Token(
+                            Token::LIST_START, [
                                 'path'     => $this->file->path,
-                                'position' => $this->position,
-                            ],
-                        ];
-                        $this->position++;
+                                'position' => $this->position++,
+                            ]);
                     break;
 
                     case ')':
-                        $tokens[]      = [
-                            'type'     => Token::LIST_END,
-                            'location' => [
+                        $tokens[] = new Token(
+                            Token::LIST_END, [
                                 'path'     => $this->file->path,
-                                'position' => $this->position,
-                            ],
-                        ];
-                        $this->position++;
+                                'position' => $this->position++,
+                            ]);
                     break;
 
                     case '[':
                         [$content, $start] =
                             $this->priority();
-                        $tokens[]      = [
-                            'type'     => Token::PRIORITY,
-                            'value'    => $content,
-                            'location' => [
+                        $tokens[] = new Token(
+                            Token::PRIORITY, [
                                 'path'     => $this->file->path,
                                 'position' => $start,
-                            ],
-                        ];
+                            ], $content);
                     break;
 
                     case ':':
-                        $tokens[]      = [
-                            'type'     => Token::COLON,
-                            'location' => [
+                        $tokens[] = new Token(
+                            Token::COLON, [
                                 'path'     => $this->file->path,
-                                'position' => $this->position,
-                            ],
-                        ];
-                        $this->position++;
+                                'position' => $this->position++,
+                            ]);
                         break;
 
                     case '|':
-                        $tokens[]      = [
-                            'type'     => Token::PIPE,
-                            'location' => [
+                        $tokens[] = new Token(
+                            Token::PIPE, [
                                 'path'     => $this->file->path,
-                                'position' => $this->position,
-                            ],
-                        ];
-                        $this->position++;
+                                'position' => $this->position++,
+                            ]);
                         break;
 
                     case '<':
                         [$content, $start] =
                             $this->balance(Token::PATTERN, '<', '>');
-                        $tokens[]      = [
-                            'type'     => Token::PATTERN,
-                            'value'    => $content,
-                            'location' => [
+                        $tokens[] = new Token(
+                            Token::PATTERN, [
                                 'path'     => $this->file->path,
                                 'position' => $start,
-                            ],
-                        ];
+                            ], $content);
                         break;
 
                     case '{':
                         [$content, $start] =
                             $this->balance(Token::ACTION, '{', '}');
-                        $tokens[]      = [
-                            'type'     => Token::ACTION,
-                            'value'    => $content,
-                            'location' => [
+                        $tokens[] = new Token(
+                            Token::ACTION, [
                                 'path'     => $this->file->path,
                                 'position' => $start,
-                            ],
-                        ];
+                            ], $content);
                         break;
 
                     case '\'':
@@ -551,29 +528,21 @@ namespace pharos\phathom\Grammar {
                             $this->string(
                                 $this->buffer[$this->position]);
 
-                        $tokens[]      = [
-                            'type'     => Token::STRING,
-                            'value'    => $content,
-                            'location' => [
+                        $tokens[] = new Token(
+                            Token::STRING, [
                                 'path'     => $this->file->path,
                                 'position' => $start,
-                            ],
-                        ];
+                            ], $content);
                         break;
 
                     case '+':
                     case '*':
                     case '?':
-                        $tokens[]      = [
-                            'type'     => Token::QUANTIFIER,
-                            'value'    => 
-                                $this->buffer[
-                                    $this->position],
-                            'location' => [
+                        $tokens[] = new Token(
+                            Token::QUANTIFIER, [
                                 'path'     => $this->file->path,
-                                'position' => $this->position++,
-                            ],
-                        ];
+                                'position' => $this->position,
+                            ], $this->buffer[$this->position++]);
                     break;
 
                     default:
@@ -587,14 +556,11 @@ namespace pharos\phathom\Grammar {
                                         $this->position++];
                             }
 
-                            $tokens[]      = [
-                                'type'     => Token::IDENT,
-                                'value'    => $ident,
-                                'location' => [
+                            $tokens[] = new Token(
+                                Token::IDENT, [
                                     'path'     => $this->file->path,
                                     'position' => $start,
-                                ],
-                            ];
+                                ], $ident);
                         } else {
                             throw UnexpectedException::character(
                                 $this->buffer, [
@@ -605,13 +571,11 @@ namespace pharos\phathom\Grammar {
                 }
             }
 
-            $tokens[]      = [
-                'type'     => Token::EOF,
-                'location' => [
+            $tokens[] = new Token(
+                Token::EOF, [
                     'path'     => $this->file->path,
                     'position' => $this->position,
-                ],
-            ];
+                ]);
 
             return $tokens;
         }

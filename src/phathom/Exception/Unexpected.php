@@ -15,7 +15,7 @@ namespace pharos\phathom\Exception {
             switch (\count($options)) {
                 case 1:
                     return $options[0];
-                
+
                 case 2:
                     return \vsprintf("%s or %s", $options);
 
@@ -29,32 +29,32 @@ namespace pharos\phathom\Exception {
             }
         }
 
-        private static function print(array $token) : string {
-            if (isset($token['value'])) {
-                if (\strlen($token['value']) > 32) {
+        private static function print(Token $token) : string {
+            if (isset($token->value)) {
+                if (\strlen($token->value) > 32) {
                     return \sprintf(
                         "%s(%s...) at %s:%d",
-                        Token::string($token['type']),
-                        \substr($token['value'], 0, 32),
-                        $token['location']['path'],
-                        $token['location']['position']);
+                        Token::string($token->type),
+                        \substr($token->value, 0, 32),
+                        $token->location['path'],
+                        $token->location['position']);
                 }
                 return \sprintf(
                     "%s(%s) at %s:%d",
-                    Token::string($token['type']),
-                    $token['value'],
-                    $token['location']['path'],
-                    $token['location']['position']);
+                    Token::string($token->type),
+                    $token->value,
+                    $token->location['path'],
+                    $token->location['position']);
             }
 
             return \sprintf(
                 "%s at %s:%d",
-                Token::string($token['type']),
-                $token['location']['path'],
-                $token['location']['position']);
+                Token::string($token->type),
+                $token->location['path'],
+                $token->location['position']);
         }
 
-        public static function directive(array $token, array $allowed) : Unexpected {
+        public static function directive(Token $token, array $allowed) : Unexpected {
             return new self(\sprintf(
                 "Unexpected directive, expected %s, ".
                 "got %s",
@@ -62,28 +62,28 @@ namespace pharos\phathom\Exception {
                 Unexpected::print($token)));
         }
 
-        public static function include(array $token, string $path, array $location) : Unexpected {
+        public static function include(Token $token, string $path, array $location) : Unexpected {
             return new self(\sprintf(
                 "Unexpected duplicate include at %s:%d, ".
                 "%s already included at %s:%d ",
-                $token['location']['path'], $token['location']['position'],
+                $token->location['path'], $token->location['position'],
                 $path, $location['path'], $location['position']));
         }
 
-        public static function initial(array $token) : Unexpected {
+        public static function initial(Token $token) : Unexpected {
             return new self(\sprintf(
                 "Unexpected %s, initial token must be ".
                     "IDENT, " .
                 "got %s",
-                Token::string($token['type']),
+                Token::string($token->type),
                 Unexpected::print($token)));
         }
 
-        public static function token(array $token, array $next, array $rules) : Unexpected {
+        public static function token(Token $token, Token $next, array $rules) : Unexpected {
             return new self(\sprintf(
                 "Unexpected %s, %s must be followed by %s, got %s",
-                Token::string($next['type']),
-                Token::string($token['type']),
+                Token::string($next->type),
+                Token::string($token->type),
                 Unexpected::explain($rules),
                 Unexpected::print($next)));
         }

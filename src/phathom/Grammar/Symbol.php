@@ -1,0 +1,12 @@
+<?php
+namespace pharos\phathom\Grammar {
+    final class Symbol {
+        public function __construct(
+            public private(set) int        $type,
+            public private(set) string     $name,
+            public private(set) array      $location   = [],
+            public private(set) Quantifier $quantifier = QUANTIFIER::NONE,
+        ) {}
+    }
+}
+?>

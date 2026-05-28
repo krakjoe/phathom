@@ -2,7 +2,7 @@ lexer: "PriorityPropagation.lexer";
 
 context: "\pharos\phathom\tests\Grammar\File";
 
-item: (X) { return $this->returnThings(0, $1); };
+item: (X) { return $this->returnThings(0, (string) $1); };
 
 unit: (item+) [1] { return $this->returnThings(1, $1); }
     | (item+) [2] { return $this->returnThings(2, $1); }

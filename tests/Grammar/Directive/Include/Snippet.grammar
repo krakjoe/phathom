@@ -1,4 +1,4 @@
 unit:
     (ALPHA EQUALS NUM) {
-        return $this->returnThings($1, $3);
+        return $this->returnThings((string) $1, (string) $3);
     };

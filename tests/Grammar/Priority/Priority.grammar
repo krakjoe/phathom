@@ -3,11 +3,11 @@ lexer: "Priority.lexer";
 context: "\pharos\phathom\tests\Grammar\File";
 
 low: (ALPHA EQUALS ALPHA) [1] {
-    return $this->returnThings("low", $1);
+    return $this->returnThings("low", (string) $1);
 };
 
 high: (ALPHA EQUALS ALPHA) [2] {
-    return $this->returnThings("high", $1);
+    return $this->returnThings("high", (string) $1);
 };
 
 line: low | high;

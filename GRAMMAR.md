@@ -13,11 +13,12 @@ Grammar files drive phathom's Earley parsing engine. A grammar file contains:
 
 Form: `directive: "string";`
 
-| Directive | Explanation                                                           |
-|-----------|-----------------------------------------------------------------------|
-| `lexer`   | Path, relative to the current grammar file, of the lexer `.ini`      |
-| `context` | Fully-qualified class name of a descendant of `\pharos\phathom\Context` |
-| `include` | Path, relative to the current grammar file, of another grammar file  |
+| Directive | Explanation                                                             | Required |
+|-----------|-------------------------------------------------------------------------|----------|
+| `lexer`   | Path, relative to the current grammar file, of the lexer `.ini`         |    yes   |
+| `context` | Fully-qualified class name of a descendant of `\pharos\phathom\Context` |    yes   |
+| `token`   | Fully-qualified class name of a descendant of `\pharos\phathom\Token`   |    no    |
+| `include` | Path, relative to the current grammar file, of another grammar file     |    no    |
 
 ### `lexer`
 
@@ -32,10 +33,22 @@ lexer: "tokens.lexer";
 Names the PHP class that receives parsed values through action callbacks.
 
 ```
-context: "\MyApp\ParseContext";
+context: "\MyApp\Context";
 ```
 
 *The class must extend `\pharos\phathom\Context`.*
+
+### `token`
+
+Names the (abstract) PHP class that represents parsed values through action callbacks.
+
+```
+token: "\MyApp\Token";
+```
+
+*The class must extend the abstract `\pharos\phathom\Token`.*
+
+**The abstract `pharos\phathom\Token` will be used when no `token` directive is used`
 
 ### `include`
 

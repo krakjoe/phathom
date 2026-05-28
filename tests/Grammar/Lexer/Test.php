@@ -1,6 +1,8 @@
 <?php
 namespace pharos\phathom\tests\Grammar\Lexer;
 
+use \pharos\phathom\Grammar\Token;
+
 final class Test extends \PHPUnit\Framework\TestCase
 {
     private \pharos\phathom\File $file;
@@ -14,14 +16,11 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("Comment.grammar");
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
 
-        $this->assertSame($lexer->tokenize(), [
-            [
-                'type' => \pharos\phathom\Grammar\Token::EOF,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 9
-                ],
-            ],
+        $this->assertEquals($lexer->tokenize(), [
+            new Token(Token::EOF, [
+                'path'     => $file->path,
+                'position' => 9
+            ], null),
         ]);
     }
 
@@ -30,14 +29,11 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("CommentWithNewline.grammar");
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
 
-        $this->assertSame($lexer->tokenize(), [
-            [
-                'type'     => \pharos\phathom\Grammar\Token::EOF,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 10
-                ],
-            ],
+        $this->assertEquals($lexer->tokenize(), [
+            new Token(Token::EOF, [
+                'path'     => $file->path,
+                'position' => 10
+            ], null),
         ]);
     }
 
@@ -110,66 +106,15 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("List.grammar");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
-        $this->assertSame($lexer->tokenize(), [
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'ident',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 0
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::COLON,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 5
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::LIST_START,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 7
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'ident',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 8
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::PATTERN,
-                'value'    => 'pattern',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 14
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::LIST_END,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 23
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::END,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 24
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::EOF,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 25
-                ],
-            ],
+        $this->assertEquals($lexer->tokenize(), [
+            new Token(Token::IDENT,    ['path' => $file->path, 'position' => 0],  'ident'),
+            new Token(Token::COLON,    ['path' => $file->path, 'position' => 5],  null),
+            new Token(Token::LIST_START, ['path' => $file->path, 'position' => 7],  null),
+            new Token(Token::IDENT,    ['path' => $file->path, 'position' => 8],  'ident'),
+            new Token(Token::PATTERN,  ['path' => $file->path, 'position' => 14], 'pattern'),
+            new Token(Token::LIST_END, ['path' => $file->path, 'position' => 23], null),
+            new Token(Token::END,      ['path' => $file->path, 'position' => 24], null),
+            new Token(Token::EOF,      ['path' => $file->path, 'position' => 25], null),
         ]);
     }
 
@@ -258,120 +203,22 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("Pipe.grammar");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
-        $this->assertSame($lexer->tokenize(), [
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'ident',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 0
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::COLON,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 5
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'ident',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 8
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::PIPE,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 14
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::PATTERN,
-                'value'    => 'pattern',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 24
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::PIPE,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 34
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'ident',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 44
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::QUANTIFIER,
-                'value'    => '+',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 49
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::PIPE,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 51
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::LIST_START,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 60
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'ident',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 61
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::LIST_END,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 66
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::ACTION,
-                'value'    => ' action ',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 68
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::END,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 78
-                ],
-            ],
-
-            [
-                'type'     => \pharos\phathom\Grammar\Token::EOF,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 80
-                ],
-            ],
+        $this->assertEquals($lexer->tokenize(), [
+            new Token(Token::IDENT,      ['path' => $file->path, 'position' => 0],  'ident'),
+            new Token(Token::COLON,      ['path' => $file->path, 'position' => 5],  null),
+            new Token(Token::IDENT,      ['path' => $file->path, 'position' => 8],  'ident'),
+            new Token(Token::PIPE,       ['path' => $file->path, 'position' => 14], null),
+            new Token(Token::PATTERN,    ['path' => $file->path, 'position' => 24], 'pattern'),
+            new Token(Token::PIPE,       ['path' => $file->path, 'position' => 34], null),
+            new Token(Token::IDENT,      ['path' => $file->path, 'position' => 44], 'ident'),
+            new Token(Token::QUANTIFIER, ['path' => $file->path, 'position' => 49], '+'),
+            new Token(Token::PIPE,       ['path' => $file->path, 'position' => 51], null),
+            new Token(Token::LIST_START, ['path' => $file->path, 'position' => 60], null),
+            new Token(Token::IDENT,      ['path' => $file->path, 'position' => 61], 'ident'),
+            new Token(Token::LIST_END,   ['path' => $file->path, 'position' => 66], null),
+            new Token(Token::ACTION,     ['path' => $file->path, 'position' => 68], ' action '),
+            new Token(Token::END,        ['path' => $file->path, 'position' => 78], null),
+            new Token(Token::EOF,        ['path' => $file->path, 'position' => 80], null),
         ]);
     }
 
@@ -380,45 +227,12 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("Pattern.grammar");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
-        $this->assertSame($lexer->tokenize(), [
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'ident',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 0
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::COLON,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 5
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::PATTERN,
-                'value'    => 'pattern',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 7
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::END,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 16
-                ],
-            ],
-
-            [
-                'type'     => \pharos\phathom\Grammar\Token::EOF,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 17
-                ],
-            ],
+        $this->assertEquals($lexer->tokenize(), [
+            new Token(Token::IDENT,   ['path' => $file->path, 'position' => 0],  'ident'),
+            new Token(Token::COLON,   ['path' => $file->path, 'position' => 5],  null),
+            new Token(Token::PATTERN, ['path' => $file->path, 'position' => 7],  'pattern'),
+            new Token(Token::END,     ['path' => $file->path, 'position' => 16], null),
+            new Token(Token::EOF,     ['path' => $file->path, 'position' => 17], null),
         ]);
     }
 
@@ -457,67 +271,15 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("Action.grammar");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
-        $this->assertSame($lexer->tokenize(), [
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'ident',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 0
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::COLON,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 5
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::LIST_START,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 7
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'ident',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 8
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::LIST_END,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 13
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::ACTION,
-                'value'    => ' action ',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 15
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::END,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 25
-                ],
-            ],
-
-            [
-                'type'     => \pharos\phathom\Grammar\Token::EOF,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 26
-                ],
-            ],
+        $this->assertEquals($lexer->tokenize(), [
+            new Token(Token::IDENT,      ['path' => $file->path, 'position' => 0],  'ident'),
+            new Token(Token::COLON,      ['path' => $file->path, 'position' => 5],  null),
+            new Token(Token::LIST_START, ['path' => $file->path, 'position' => 7],  null),
+            new Token(Token::IDENT,      ['path' => $file->path, 'position' => 8],  'ident'),
+            new Token(Token::LIST_END,   ['path' => $file->path, 'position' => 13], null),
+            new Token(Token::ACTION,     ['path' => $file->path, 'position' => 15], ' action '),
+            new Token(Token::END,        ['path' => $file->path, 'position' => 25], null),
+            new Token(Token::EOF,        ['path' => $file->path, 'position' => 26], null),
         ]);
     }
 
@@ -526,76 +288,16 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("StringSingleQuoted.grammar");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
-        $this->assertSame($lexer->tokenize(), [
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'ident',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 0
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::COLON,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 5
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::STRING,
-                'value'    => "string'string",
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 7
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::END,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 23
-                ],
-            ],
-
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'ident',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 25
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::COLON,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 30
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::STRING,
-                'value'    => '\n',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 32
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::END,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 36
-                ],
-            ],
-
-            [
-                'type'     => \pharos\phathom\Grammar\Token::EOF,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 37
-                ],
-            ],
+        $this->assertEquals($lexer->tokenize(), [
+            new Token(Token::IDENT,  ['path' => $file->path, 'position' => 0],  'ident'),
+            new Token(Token::COLON,  ['path' => $file->path, 'position' => 5],  null),
+            new Token(Token::STRING, ['path' => $file->path, 'position' => 7],  "string'string"),
+            new Token(Token::END,    ['path' => $file->path, 'position' => 23], null),
+            new Token(Token::IDENT,  ['path' => $file->path, 'position' => 25], 'ident'),
+            new Token(Token::COLON,  ['path' => $file->path, 'position' => 30], null),
+            new Token(Token::STRING, ['path' => $file->path, 'position' => 32], '\n'),
+            new Token(Token::END,    ['path' => $file->path, 'position' => 36], null),
+            new Token(Token::EOF,    ['path' => $file->path, 'position' => 37], null),
         ]);
     }
 
@@ -604,76 +306,16 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("StringDoubleQuoted.grammar");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
-        $this->assertSame($lexer->tokenize(), [
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'ident',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 0
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::COLON,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 5
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::STRING,
-                'value'    => 'string"string',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 7
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::END,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 23
-                ],
-            ],
-
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'ident',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 25
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::COLON,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 30
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::STRING,
-                'value'    => '\n',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 32
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::END,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 36
-                ],
-            ],
-
-            [
-                'type'     => \pharos\phathom\Grammar\Token::EOF,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 37
-                ],
-            ],
+        $this->assertEquals($lexer->tokenize(), [
+            new Token(Token::IDENT,  ['path' => $file->path, 'position' => 0],  'ident'),
+            new Token(Token::COLON,  ['path' => $file->path, 'position' => 5],  null),
+            new Token(Token::STRING, ['path' => $file->path, 'position' => 7],  'string"string'),
+            new Token(Token::END,    ['path' => $file->path, 'position' => 23], null),
+            new Token(Token::IDENT,  ['path' => $file->path, 'position' => 25], 'ident'),
+            new Token(Token::COLON,  ['path' => $file->path, 'position' => 30], null),
+            new Token(Token::STRING, ['path' => $file->path, 'position' => 32], '\n'),
+            new Token(Token::END,    ['path' => $file->path, 'position' => 36], null),
+            new Token(Token::EOF,    ['path' => $file->path, 'position' => 37], null),
         ]);
     }
 
@@ -730,248 +372,38 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
 
-        $this->assertSame($lexer->tokenize(), [
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'ident1',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 0
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::COLON,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 6
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'ident1',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 8
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::QUANTIFIER,
-                'value'    => '+',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 14
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::END,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 16
-                ],
-            ],
-
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'ident2',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 18
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::COLON,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 24
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'ident2',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 26
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::QUANTIFIER,
-                'value'    => '*',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 32
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::END,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 34
-                ],
-            ],
-
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'ident3',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 36
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::COLON,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 42
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'ident3',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 44
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::QUANTIFIER,
-                'value'    => '?',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 50
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::END,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 52
-                ],
-            ],
-
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'pattern1',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 55
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::COLON,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 63
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::PATTERN,
-                'value'    => 'pattern1',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 65
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::QUANTIFIER,
-                'value'    => '+',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 75
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::END,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 77
-                ],
-            ],
-
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'pattern2',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 79
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::COLON,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 87
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::PATTERN,
-                'value'    => 'pattern2',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 89
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::QUANTIFIER,
-                'value'    => '*',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 99
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::END,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 101
-                ],
-            ],
-
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'pattern3',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 103
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::COLON,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 111
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::PATTERN,
-                'value'    => 'pattern3',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 113
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::QUANTIFIER,
-                'value'    => '?',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 123
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::END,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 125
-                ],
-            ],
-
-            [
-                'type'     => \pharos\phathom\Grammar\Token::EOF,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 126
-                ],
-            ],
+        $this->assertEquals($lexer->tokenize(), [
+            new Token(Token::IDENT,      ['path' => $file->path, 'position' => 0],   'ident1'),
+            new Token(Token::COLON,      ['path' => $file->path, 'position' => 6],   null),
+            new Token(Token::IDENT,      ['path' => $file->path, 'position' => 8],   'ident1'),
+            new Token(Token::QUANTIFIER, ['path' => $file->path, 'position' => 14],  '+'),
+            new Token(Token::END,        ['path' => $file->path, 'position' => 16],  null),
+            new Token(Token::IDENT,      ['path' => $file->path, 'position' => 18],  'ident2'),
+            new Token(Token::COLON,      ['path' => $file->path, 'position' => 24],  null),
+            new Token(Token::IDENT,      ['path' => $file->path, 'position' => 26],  'ident2'),
+            new Token(Token::QUANTIFIER, ['path' => $file->path, 'position' => 32],  '*'),
+            new Token(Token::END,        ['path' => $file->path, 'position' => 34],  null),
+            new Token(Token::IDENT,      ['path' => $file->path, 'position' => 36],  'ident3'),
+            new Token(Token::COLON,      ['path' => $file->path, 'position' => 42],  null),
+            new Token(Token::IDENT,      ['path' => $file->path, 'position' => 44],  'ident3'),
+            new Token(Token::QUANTIFIER, ['path' => $file->path, 'position' => 50],  '?'),
+            new Token(Token::END,        ['path' => $file->path, 'position' => 52],  null),
+            new Token(Token::IDENT,      ['path' => $file->path, 'position' => 55],  'pattern1'),
+            new Token(Token::COLON,      ['path' => $file->path, 'position' => 63],  null),
+            new Token(Token::PATTERN,    ['path' => $file->path, 'position' => 65],  'pattern1'),
+            new Token(Token::QUANTIFIER, ['path' => $file->path, 'position' => 75],  '+'),
+            new Token(Token::END,        ['path' => $file->path, 'position' => 77],  null),
+            new Token(Token::IDENT,      ['path' => $file->path, 'position' => 79],  'pattern2'),
+            new Token(Token::COLON,      ['path' => $file->path, 'position' => 87],  null),
+            new Token(Token::PATTERN,    ['path' => $file->path, 'position' => 89],  'pattern2'),
+            new Token(Token::QUANTIFIER, ['path' => $file->path, 'position' => 99],  '*'),
+            new Token(Token::END,        ['path' => $file->path, 'position' => 101], null),
+            new Token(Token::IDENT,      ['path' => $file->path, 'position' => 103], 'pattern3'),
+            new Token(Token::COLON,      ['path' => $file->path, 'position' => 111], null),
+            new Token(Token::PATTERN,    ['path' => $file->path, 'position' => 113], 'pattern3'),
+            new Token(Token::QUANTIFIER, ['path' => $file->path, 'position' => 123], '?'),
+            new Token(Token::END,        ['path' => $file->path, 'position' => 125], null),
+            new Token(Token::EOF,        ['path' => $file->path, 'position' => 126], null),
         ]);
     }
 
@@ -993,44 +425,12 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("BalancedEscapeDelimiter.grammar");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
-        $this->assertSame($lexer->tokenize(), [
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'ident',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 0
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::COLON,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 5
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::PATTERN,
-                'value'    => 'pattern<',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 7
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::END,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 18
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::EOF,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 19
-                ],
-            ],
+        $this->assertEquals($lexer->tokenize(), [
+            new Token(Token::IDENT,   ['path' => $file->path, 'position' => 0],  'ident'),
+            new Token(Token::COLON,   ['path' => $file->path, 'position' => 5],  null),
+            new Token(Token::PATTERN, ['path' => $file->path, 'position' => 7],  'pattern<'),
+            new Token(Token::END,     ['path' => $file->path, 'position' => 18], null),
+            new Token(Token::EOF,     ['path' => $file->path, 'position' => 19], null),
         ]);
     }
 
@@ -1039,76 +439,16 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("BalancedEscapeLiteral.grammar");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
-        $this->assertSame($lexer->tokenize(), [
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'ident',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 0
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::COLON,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 5
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::PATTERN,
-                'value'    => 'escape\\literal',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 7
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::END,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 23
-                ],
-            ],
-
-            [
-                'type'     => \pharos\phathom\Grammar\Token::IDENT,
-                'value'    => 'ident',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 26
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::COLON,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 31
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::PATTERN,
-                'value'    => '\\',
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 33
-                ],
-            ],
-            [
-                'type'     => \pharos\phathom\Grammar\Token::END,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 37
-                ],
-            ],
-            
-            [
-                'type'     => \pharos\phathom\Grammar\Token::EOF,
-                'location'     => [
-                    'path'     => $file->path,
-                    'position' => 38
-                ],
-            ],
+        $this->assertEquals($lexer->tokenize(), [
+            new Token(Token::IDENT,   ['path' => $file->path, 'position' => 0],  'ident'),
+            new Token(Token::COLON,   ['path' => $file->path, 'position' => 5],  null),
+            new Token(Token::PATTERN, ['path' => $file->path, 'position' => 7],  'escape\\literal'),
+            new Token(Token::END,     ['path' => $file->path, 'position' => 23], null),
+            new Token(Token::IDENT,   ['path' => $file->path, 'position' => 26], 'ident'),
+            new Token(Token::COLON,   ['path' => $file->path, 'position' => 31], null),
+            new Token(Token::PATTERN, ['path' => $file->path, 'position' => 33], '\\'),
+            new Token(Token::END,     ['path' => $file->path, 'position' => 37], null),
+            new Token(Token::EOF,     ['path' => $file->path, 'position' => 38], null),
         ]);
     }
 

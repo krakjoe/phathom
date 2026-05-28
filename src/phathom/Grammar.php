@@ -4,12 +4,17 @@ namespace pharos\phathom
     use \pharos\phathom\Exception\Undeclared as UndeclaredException;
     use \pharos\phathom\Exception\Execute    as ExecuteException;
     use \pharos\phathom\Exception\Directive  as DirectiveException;
-
+   
     final class Grammar
     {
         private             ?Lexer  $lexer     = null;
-        private             ?string $abstract  = null;
-        private             ?string $context   = null;
+
+        private              array  $abstracts  = [
+            'token'   =>     '\pharos\phathom\Token',
+            'context' =>     null,
+        ];
+        public private(set) string $token;             /* concrete Token implementation */
+        public private(set) string $context;           /* concrete Context implementation */
 
         private             array   $rules     = [];   /* raw rules from grammar file parse       */
         private             array   $compiled  = [];   /* desugared rules used by the Earley loop */
@@ -29,7 +34,7 @@ namespace pharos\phathom
                     "$this->file does not declare a lexer");
             }
 
-            if ($this->abstract === null) {
+            if ($this->abstracts['context'] === null) {
                 throw new UndeclaredException(
                     "$this->file does not declare a context");
             }
@@ -44,31 +49,19 @@ namespace pharos\phathom
 
         public function complexRule(string $rule, array $symbols, int|false $priority, ?string $action = null): void {
             $this->rules[$rule][] = [
-                'symbols' => \array_map(function($symbol) {
-                    return [
-                        'name'       => $symbol['value'],
-                        'type'       => $symbol['type'],
-                        'quantifier' => $symbol['quantifier'] ?? null,
-                        'location'   => $symbol['location'],
-                    ];
-                }, $symbols),
+                'symbols'  => $symbols,
                 'priority' => $priority,
-                'action' =>
+                'action'   =>
                     ($action !== null) ?
                         \trim($action) : null,
             ];
         }
 
-        public function simpleRule(string $rule, array $token, ?string $quantifier = null): void {
+        public function simpleRule(string $rule, Grammar\Symbol $symbol): void {
             $this->rules[$rule][] = [
-                'symbols' => [[
-                    'name'       => $token['value'],
-                    'type'       => $token['type'],
-                    'quantifier' => $quantifier,
-                    'location'   => $token['location'],
-                ]],
+                'symbols'  => [$symbol],
                 'priority' => false,
-                'action' => null,
+                'action'   => null,
             ];
         }
 
@@ -85,11 +78,16 @@ namespace pharos\phathom
                 $this->patterns
             ] = $compiler->compile();
 
-            $this->context = (string)
-                new Grammar\Generator(
+            $generator = new Grammar\Generator(
                     $this->assets,
-                    $this->abstract,
-                    $this->compiled);
+                    $this->abstracts,
+                    $this->lexer,
+                    $this->compiled,
+                    $this->synthetic);
+            [
+                $this->token,
+                $this->context
+            ] = $generator->generate();
 
             $this->start = isset($this->rules['unit'])
                 ? 'unit'
@@ -100,11 +98,13 @@ namespace pharos\phathom
             $tokens =
                 $this->lexer
                     ->tokenize(
-                        $context->parser->file);
+                        $context->parser
+                            ->file,
+                        $this->token);
             $limit = \count($tokens);
 
             $builder =
-                new Grammar\Chart(
+                new Earley\Chart(
                     $this->compiled,
                     $this->terminals,
                     $this->patterns,
@@ -114,7 +114,7 @@ namespace pharos\phathom
             [$chart, $items] = $builder->build();
 
             $evaluator =
-                new Grammar\Evaluator(
+                new Earley\Evaluator(
                     $this->compiled,
                     $this->synthetic,
                     $chart, $items);
@@ -139,10 +139,11 @@ namespace pharos\phathom
                 $this->file->relative($location));
         }
 
-        public function setContext(string $abstract): void {
-            if ($this->abstract !== null) {
+        public function setAbstract(string $type, string $abstract, string $parent) : void {
+            if ($this->abstracts[$type] !== null &&
+                $this->abstracts[$type] !== $parent) {
                 throw new DirectiveException(
-                    "context already declared as {$this->abstract}");
+                    "{$type} already declared as {$this->abstracts[$type]}");
             }
 
             $parents = @\class_parents($abstract);
@@ -152,12 +153,16 @@ namespace pharos\phathom
                     "{$abstract} does not exist, it must be autoloadable");
             }
 
-            if (!\in_array(Context::class, $parents)) {
+            $parents = array_map(function(string $parent) : string {
+                return "\\$parent";
+            }, $parents);
+
+            if (!\in_array($parent, $parents)) {
                 throw new DirectiveException(
-                    "{$abstract} does not extend \\pharos\\phathom\\Context");
+                    "{$abstract} does not extend {$parent}");
             }
 
-            $this->abstract = $abstract;
+            $this->abstracts[$type] = $abstract;
         }
 
         public function factory(Parser $parser): Context {
@@ -169,7 +174,7 @@ namespace pharos\phathom
                 'file'      => $this->file,
                 'assets'    => $this->assets,
                 'lexer'     => $this->lexer,
-                'abstract'  => $this->abstract,
+                'abstracts' => $this->abstracts,
                 'compiled'  => $this->compiled,
                 'synthetic' => $this->synthetic,
                 'terminals' => $this->terminals,
@@ -183,11 +188,17 @@ namespace pharos\phathom
                 $this->$member = $value;
             }
 
-            $this->context = (string)
+            $generator =
                 new Grammar\Generator(
                     $this->assets,
-                    $this->abstract,
-                    $this->compiled);
+                    $this->abstracts,
+                    $this->lexer,
+                    $this->compiled,
+                    $this->synthetic);
+            [
+                $this->token,
+                $this->context
+            ] = $generator->generate();
         }
     }
 }

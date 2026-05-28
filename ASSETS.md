@@ -2,7 +2,7 @@
 
 **An assets directory is required at runtime, by default the asset directory at the root of the source tree will be used**
 
-During compilation of grammar files, a PHP class is generated from the actions therein; This file must be written to the physical disk - so that it may be cached and optimized as normal code - which means at some point you need to execute with write permission.
+During compilation of grammar files, 2 PHP classes are generated (Token, Context); These files must be written to the physical disk - so they may be cached and optimized as normal code - which means at some point you need to execute with write permission.
 
 For a read-only deployment, you may deploy assets generated during testing/staging so long as the paths remain consistent.
 
@@ -10,7 +10,18 @@ You may change the assets directory location at runtime, see `Grammar::__constru
 
 The assets directory must contain a file named `.guard`.
 
-*Changes to grammar files will result in re-generation of assets upon subsequent invocation.*
+*Changes to grammar/lexer files will result in re-generation of assets upon subsequent invocation.*
+
+## Token
+
+A class derived from `\pharos\phathom\Token` (or a user provided abstract, with the directive `token`) is generated with constant integer identifiers for
+all named token types in the lexer configuration.
+
+## Context
+
+A class derived from a user provided  `\pharos\phathom\Context` is generated containing all action code.
+
+*The `Token` concrete implementation is imported as `Token`, such that action code referencing `Token` is referring to the concrete class*
 
 ### Notes
 

@@ -1,6 +1,6 @@
 <?php
 namespace pharos\phathom\Grammar {
-    final class Token {
+    final class Token extends \pharos\phathom\Token {
         const int IDENT        = 1;
         const int PATTERN      = 2;
         const int STRING       = 3;

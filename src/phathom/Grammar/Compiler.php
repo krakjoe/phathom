@@ -30,36 +30,24 @@ namespace pharos\phathom\Grammar {
                     foreach ($alternative['symbols'] as &$symbol) {
                         $this->compileSymbol($rule, $symbol);
 
-                        if ($symbol['quantifier'] === null) {
+                        if ($symbol->quantifier === Quantifier::NONE) {
                             continue;
                         }
 
-                        $base  = $symbol['name'];
-                        $type  = $symbol['quantifier'];
-                        $kind  = match ($type) {
-                            '*'     => 'star',
-                            '+'     => 'plus',
-                            '?'     => 'opt',
-                        };
+                        $base  = $symbol->name;
+                        $kind  = Quantifier::name($symbol->quantifier);
                         $name =
                             \sprintf("__%s_%s__",
                                 $base, $kind);
 
                         if (!isset($synthetic[$name])) {
-                            $self = [[
-                                'name'       => $name,
-                                'type'       => Token::IDENT,
-                                'quantifier' => null
-                            ]];
+                            $self = [
+                                new Symbol(Token::IDENT, $name)];
+                            $one  = [
+                                new Symbol($symbol->type, $base)];
 
-                            $one = [[
-                                'name'       => $base,
-                                'type'       => $symbol['type'],
-                                'quantifier' => null
-                            ]];
-
-                            $synthetic[$name] = match ($kind) {
-                                'star' => [
+                            $synthetic[$name] = match ($symbol->quantifier) {
+                                Quantifier::STAR => [
                                     [
                                         'symbols'  => [],
                                         'priority' => false,
@@ -71,7 +59,7 @@ namespace pharos\phathom\Grammar {
                                         'action'   => null
                                     ], /* A* A */
                                 ],
-                                'plus' => [
+                                Quantifier::PLUS => [
                                     [
                                         'symbols'  => $one,
                                         'priority' => $alternative['priority'],
@@ -83,7 +71,7 @@ namespace pharos\phathom\Grammar {
                                         'action'   => null
                                     ], /* A+ A */
                                 ],
-                                'opt' => [
+                                Quantifier::OPTIONAL => [
                                     [
                                         'symbols'  => [],
                                         'priority' => false,
@@ -99,8 +87,7 @@ namespace pharos\phathom\Grammar {
                             $this->synthetic[$name] = $kind;
                         }
 
-                        $symbol['name']       = $name;
-                        $symbol['quantifier'] = null;
+                        $symbol = new Symbol($symbol->type, $name, $symbol->location);
                     }
                 }
             }
@@ -108,35 +95,48 @@ namespace pharos\phathom\Grammar {
             $this->rules = \array_merge($this->rules, $synthetic);
         }
 
-        private function compileSymbol(string $rule, array $symbol): void {
-            if (isset($this->rules[$symbol['name']])) {
+        private function compileSymbol(string $rule, Symbol $symbol): void {
+            if (isset($this->rules[$symbol->name])) {
                 return;
             }
 
-            switch ($symbol['type']) {
+            switch ($symbol->type) {
                 case Token::PATTERN:
-                    $this->patterns[$symbol['name']] = true;
+                    $this->patterns[$symbol->name] = true;
                 break;
 
                 default:
-                    if (!$this->lexer->known($symbol['name'])) {
+                    if (!$this->lexer->known($symbol->name)) {
                         throw new UndefinedException(
-                            "Undefined symbol '{$symbol['name']}' "
+                            "Undefined symbol '{$symbol->name}' "
                                 ."at '{$rule}' in {$this->file}");
                     }
 
-                    $this->terminals[$symbol['name']] = true;
+                    $this->terminals[$symbol->name] =
+                        $this->lexer->config[$symbol->name]['const'];
+            }
+        }
+
+        private function compilePatterns() : void {
+            if (!\count($this->patterns)) {
+                return;
+            }
+
+            $patterns =
+                \array_keys(
+                    $this->patterns);
+
+            $this->lexer->add($patterns);
+
+            foreach ($patterns as $name) {
+                $this->patterns[$name] =
+                    $this->lexer->config[$name]['const'];
             }
         }
 
         public function compile() : array {
             $this->compileRules();
-
-            if (\count($this->patterns)) {
-                $this->lexer->add(
-                    \array_keys(
-                        $this->patterns));
-            }
+            $this->compilePatterns();
 
             return [
                 $this->rules,

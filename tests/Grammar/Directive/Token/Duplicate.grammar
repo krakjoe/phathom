@@ -1,0 +1,4 @@
+lexer: "../../Basic/Basic.lexer";
+
+token: "\pharos\phathom\tests\Grammar\Directive\Token\Token";
+token: "\pharos\phathom\tests\Grammar\Directive\Token\Token";

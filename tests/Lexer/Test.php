@@ -44,39 +44,23 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         $file = new \pharos\phathom\File($path);
 
-        $this->assertSame($content->tokenize($file), [
-            [
-                "type" => "ALPHANUM",
-                "value" => "Hello",
-                "location" => [
-                    "path"     => $path,
-                    "position" => 0,
-                ],
-            ],
-            [
-                "type" => "ALPHANUM",
-                "value" => "World",
-                "location" => [
-                    "path"     => $path,
-                    "position" => 7,
-                ],
-            ],
-            [
-                "type" => "ALPHANUM",
-                "value" => "Indented",
-                "location" => [
-                    "path"     => $path,
-                    "position" => 18,
-                ],
-            ],
-            [
-                "type" => "INTEGER",
-                "value" => "42",
-                "location" => [
-                    "path"     => $path,
-                    "position" => 32,
-                ],
-            ]
-        ]);
+        $tokens = $content->tokenize($file, Token::class);
+
+        $this->assertCount(4, $tokens);
+        $this->assertContainsOnlyInstancesOf(\pharos\phathom\Token::class, $tokens);
+
+        $this->assertSame("Hello",    $tokens[0]->value);
+        $this->assertSame("World",    $tokens[1]->value);
+        $this->assertSame("Indented", $tokens[2]->value);
+        $this->assertSame("42",       $tokens[3]->value);
+
+        $this->assertSame($tokens[0]->type, $tokens[1]->type); /* ALPHANUM */
+        $this->assertSame($tokens[0]->type, $tokens[2]->type); /* ALPHANUM */
+        $this->assertNotSame($tokens[0]->type, $tokens[3]->type); /* INTEGER != ALPHANUM */
+
+        $this->assertSame(["path" => $path, "position" => 0],  $tokens[0]->location);
+        $this->assertSame(["path" => $path, "position" => 7],  $tokens[1]->location);
+        $this->assertSame(["path" => $path, "position" => 18], $tokens[2]->location);
+        $this->assertSame(["path" => $path, "position" => 32], $tokens[3]->location);
     }
 }

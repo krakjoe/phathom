@@ -1,5 +1,5 @@
 <?php
-namespace pharos\phathom\Grammar {
+namespace pharos\phathom\Earley {
     use \pharos\phathom\Context;
 
     final class Evaluator {
@@ -11,11 +11,11 @@ namespace pharos\phathom\Grammar {
 
         private function evalItem(Context $context, int $itemId, array $tokens): mixed {
             $item = $this->items[$itemId];
-            $alt  = $this->rules[$item['rule']][$item['alt']];
+            $alt  = $this->rules[$item->rule][$item->alt];
 
             $synthesized =
                 $this->synthetic[
-                    $item['rule']] ?? false;
+                    $item->rule] ?? false;
 
             if (empty($alt['symbols'])) {
                 return $synthesized ? [] : null;
@@ -27,8 +27,8 @@ namespace pharos\phathom\Grammar {
                 $method =
                     \sprintf(
                         '__action_%s_%d__',
-                        $item['rule'],
-                        $item['alt']);
+                        $item->rule,
+                        $item->alt);
                 return $context->$method(...$values);
             }
 
@@ -49,9 +49,11 @@ namespace pharos\phathom\Grammar {
             return \count($values) === 1 ? $values[0] : $values;
         }
 
-        private function selectPriority(array $back) : int {
-            if (isset($back['child'])) {
-                $priority = $this->items[$back['child']]['priority'];
+        private function selectPriority(Back $back) : int {
+            if ($back->child !== null) {
+                $priority = $this->items[
+                    $back->child
+                ]->priority;
 
                 if ($priority !== false) {
                     return $priority;
@@ -60,7 +62,9 @@ namespace pharos\phathom\Grammar {
                 return \PHP_INT_MIN;
             }
 
-            $priority = $this->items[$back['prev']]['priority'];
+            $priority = $this->items[
+                $back->prev
+            ]->priority;
 
             if ($priority !== false) {
                 return $priority;
@@ -69,7 +73,7 @@ namespace pharos\phathom\Grammar {
             return \PHP_INT_MIN;
         }
 
-        private function selectBack(array $backs) : array {
+        private function selectBack(array $backs) : Back {
             $selected = $backs[0];
 
             $best = $this->selectPriority($selected);
@@ -89,7 +93,7 @@ namespace pharos\phathom\Grammar {
 
         private function collectValues(Context $context, int $itemId, array $tokens): array {
             $item     = $this->items[$itemId];
-            $alt      = $this->rules[$item['rule']][$item['alt']];
+            $alt      = $this->rules[$item->rule][$item->alt];
             $nSymbols = \count($alt['symbols']);
 
             /* Walk the backs chain right-to-left to collect (pos → back) pairs,
@@ -101,21 +105,19 @@ namespace pharos\phathom\Grammar {
             for ($pos = $nSymbols - 1; $pos >= 0; $pos--) {
                 $back =
                     $this->selectBack(
-                        $this->items[$cur]['backs']);
+                        $this->items[$cur]->backs);
                 $backs[$pos] = $back;
-                $cur         = $back['prev'];
+                $cur         = $back->prev;
             }
 
             $values = \array_fill(0, $nSymbols, null);
             for ($pos = 0; $pos < $nSymbols; $pos++) {
                 $back         = $backs[$pos];
-                $values[$pos] = isset($back['token'])
-                    ? (
-                        $tokens[$back['token']]['value'] ??
-                        $tokens[$back['token']]['type']
-                    ) : $this->evalItem(
+                $values[$pos] = $back->token !== null
+                    ? $tokens[$back->token]
+                    : $this->evalItem(
                             $context,
-                            $back['child'],
+                            $back->child,
                             $tokens);
             }
 
@@ -128,13 +130,13 @@ namespace pharos\phathom\Grammar {
 
             foreach ($this->chart[$limit] as $id) {
                 $item = $this->items[$id];
-                $alt  = $this->rules[$item['rule']][$item['alt']];
+                $alt  = $this->rules[$item->rule][$item->alt];
 
-                if ($item['rule']   === $start &&
-                    $item['origin'] === 0 &&
-                    $item['dot']    === \count($alt['symbols'])) {
+                if ($item->rule   === $start &&
+                    $item->origin === 0 &&
+                    $item->dot    === \count($alt['symbols'])) {
 
-                    $itemPriority = $item['priority'];
+                    $itemPriority = $item->priority;
 
                     if ($root === null) {
                         $root         = $id;

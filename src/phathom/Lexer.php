@@ -8,7 +8,8 @@ namespace pharos\phathom
 
     final class Lexer
     {
-        private array|bool   $config;
+        public private(set) array|bool $config;
+
         private string|false $skipping  = false;
         private array        $consuming = [];
 
@@ -23,6 +24,10 @@ namespace pharos\phathom
                     "$this->file does not contain valid configuration (ini syntax)");
             }
 
+            foreach ($this->config as $name => &$config) {
+                $config['added'] = false;
+            }
+
             $this->compile();
         }
 
@@ -33,7 +38,8 @@ namespace pharos\phathom
         public function add(array $patterns): void {
             foreach ($patterns as $pattern) {
                 $this->config[$pattern] = [
-                    'pattern' => $pattern
+                    'pattern' => $pattern,
+                    'added'   => true,
                 ];
             }
             $this->compile();
@@ -120,8 +126,9 @@ namespace pharos\phathom
         public function compile(): void {
             $skipping  = [];
             $consuming = [];
+            $iterator  = 1;
 
-            foreach ($this->config as $name => $config) {
+            foreach ($this->config as $name => &$config) {
                 [$pattern, $flags] =
                     $this->unwrap($config['pattern']);
 
@@ -135,6 +142,8 @@ namespace pharos\phathom
                     $consuming[$name] =
                         $this->wrap([$inner]);
                 }
+
+                $config['const'] = $iterator++;
             }
 
             $this->skipping  =
@@ -169,7 +178,7 @@ namespace pharos\phathom
             }
         }
 
-        public function tokenize(File $file): array {
+        public function tokenize(File $file, string $class = Token::class): array {
             $tokens   = [];
             $buffer   = $file->contents();
             $position = 0;
@@ -251,14 +260,14 @@ namespace pharos\phathom
                         ], \array_keys($this->consuming));
                 }
 
-                $tokens[] = [
-                    'type'     => $type,
-                    'value'    => $value,
-                    'location' => [
+                $tokens[] = new $class(
+                    $this->config[$type]['const'],
+                    [
                         'path'     => $file->path,
                         'position' => $position,
                     ],
-                ];
+                    $value
+                );
 
                 $position += $length;
             }

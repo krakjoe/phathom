@@ -36,11 +36,19 @@ namespace pharos\phathom\tests\Grammar\Generator {
         }
 
         public function testExpectations() : void {
+            $lexer = new \pharos\phathom\Lexer(
+                new \pharos\phathom\File(
+                    \sprintf("%s%s..%s..%sLexer%sContent.lexer",
+                        \dirname(__FILE__),
+                        \DIRECTORY_SEPARATOR,
+                        \DIRECTORY_SEPARATOR,
+                        \DIRECTORY_SEPARATOR,
+                        \DIRECTORY_SEPARATOR)));
             $this->expectException(
                 \pharos\phathom\Exception::class);
             $this->expectExceptionMessageMatches(
                 "/could not find the default assets directory/");
-            new \pharos\phathom\Grammar\Generator(null, "\stdClass", []);
+            new \pharos\phathom\Grammar\Generator(null, ['token' => '\\pharos\\phathom\\Token', 'context' => '\\stdClass'], $lexer, [], []);
         }
     }
 }

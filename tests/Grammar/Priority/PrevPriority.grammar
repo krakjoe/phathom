@@ -8,8 +8,8 @@ context: "\pharos\phathom\tests\Grammar\File";
 # branch of selectPriority that returns a real priority value.
 a: (X) [3] { return $1; };
 
-b: (a X) [1] { return $this->returnThings(1, $1); }
- | (a X) [4] { return $this->returnThings(4, $1); }
+b: (a X) [1] { return $this->returnThings(1, (string) $1); }
+ | (a X) [4] { return $this->returnThings(4, (string) $1); }
  ;
 
 unit: b;

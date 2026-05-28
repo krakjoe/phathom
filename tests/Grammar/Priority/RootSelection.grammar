@@ -9,8 +9,8 @@ context: "\pharos\phathom\tests\Grammar\File";
 # execute() finds unit@alt=0 first (sets root, rootPriority=1), then
 # unit@alt=1 (itemPriority=2 > 1) — hitting the elseif at lines 222-226.
 
-inner: (X) [1] { return $this->returnThings(1, $1); };
-outer: (X) [2] { return $this->returnThings(2, $1); };
+inner: (X) [1] { return $this->returnThings(1, (string) $1); };
+outer: (X) [2] { return $this->returnThings(2, (string) $1); };
 
 unit: inner
     | outer;
