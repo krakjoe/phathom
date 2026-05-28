@@ -14,12 +14,14 @@ The assets directory must contain a file named `.guard`.
 
 ## Token
 
-A class derived from `\pharos\phathom\Token` (or a user provided abstract, with the directive `token`) is generated with constant integer identifiers for
+A class derived from `\pharos\phathom\Token` (or a user provided abstract, set with the `token` directive) is generated with constant integer identifiers for
 all named token types in the lexer configuration.
+
+*This allows the Earley engine to reference Tokens by integer identifier rather than strings, and exposes the Token in Context, such that the programmer can see location information and token type*
 
 ## Context
 
-A class derived from a user provided  `\pharos\phathom\Context` is generated containing all action code.
+A class derived from a user provided  `\pharos\phathom\Context` (set with the `context` directive) is generated containing all action code.
 
 *The `Token` concrete implementation is imported as `Token`, such that action code referencing `Token` is referring to the concrete class*
 
