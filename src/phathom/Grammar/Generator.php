@@ -59,7 +59,7 @@ namespace pharos\phathom\Grammar {
                                 $name,
                                 $index,
                                 ... $this->compileContextMethod(
-                                        $alternative, $token));
+                                        $alternative));
                         }
                     }
                 }
@@ -87,7 +87,7 @@ namespace pharos\phathom\Grammar {
             return [$class, $symbol];
         }
 
-        private function compileContextMethod(array $alternative, string $token) : array {
+        private function compileContextMethod(array $alternative) : array {
             $parameters = [];
             $action     = $alternative['action'];
 
@@ -105,7 +105,7 @@ namespace pharos\phathom\Grammar {
                     $action);
 
                 if (!isset($this->rules[$symbol->name])) {
-                    $type = $token;
+                    $type = "Token";
                 } elseif (isset($this->synthetic[$symbol->name])) {
                     $type = 'array';
                 } else {

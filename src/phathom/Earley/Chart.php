@@ -15,34 +15,30 @@ namespace pharos\phathom\Earley {
             $chart = \array_fill(0, $this->limit + 1, []);
 
             $add = function (int $pos, Item $item) use (&$items, &$index, &$chart): void {
-                $key = "{$pos}/{$item->rule}/{$item->alt}/{$item->dot}/{$item->origin}";
+                $slot = &$index[$pos][$item->rule][$item->alt][$item->dot][$item->origin];
 
-                if (!isset($index[$key])) {
+                if (!isset($slot)) {
                     $item->pos     = $pos;
-                    $id              = \count($items);
-                    $items[]         = $item;
-                    $index[$key]     = $id;
-                    $chart[$pos][]   = $id;
+                    $id            = \count($items);
+                    $items[]       = $item;
+                    $slot          = $id;
+                    $chart[$pos][] = $id;
                 } elseif (!empty($item->backs)) {
                     foreach ($item->backs as $back) {
-                        $items[
-                            $index[$key]
-                        ]->backs[] = $back;
+                        $items[$slot]->backs[] = $back;
                     }
                     /* Propagate priority upward — if the incoming completion
                      * carries higher priority, update the existing item so
                      * the priority is visible at root selection time. */
                     $incoming = $item->priority;
-                    $existing = $items[
-                        $index[$key]
-                    ]->priority;
+                    $existing = $items[$slot]->priority;
 
                     if ($incoming === false) {
                         return;
                     }
 
                     if ($existing === false || $incoming > $existing) {
-                        $items[$index[$key]]->priority = $incoming;
+                        $items[$slot]->priority = $incoming;
                     }
                 }
             };
