@@ -62,6 +62,17 @@ final class Test extends \PHPUnit\Framework\TestCase
         ]);
     }
 
+    public function testAmbiguous() : void {
+        $file = $this->file
+            ->relative("Ambiguous.grammar");
+
+        $this->expectException(
+            \pharos\phathom\Exception\Priority::class);
+        $this->expectExceptionMessageMatches('/ambiguous/');
+            
+        new \pharos\phathom\Grammar($file);
+    }
+
     public function testRoot() : void {
         $file = $this->file
             ->relative("Root.grammar");

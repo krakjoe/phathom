@@ -29,37 +29,12 @@ namespace pharos\phathom\Exception {
             }
         }
 
-        private static function print(Token $token) : string {
-            if (isset($token->value)) {
-                if (\strlen($token->value) > 32) {
-                    return \sprintf(
-                        "%s(%s...) at %s:%d",
-                        Token::string($token->type),
-                        \substr($token->value, 0, 32),
-                        $token->location['path'],
-                        $token->location['position']);
-                }
-                return \sprintf(
-                    "%s(%s) at %s:%d",
-                    Token::string($token->type),
-                    $token->value,
-                    $token->location['path'],
-                    $token->location['position']);
-            }
-
-            return \sprintf(
-                "%s at %s:%d",
-                Token::string($token->type),
-                $token->location['path'],
-                $token->location['position']);
-        }
-
         public static function directive(Token $token, array $allowed) : Unexpected {
             return new self(\sprintf(
                 "Unexpected directive, expected %s, ".
                 "got %s",
                 Unexpected::explain($allowed),
-                Unexpected::print($token)));
+                Token::print($token)));
         }
 
         public static function include(Token $token, string $path, array $location) : Unexpected {
@@ -76,7 +51,7 @@ namespace pharos\phathom\Exception {
                     "IDENT, " .
                 "got %s",
                 Token::string($token->type),
-                Unexpected::print($token)));
+                Token::print($token)));
         }
 
         public static function token(Token $token, Token $next, array $rules) : Unexpected {
@@ -85,7 +60,7 @@ namespace pharos\phathom\Exception {
                 Token::string($next->type),
                 Token::string($token->type),
                 Unexpected::explain($rules),
-                Unexpected::print($next)));
+                Token::print($next)));
         }
 
         public static function nondigit(int $type, string $content, array $location) : Unexpected {

@@ -10,60 +10,57 @@ namespace pharos\phathom\Earley {
             private int    $limit) {}
 
         public function build(): array {
-            $items = [];
             $index = [];
             $chart = \array_fill(0, $this->limit + 1, []);
 
-            $add = function (int $pos, Item $item) use (&$items, &$index, &$chart): void {
+            $add = function (int $pos, Item $item) use (&$index, &$chart): void {
                 $slot = &$index[$pos][$item->rule][$item->alt][$item->dot][$item->origin];
 
                 if (!isset($slot)) {
                     $item->pos     = $pos;
-                    $id            = \count($items);
-                    $items[]       = $item;
-                    $slot          = $id;
-                    $chart[$pos][] = $id;
+                    $slot          = $item;
+                    $chart[$pos][] = $item;
                 } elseif (!empty($item->backs)) {
                     foreach ($item->backs as $back) {
-                        $items[$slot]->backs[] = $back;
+                        $slot->backs[] = $back;
                     }
                 }
             };
 
-            foreach ($this->rules[$this->start] as $altIdx => $_) {
+            foreach ($this->rules[$this->start] as $aid => $alternative) {
                 $add(0, new Item(
-                    rule:     $this->start,
-                    alt:      $altIdx,
-                    dot:      0,
-                    origin:   0,
-                    backs:    []));
+                    rule:        $this->start,
+                    alt:         $aid,
+                    dot:         0,
+                    origin:      0,
+                    backs:       [],
+                    alternative: $alternative));
             }
 
             for ($i = 0; $i <= $this->limit; $i++) {
                 $j = 0;
                 while ($j < \count($chart[$i])) {
-                    $itemId = $chart[$i][$j++];
-                    $item   = $items[$itemId];
-                    $alt    = $this->rules[$item->rule][$item->alt];
+                    $item   = $chart[$i][$j++];
+                    $alt    = $item->alternative;
                     $dotted = $alt->symbols[$item->dot] ?? null;
 
                     if ($dotted === null) {
                         /* Complete */
-                        foreach ($chart[$item->origin] as $prevId) {
-                            $prev    = $items[$prevId];
-                            $prevAlt = $this->rules[$prev->rule][$prev->alt];
-                            $prevSym = $prevAlt->symbols[$prev->dot] ?? null;
+                        foreach ($chart[$item->origin] as $prev) {
+                            $palt = $prev->alternative;
+                            $psym = $palt->symbols[$prev->dot] ?? null;
 
-                            if ($prevSym !== null && $prevSym->name === $item->rule) {
+                            if ($psym !== null && $psym->name === $item->rule) {
                                 $add($i, new Item(
-                                    rule:     $prev->rule,
-                                    alt:      $prev->alt,
-                                    dot:      $prev->dot + 1,
-                                    origin:   $prev->origin,
-                                    backs:    [new Back(
-                                        prev:  $prevId,
-                                        child: $itemId,
-                                        token: null)]));
+                                    rule:        $prev->rule,
+                                    alt:         $prev->alt,
+                                    dot:         $prev->dot + 1,
+                                    origin:      $prev->origin,
+                                    backs:       [new Back(
+                                        prev:  $prev,
+                                        child: $item,
+                                        token: null)],
+                                    alternative: $palt));
                             }
                         }
                     } elseif (isset($this->terminals[$dotted->name]) ||
@@ -74,30 +71,32 @@ namespace pharos\phathom\Earley {
                             $this->patterns[$dotted->name];
                         if ($i < $this->limit && $this->tokens[$i]->type === $scanning) {
                             $add($i + 1, new Item(
-                                rule:     $item->rule,
-                                alt:      $item->alt,
-                                dot:      $item->dot + 1,
-                                origin:   $item->origin,
-                                backs:    [new Back(
-                                    prev:  $itemId,
+                                rule:        $item->rule,
+                                alt:         $item->alt,
+                                dot:         $item->dot + 1,
+                                origin:      $item->origin,
+                                backs:       [new Back(
+                                    prev:  $item,
                                     child: null,
-                                    token: $i)]));
+                                    token: $i)],
+                                alternative: $item->alternative));
                         }
                     } else {
                         /* Predict */
-                        foreach ($this->rules[$dotted->name] as $altIdx => $_) {
+                        foreach ($this->rules[$dotted->name] as $aid => $alternative) {
                             $add($i, new Item(
-                                rule:     $dotted->name,
-                                alt:      $altIdx,
-                                dot:      0,
-                                origin:   $i,
-                                backs:    []));
+                                rule:        $dotted->name,
+                                alt:         $aid,
+                                dot:         0,
+                                origin:      $i,
+                                backs:       [],
+                                alternative: $alternative));
                         }
                     }
                 }
             }
 
-            return [$chart, $items];
+            return $chart;
         }
     }
 }

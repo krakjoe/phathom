@@ -184,6 +184,10 @@ A priority annotation on a rule with a single alternative expression is inert, a
 
 Priority annotations have rule-scope, ie: they determine how to resolve ambiguity in a single rule, but do not effect the priorities of a consumer of that rule.
 
+Priority annotations must be unique (with respect to the rule of the alternative, not globally); equal priorities among alternatives will raise `Exception\Priority` at compile time.
+
+At execution time, where input is ambiguous because multiple parse paths exists and priority annotations are missing `Exception\Ambiguity` will be raised.
+
 ### Actions
 
 An action is a PHP code block that is called when an alternative is successfully matched.

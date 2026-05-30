@@ -4,6 +4,7 @@ namespace pharos\phathom\Grammar {
     use \pharos\phathom\Grammar;
     use \pharos\phathom\Assets;
     use \pharos\phathom\Lexer;
+    use \pharos\phathom\Grammar\Quantifier;
 
     use \pharos\phathom\Exception;
     use \pharos\phathom\Exception\IO as IOException;
@@ -13,8 +14,7 @@ namespace pharos\phathom\Grammar {
             private ?Assets $assets,
             private array   $abstracts,
             private Lexer   $lexer,
-            private array   $rules,
-            private array   $synthetic) {
+            private array   $rules) {
 
             if ($this->assets === null) {
                 $self = new \pharos\phathom\File(__FILE__);
@@ -106,7 +106,7 @@ namespace pharos\phathom\Grammar {
 
                 if (!isset($this->rules[$symbol->name])) {
                     $type = "Token";
-                } elseif (isset($this->synthetic[$symbol->name])) {
+                } elseif ($this->rules[$symbol->name][0]->synthetic !== Quantifier::NONE) {
                     $type = 'array';
                 } else {
                     $type = 'mixed';

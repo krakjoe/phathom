@@ -2,9 +2,9 @@
 namespace pharos\phathom\Earley {
     final class Back {
         public function __construct(
-            public int  $prev,
-            public ?int $child,
-            public ?int $token) {}
+            public Item  $prev,
+            public ?Item $child,
+            public ?int  $token) {}
     }
 }
 ?>

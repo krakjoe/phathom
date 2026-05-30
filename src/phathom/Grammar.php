@@ -1,6 +1,6 @@
 <?php
 namespace pharos\phathom
-{
+{    
     use \pharos\phathom\Exception\Undeclared as UndeclaredException;
     use \pharos\phathom\Exception\Execute    as ExecuteException;
     use \pharos\phathom\Exception\Directive  as DirectiveException;
@@ -20,7 +20,6 @@ namespace pharos\phathom
         private             array   $compiled  = [];   /* desugared rules used by the Earley loop */
         private             array   $terminals = [];   /* terminal name => true                   */
         private             array   $patterns  = [];   /* pattern terminal name => true           */
-        private             array   $synthetic = [];   /* name => 'star'|'plus'|'opt'             */
         private             string  $start;            /* name of starting rule, unit or last */
 
         public function __construct(
@@ -48,11 +47,11 @@ namespace pharos\phathom
         }
 
         public function complexAlternative(string $rule, array $symbols, int|false $priority, ?string $action = null): void {
-            $this->rules[$rule][] = new Grammar\Alternative($symbols, $priority, $action);
+            $this->rules[$rule][] = Grammar\Alternative::complex($symbols, $priority, $action);
         }
 
         public function simpleAlternative(string $rule, Grammar\Symbol $symbol): void {
-            $this->rules[$rule][] = new Grammar\Alternative([$symbol]);
+            $this->rules[$rule][] = Grammar\Alternative::simple($symbol);
         }
 
         private function compile(): void {
@@ -63,7 +62,6 @@ namespace pharos\phathom
                     $this->rules);
             [
                 $this->compiled,
-                $this->synthetic,
                 $this->terminals,
                 $this->patterns
             ] = $compiler->compile();
@@ -72,8 +70,7 @@ namespace pharos\phathom
                     $this->assets,
                     $this->abstracts,
                     $this->lexer,
-                    $this->compiled,
-                    $this->synthetic);
+                    $this->compiled);
             [
                 $this->token,
                 $this->context
@@ -82,6 +79,8 @@ namespace pharos\phathom
             $this->start = isset($this->rules['unit'])
                 ? 'unit'
                 : \array_key_last($this->rules);
+
+            unset($this->rules);
         }
 
         public function execute(Context $context): Context {
@@ -101,20 +100,14 @@ namespace pharos\phathom
                     $this->start,
                     $tokens, $limit);
 
-            [$chart, $items] = $builder->build();
+            $chart = $builder->build();
 
             $evaluator =
                 new Earley\Evaluator(
-                    $this->compiled,
-                    $this->synthetic,
-                    $chart, $items);
+                    $context,
+                    $chart);
 
-            if (!$evaluator->enter(
-                    $context, $this->start, $tokens, $limit)) {
-                throw new ExecuteException(
-                    "{$context->parser->file} does not match ".
-                        "'{$this->start}' in {$this->file}");
-            }
+            $evaluator->enter($this->start, $tokens, $limit);
 
             return $context;
         }
@@ -136,16 +129,14 @@ namespace pharos\phathom
                     "{$type} already declared as {$this->abstracts[$type]}");
             }
 
-            $parents = @\class_parents($abstract);
-
-            if ($parents === false) {
+            if (!\class_exists($abstract)) {
                 throw new DirectiveException(
                     "{$abstract} does not exist, it must be autoloadable");
             }
 
-            $parents = array_map(function(string $parent) : string {
+            $parents = \array_map(function(string $parent) : string {
                 return "\\$parent";
-            }, $parents);
+            }, \class_parents($abstract));
 
             if (!\in_array($parent, $parents)) {
                 throw new DirectiveException(
@@ -166,7 +157,6 @@ namespace pharos\phathom
                 'lexer'     => $this->lexer,
                 'abstracts' => $this->abstracts,
                 'compiled'  => $this->compiled,
-                'synthetic' => $this->synthetic,
                 'terminals' => $this->terminals,
                 'patterns'  => $this->patterns,
                 'start'     => $this->start,
@@ -183,8 +173,7 @@ namespace pharos\phathom
                     $this->assets,
                     $this->abstracts,
                     $this->lexer,
-                    $this->compiled,
-                    $this->synthetic);
+                    $this->compiled);
             [
                 $this->token,
                 $this->context

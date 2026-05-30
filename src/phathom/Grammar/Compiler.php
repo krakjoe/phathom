@@ -20,8 +20,10 @@ namespace pharos\phathom\Grammar {
             $synthetic = [];
 
             foreach ($this->rules as $rule => &$alternatives) {
+                $priorities  = [];
                 $prioritized =
-                    $alternatives[0]->priority !== false;
+                    $alternatives[0]
+                        ->priority !== false;
 
                 foreach ($alternatives as $aid => &$alternative) {
                     if (($prioritized === true  && $alternative->priority === false) ||
@@ -33,6 +35,19 @@ namespace pharos\phathom\Grammar {
                             $rule,
                             $this->file
                         ));
+                    }
+
+                    if ($prioritized === true) {
+                        if (\in_array($alternative->priority, $priorities)) {
+                            throw new PriorityException(\sprintf(
+                                "Priority annotation ambiguous for ".
+                                "alternative %d at '%s' in %s",
+                                $aid + 1,
+                                $rule,
+                                $this->file));
+                        }
+                        $priorities[] =
+                            $alternative->priority;
                     }
 
                     foreach ($alternative->symbols as &$symbol) {
@@ -93,10 +108,10 @@ namespace pharos\phathom\Grammar {
          */
         private function compileSynthetic(string $rule, Symbol &$symbol, array &$synthetic) {
             $base  = $symbol->name;
-            $kind  = Quantifier::name($symbol->quantifier);
             $name =
                 \sprintf("__%s_%s__",
-                    $base, $kind);
+                    $base,
+                    Quantifier::name($symbol->quantifier));
 
             if (!isset($this->synthetic[$name])) {
                 $self = [
@@ -106,19 +121,18 @@ namespace pharos\phathom\Grammar {
 
                 $synthetic[$name] = match ($symbol->quantifier) {
                     Quantifier::STAR => [
-                        new Alternative([]),                        /* ε */
-                        new Alternative(\array_merge($self, $one)), /* A* A */
+                        Alternative::synthetic([],                        Quantifier::STAR), /* ε */
+                        Alternative::synthetic(\array_merge($self, $one), Quantifier::STAR), /* A* A */
                     ],
                     Quantifier::PLUS => [
-                        new Alternative($one),                      /* A */
-                        new Alternative(\array_merge($self, $one)), /* A+ A */
+                        Alternative::synthetic($one,                      Quantifier::PLUS), /* A */
+                        Alternative::synthetic(\array_merge($self, $one), Quantifier::PLUS), /* A+ A */
                     ],
                     Quantifier::OPTIONAL => [
-                        new Alternative([]),                        /* ε */
-                        new Alternative($one),                      /* A */
+                        Alternative::synthetic([],                        Quantifier::OPTIONAL), /* ε */
+                        Alternative::synthetic($one,                      Quantifier::OPTIONAL), /* A */
                     ],
                 };
-                $this->synthetic[$name] = $kind;
             }
 
             $symbol = new Symbol($symbol->type, $name, $symbol->location);
@@ -147,7 +161,6 @@ namespace pharos\phathom\Grammar {
 
             return [
                 $this->rules,
-                $this->synthetic,
                 $this->terminals,
                 $this->patterns,
             ];

@@ -1,14 +1,17 @@
 <?php
 namespace pharos\phathom\Earley {
+    use \pharos\phathom\Grammar\Alternative;
+
     final class Item {
         public int $pos;
 
         public function __construct(
-            public string    $rule,
-            public int       $alt,
-            public int       $dot,
-            public int       $origin,
-            public array     $backs) {}
+            public private(set) string      $rule,
+            public private(set) int         $alt,
+            public private(set) int         $dot,
+            public private(set) int         $origin,
+            public              array       $backs,
+            public private(set) Alternative $alternative) {}
     }
 }
 ?>
