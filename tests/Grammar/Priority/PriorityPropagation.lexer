@@ -1,6 +1,0 @@
-[X]
-pattern = "/x/"
-
-[WHITESPACE]
-pattern = "/\s+/"
-skip = true

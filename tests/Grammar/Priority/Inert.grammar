@@ -6,10 +6,6 @@ line:
     (ALPHA EQUALS ALPHA) [1] {
         return $this->returnThings("low", (string) $1);
     }
-    | 
-    (ALPHA EQUALS ALPHA) [2] {
-        return $this->returnThings("high", (string) $1);
-    }
 ;
 
 unit: line+;

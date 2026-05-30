@@ -5,3 +5,4 @@ namespace pharos\phathom {
             public private(set) Parser $parser) {}
     }
 }
+?>

@@ -51,7 +51,7 @@ namespace pharos\phathom\Grammar {
 
                 foreach ($this->rules as $name => $rule) {
                     foreach ($rule as $index => $alternative) {
-                        if ($alternative['action']) {
+                        if ($alternative->action) {
                             $result[] = \sprintf(
                                 "\tpublic function __action_%s_%d__(%s) {\n".
                                         "\t\t%s\n".
@@ -87,11 +87,11 @@ namespace pharos\phathom\Grammar {
             return [$class, $symbol];
         }
 
-        private function compileContextMethod(array $alternative) : array {
+        private function compileContextMethod(Alternative $alternative) : array {
             $parameters = [];
-            $action     = $alternative['action'];
+            $action     = $alternative->action;
 
-            foreach ($alternative['symbols'] as $index => $symbol) {
+            foreach ($alternative->symbols as $index => $symbol) {
                 $parameter =
                     \sprintf(
                         '$__sym%d__',

@@ -4,6 +4,7 @@ namespace pharos\phathom\Grammar {
     use \pharos\phathom\Lexer;
 
     use \pharos\phathom\Exception\Undefined as UndefinedException;
+    use \pharos\phathom\Exception\Priority as PriorityException;
 
     final class Compiler {
         private array  $synthetic = [];
@@ -15,87 +16,50 @@ namespace pharos\phathom\Grammar {
             private Lexer $lexer,
             private array $rules) {}
 
-        /* Rewrite quantified symbols into synthetic nullable/recursive rules,
-         * replacing each quantified reference with the synthetic rule name.
-         *
-         *   A*  →  __A_star__ :  ε  |  __A_star__ A     (left-recursive)
-         *   A+  →  __A_plus__ :  A  |  __A_plus__ A     (left-recursive)
-         *   A?  →  __A_opt__  :  ε  |  A
-         */
         private function compileRules(): void {
             $synthetic = [];
 
             foreach ($this->rules as $rule => &$alternatives) {
-                foreach ($alternatives as &$alternative) {
-                    foreach ($alternative['symbols'] as &$symbol) {
+                $prioritized =
+                    $alternatives[0]->priority !== false;
+
+                foreach ($alternatives as $aid => &$alternative) {
+                    if (($prioritized === true  && $alternative->priority === false) ||
+                        ($prioritized === false && $alternative->priority !== false)) {
+                        throw new PriorityException(\sprintf(
+                            "Priority annotation inconsistent for ".
+                            "alternative %d at '%s' in %s",
+                            $aid + 1,
+                            $rule,
+                            $this->file
+                        ));
+                    }
+
+                    foreach ($alternative->symbols as &$symbol) {
                         $this->compileSymbol($rule, $symbol);
 
                         if ($symbol->quantifier === Quantifier::NONE) {
                             continue;
                         }
 
-                        $base  = $symbol->name;
-                        $kind  = Quantifier::name($symbol->quantifier);
-                        $name =
-                            \sprintf("__%s_%s__",
-                                $base, $kind);
-
-                        if (!isset($synthetic[$name])) {
-                            $self = [
-                                new Symbol(Token::IDENT, $name)];
-                            $one  = [
-                                new Symbol($symbol->type, $base)];
-
-                            $synthetic[$name] = match ($symbol->quantifier) {
-                                Quantifier::STAR => [
-                                    [
-                                        'symbols'  => [],
-                                        'priority' => false,
-                                        'action'   => null
-                                    ], /* ε */
-                                    [
-                                        'symbols'  => \array_merge($self, $one),
-                                        'priority' => $alternative['priority'],
-                                        'action'   => null
-                                    ], /* A* A */
-                                ],
-                                Quantifier::PLUS => [
-                                    [
-                                        'symbols'  => $one,
-                                        'priority' => $alternative['priority'],
-                                        'action'   => null
-                                    ], /* A */
-                                    [
-                                        'symbols'  => \array_merge($self, $one),
-                                        'priority' => $alternative['priority'],
-                                        'action'   => null
-                                    ], /* A+ A */
-                                ],
-                                Quantifier::OPTIONAL => [
-                                    [
-                                        'symbols'  => [],
-                                        'priority' => false,
-                                        'action'   => null
-                                    ], /* ε */
-                                    [
-                                        'symbols'  => $one,
-                                        'priority' => $alternative['priority'],
-                                        'action'   => null
-                                    ], /* A */
-                                ],
-                            };
-                            $this->synthetic[$name] = $kind;
-                        }
-
-                        $symbol = new Symbol($symbol->type, $name, $symbol->location);
+                        $this->compileSynthetic(
+                            $rule, $symbol, $synthetic);
                     }
+                }
+
+                if ($prioritized && \count($alternatives) === 1) {
+                    throw new PriorityException(\sprintf(
+                        "Priority annotation inert for ".
+                        "single alternative at '%s' in %s",
+                        $rule,
+                        $this->file));
                 }
             }
 
             $this->rules = \array_merge($this->rules, $synthetic);
         }
 
-        private function compileSymbol(string $rule, Symbol $symbol): void {
+        private function compileSymbol(string $rule, Symbol &$symbol): void {
             if (isset($this->rules[$symbol->name])) {
                 return;
             }
@@ -107,14 +71,57 @@ namespace pharos\phathom\Grammar {
 
                 default:
                     if (!$this->lexer->known($symbol->name)) {
-                        throw new UndefinedException(
-                            "Undefined symbol '{$symbol->name}' "
-                                ."at '{$rule}' in {$this->file}");
+                        throw new UndefinedException(\sprintf(
+                            "Undefined symbol '%s' at '%s' in %s",
+                            $symbol->name,
+                            $rule,
+                            $this->file
+                        ));
                     }
 
                     $this->terminals[$symbol->name] =
                         $this->lexer->config[$symbol->name]['const'];
             }
+        }
+
+        /* Rewrite quantified symbols into synthetic nullable/recursive rules,
+         * replacing each quantified reference with the synthetic rule name.
+         *
+         *   A*  →  __A_star__ :  ε  |  __A_star__ A     (left-recursive)
+         *   A+  →  __A_plus__ :  A  |  __A_plus__ A     (left-recursive)
+         *   A?  →  __A_opt__  :  ε  |  A
+         */
+        private function compileSynthetic(string $rule, Symbol &$symbol, array &$synthetic) {
+            $base  = $symbol->name;
+            $kind  = Quantifier::name($symbol->quantifier);
+            $name =
+                \sprintf("__%s_%s__",
+                    $base, $kind);
+
+            if (!isset($this->synthetic[$name])) {
+                $self = [
+                    new Symbol(Token::IDENT, $name)];
+                $one  = [
+                    new Symbol($symbol->type, $base)];
+
+                $synthetic[$name] = match ($symbol->quantifier) {
+                    Quantifier::STAR => [
+                        new Alternative([]),                        /* ε */
+                        new Alternative(\array_merge($self, $one)), /* A* A */
+                    ],
+                    Quantifier::PLUS => [
+                        new Alternative($one),                      /* A */
+                        new Alternative(\array_merge($self, $one)), /* A+ A */
+                    ],
+                    Quantifier::OPTIONAL => [
+                        new Alternative([]),                        /* ε */
+                        new Alternative($one),                      /* A */
+                    ],
+                };
+                $this->synthetic[$name] = $kind;
+            }
+
+            $symbol = new Symbol($symbol->type, $name, $symbol->location);
         }
 
         private function compilePatterns() : void {

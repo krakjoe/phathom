@@ -1,5 +1,4 @@
 <?php
-
 namespace pharos\phathom
 {
     abstract class Token {
@@ -16,3 +15,4 @@ namespace pharos\phathom
         }
     }
 }
+?>

@@ -25,3 +25,4 @@ namespace pharos\phathom\Grammar {
         }
     }
 }
+?>

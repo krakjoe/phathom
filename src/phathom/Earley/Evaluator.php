@@ -17,13 +17,13 @@ namespace pharos\phathom\Earley {
                 $this->synthetic[
                     $item->rule] ?? false;
 
-            if (empty($alt['symbols'])) {
+            if (empty($alt->symbols)) {
                 return $synthesized ? [] : null;
             }
 
             $values = $this->collectValues($context, $itemId, $tokens);
 
-            if ($alt['action'] !== null) {
+            if ($alt->action !== null) {
                 $method =
                     \sprintf(
                         '__action_%s_%d__',
@@ -35,7 +35,7 @@ namespace pharos\phathom\Earley {
             switch ($synthesized) {
                 case 'star':
                 case 'plus':
-                    if (\count($alt['symbols']) === 2) {
+                    if (\count($alt->symbols) === 2) {
                         $list   = $values[0];
                         $list[] = $values[1];
                         return $list;
@@ -49,40 +49,30 @@ namespace pharos\phathom\Earley {
             return \count($values) === 1 ? $values[0] : $values;
         }
 
-        private function selectPriority(Back $back) : int {
-            if ($back->child !== null) {
-                $priority = $this->items[
-                    $back->child
-                ]->priority;
-
-                if ($priority !== false) {
-                    return $priority;
-                }
-
-                return \PHP_INT_MIN;
+        private function selectPriority(Back $back) : int|false {
+            if ($back->child === null) {
+                return false;
             }
 
-            $priority = $this->items[
-                $back->prev
-            ]->priority;
+            $child =
+                $this->items[
+                    $back->child];
 
-            if ($priority !== false) {
-                return $priority;
-            }
-
-            return \PHP_INT_MIN;
+            return $this->rules[$child->rule][$child->alt]->priority;
         }
 
         private function selectBack(array $backs) : Back {
             $selected = $backs[0];
-
-            $best = $this->selectPriority($selected);
+            $best     = $this->selectPriority($selected);
 
             foreach ($backs as $back) {
-                $priority =
-                    $this->selectPriority($back);
+                $priority = $this->selectPriority($back);
 
-                if ($priority > $best) {
+                if ($priority === false) {
+                    continue;
+                }
+
+                if ($best === false || $priority > $best) {
                     $selected = $back;
                     $best     = $priority;
                 }
@@ -94,7 +84,7 @@ namespace pharos\phathom\Earley {
         private function collectValues(Context $context, int $itemId, array $tokens): array {
             $item     = $this->items[$itemId];
             $alt      = $this->rules[$item->rule][$item->alt];
-            $nSymbols = \count($alt['symbols']);
+            $nSymbols = \count($alt->symbols);
 
             /* Walk the backs chain right-to-left to collect (pos → back) pairs,
              * then evaluate left-to-right so side-effects fire in document
@@ -125,7 +115,7 @@ namespace pharos\phathom\Earley {
         }
 
         public function enter(Context $context, string $start, array $tokens, int $limit) : bool {
-            $root     = null;
+            $root         = null;
             $rootPriority = false;
 
             foreach ($this->chart[$limit] as $id) {
@@ -134,9 +124,10 @@ namespace pharos\phathom\Earley {
 
                 if ($item->rule   === $start &&
                     $item->origin === 0 &&
-                    $item->dot    === \count($alt['symbols'])) {
+                    $item->dot    === \count($alt->symbols)) {
 
-                    $itemPriority = $item->priority;
+                    $itemPriority =
+                        $alt->priority;
 
                     if ($root === null) {
                         $root         = $id;

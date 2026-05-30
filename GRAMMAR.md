@@ -168,20 +168,21 @@ line: (ALPHA EQUALS numeric)     { return $this->pair((string) $1, (int) (string
 
 ### Priority
 
-When a grammar is ambiguous and multiple parse trees are valid, a priority annotation
-on an expression selects the preferred alternative.  Higher integers win.
+When a grammar is ambiguous and multiple parse trees are valid for a single rule, priority annotations select the preferred alternative. Higher integers win.
 
-Form: `[n]` immediately after the closing `)` of an expression.
+Form: `[n]` immediately after the closing `)` of an expression:
 
 ```
-low:  (ALPHA EQUALS ALPHA) [1] { return $this->make("low",  $1); } ;
-high: (ALPHA EQUALS ALPHA) [2] { return $this->make("high", $1); } ;
-
-line: low | high ;
+line: (ALPHA EQUALS ALPHA) [1] { return $this->make("low",  $1); }
+    | (ALPHA EQUALS ALPHA) [2] { return $this->make("high", $1); } 
+    ;
 ```
 
-Priority propagates through synthetic quantifier rules, so it applies correctly
-when the prioritised rule is reached via `+`, `*`, or `?`.
+Priority annotations must be present for *all* alternatives in a rule, or *none*, missing priority annotations will raise `Exception\Priority` at compile time.
+
+A priority annotation on a rule with a single alternative expression is inert, and will raise `Exception\Priority` at compile time.
+
+Priority annotations have rule-scope, ie: they determine how to resolve ambiguity in a single rule, but do not effect the priorities of a consumer of that rule.
 
 ### Actions
 

@@ -8,7 +8,6 @@ namespace pharos\phathom\Earley {
             public int       $alt,
             public int       $dot,
             public int       $origin,
-            public int|false $priority,
             public array     $backs) {}
     }
 }

@@ -151,11 +151,11 @@ namespace pharos\phathom\Grammar {
                                 $action = 
                                     $consume(); /* ACTION */
                                 $this->grammar
-                                    ->complexRule(
+                                    ->complexAlternative(
                                         $ident->value, $symbols, $priority, $action->value);
                             } else {
                                 $this->grammar
-                                    ->complexRule(
+                                    ->complexAlternative(
                                         $ident->value, $symbols, $priority);
                             }
                             break;
@@ -171,7 +171,7 @@ namespace pharos\phathom\Grammar {
                                 $quantify = null;
                             }
 
-                            $this->grammar->simpleRule(
+                            $this->grammar->simpleAlternative(
                                 $ident->value,
                                 new Symbol(
                                     $token->type,

@@ -47,22 +47,12 @@ namespace pharos\phathom
             $this->compile();
         }
 
-        public function complexRule(string $rule, array $symbols, int|false $priority, ?string $action = null): void {
-            $this->rules[$rule][] = [
-                'symbols'  => $symbols,
-                'priority' => $priority,
-                'action'   =>
-                    ($action !== null) ?
-                        \trim($action) : null,
-            ];
+        public function complexAlternative(string $rule, array $symbols, int|false $priority, ?string $action = null): void {
+            $this->rules[$rule][] = new Grammar\Alternative($symbols, $priority, $action);
         }
 
-        public function simpleRule(string $rule, Grammar\Symbol $symbol): void {
-            $this->rules[$rule][] = [
-                'symbols'  => [$symbol],
-                'priority' => false,
-                'action'   => null,
-            ];
+        public function simpleAlternative(string $rule, Grammar\Symbol $symbol): void {
+            $this->rules[$rule][] = new Grammar\Alternative([$symbol]);
         }
 
         private function compile(): void {
@@ -202,3 +192,4 @@ namespace pharos\phathom
         }
     }
 }
+?>
