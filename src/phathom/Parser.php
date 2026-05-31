@@ -2,8 +2,6 @@
 
 namespace pharos\phathom 
 {
-    use \pharos\phathom\Exception\Serial as SerializationException;
-
     final class Parser 
     {
         public function __construct(
