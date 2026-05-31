@@ -15,7 +15,7 @@ namespace pharos\phathom\Exception {
                 "Input %s does not match '%s' in %s: ".
                 "unexpected tokens from %s, ".
                 "last token %s",
-                $context->parser->file,
+                $context->parser->input,
                 $start,
                 $context->parser->grammar->file,
                 $first::print($first),

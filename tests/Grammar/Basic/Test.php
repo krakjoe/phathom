@@ -34,6 +34,34 @@ final class Test extends \PHPUnit\Framework\TestCase
             \pharos\phathom\Grammar::class, $parser->grammar);
     }
 
+    public function testBasicBufferInput() : void {
+        $file = $this->file
+            ->relative("Basic.grammar");
+        $test = $this->file
+            ->relative("Basic.content");
+
+        $input = new \pharos\phathom\Buffer(
+            "buffer", $test->contents());
+
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser  = new \pharos\phathom\Parser($grammar, $input);
+        $result  = $parser->parse();
+
+        $this->assertSame($result->getThings(), [
+            0 => [
+                0 => "one",
+                1 => "42"
+            ],
+            1 => [
+                0 => "two",
+                1 => "24"
+            ]
+        ]);
+
+        $this->assertInstanceOf(
+            \pharos\phathom\Grammar::class, $parser->grammar);
+    }
+
     public function testBasicDefault() : void {
         $file = $this->file
             ->relative("BasicDefault.grammar");

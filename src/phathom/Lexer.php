@@ -178,17 +178,17 @@ namespace pharos\phathom
             }
         }
 
-        public function tokenize(File $file, string $class = Token::class): array {
+        public function tokenize(File|Buffer $input, string $class = Token::class): array {
             $tokens   = [];
-            $buffer   = $file->contents();
+            $buffered = $input->contents();
             $position = 0;
-            $limit    = \strlen($buffer);
+            $limit    = \strlen($buffered);
 
             while ($position < $limit) {
                 if ($this->skipping !== false) {
                     $skipped = @\preg_match(
                         $this->skipping,
-                        $buffer, $matches,
+                        $buffered, $matches,
                         0, $position);
 
                     if ($skipped === false) {
@@ -196,7 +196,7 @@ namespace pharos\phathom
                         throw new RegexException(\sprintf(
                             "skipping failed at %s:%d, ".
                                 "PCRE reported: %s",
-                            $file->path, $position,
+                            $input, $position,
                             \preg_last_error_msg()));
                         // @codeCoverageIgnoreEnd
                     }
@@ -216,14 +216,14 @@ namespace pharos\phathom
 
                 foreach ($this->consuming as $name => $pattern) {
                     $matched = @\preg_match(
-                        $pattern, $buffer, $matches, 0, $position);
+                        $pattern, $buffered, $matches, 0, $position);
 
                     if ($matched === false) {
                         // @codeCoverageIgnoreStart
                         throw new RegexException(\sprintf(
                             "matching %s failed at %s:%d, ".
                                 "PCRE reported: %s",
-                            $name, $file->path, $position,
+                            $name, $input, $position,
                             \preg_last_error_msg()));
                         // @codeCoverageIgnoreEnd
                     }
@@ -250,12 +250,12 @@ namespace pharos\phathom
                         throw new RegexException(\sprintf(
                             "matching %s failed at %s:%d, ".
                             "pattern matches zero characters",
-                            $empty, $file->path, $position));
+                            $empty, $input, $position));
                     }
 
                     throw UnexpectedException::character(
-                        $buffer, [
-                            'path'     => $file->path,
+                        $buffered, [
+                            'path'     => $input,
                             'position' => $position
                         ], \array_keys($this->consuming));
                 }
@@ -263,7 +263,7 @@ namespace pharos\phathom
                 $tokens[] = new $class(
                     $this->config[$type]['const'],
                     [
-                        'path'     => $file->path,
+                        'path'     => $input,
                         'position' => $position,
                     ],
                     $value

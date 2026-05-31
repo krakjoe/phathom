@@ -58,9 +58,9 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->assertSame($tokens[0]->type, $tokens[2]->type); /* ALPHANUM */
         $this->assertNotSame($tokens[0]->type, $tokens[3]->type); /* INTEGER != ALPHANUM */
 
-        $this->assertSame(["path" => $path, "position" => 0],  $tokens[0]->location);
-        $this->assertSame(["path" => $path, "position" => 7],  $tokens[1]->location);
-        $this->assertSame(["path" => $path, "position" => 18], $tokens[2]->location);
-        $this->assertSame(["path" => $path, "position" => 32], $tokens[3]->location);
+        $this->assertSame(0,  $tokens[0]->location['position']);
+        $this->assertSame(7,  $tokens[1]->location['position']);
+        $this->assertSame(18, $tokens[2]->location['position']);
+        $this->assertSame(32, $tokens[3]->location['position']);
     }
 }

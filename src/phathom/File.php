@@ -3,7 +3,7 @@ namespace pharos\phathom
 {
     use \pharos\phathom\Exception\IO as IOException;
 
-    final class File
+    final class File implements Interface\Buffer
     {
         const int REGULAR   = 1;
         const int DIRECTORY = 2;
@@ -46,7 +46,7 @@ namespace pharos\phathom
             }
             // @codeCoverageIgnoreEnd
 
-            return $this->buffer;            
+            return $this->buffer;
         }
 
         public function relative(string $path) : self {
@@ -103,6 +103,13 @@ namespace pharos\phathom
             foreach ($array as $member => $value) {
                 $this->$member = $value;
             }
+        }
+
+        public function __debugInfo() : array {
+            return [
+                'path' => $this->path,
+                'kind' => $this->kind,
+            ];
         }
 
         public function __toString() : string {

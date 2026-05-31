@@ -68,4 +68,14 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->assertSame($object->kind,
             \pharos\phathom\FILE::REGULAR);
     }
+
+    public function testDebug() : void {
+        $file = new \pharos\phathom\File(__FILE__);
+        $file->contents();
+
+        $this->assertSame($file->__debugInfo(), [
+            'path' => __FILE__,
+            'kind' => \pharos\phathom\FILE::REGULAR,
+        ]);
+    }
 }

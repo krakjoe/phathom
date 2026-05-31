@@ -88,7 +88,7 @@ namespace pharos\phathom
                 $this->lexer
                     ->tokenize(
                         $context->parser
-                            ->file,
+                            ->input,
                         $this->token);
             $limit = \count($tokens);
 
