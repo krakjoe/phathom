@@ -2,11 +2,11 @@ lexer: "Priority.lexer";
 
 line:
     (ALPHA EQUALS ALPHA) {
-        return $this->returnThings("low", (string) $1);
+        return ["low" => (string) $1];
     }
     |
     (ALPHA EQUALS ALPHA) [1] {
-        return $this->returnThings("missing", (string) $1);
+        return ["missing" => (string) $1];
     }
 ;
 

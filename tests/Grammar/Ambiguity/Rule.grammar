@@ -2,11 +2,11 @@ lexer: "Ambiguity.lexer";
 
 item:
     (ALPHA EQUALS ALPHA) {
-        return $this->returnThings("low", (string) $1);
+        return ["low" => (string) $1];
     }
     |
     (ALPHA EQUALS ALPHA) {
-        return $this->returnThings("high", (string) $1);
+        return ["high" => (string) $1];
     }
 ;
 
