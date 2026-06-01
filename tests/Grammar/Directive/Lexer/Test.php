@@ -16,9 +16,32 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectException(
             \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessageMatches(
-            "/already declared/");
+            "/already loaded/");
+
+        new \pharos\phathom\Grammar($file);
+    }
+
+    public function testMissing() : void {
+        $file = $this->file
+            ->relative("Missing.grammar");
+
+        $this->expectException(
+            \pharos\phathom\Exception\Directive::class);
+        $this->expectExceptionMessageMatches(
+            "/cannot be found on the local filesystem/");
 
         new \pharos\phathom\Grammar($file);    
     }
 
+    public function testRedefine() : void {
+        $file = $this->file
+            ->relative("Redefine.grammar");
+
+        $this->expectException(
+            \pharos\phathom\Exception\IO::class);
+        $this->expectExceptionMessageMatches(
+            "/cannot redefine/");
+
+        new \pharos\phathom\Grammar($file);    
+    }
 }

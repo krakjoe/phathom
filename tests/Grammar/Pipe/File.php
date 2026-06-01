@@ -23,12 +23,8 @@ namespace pharos\phathom\tests\Grammar\Pipe {
             return [$key => $value];
         }
 
-        public function getThings() {
-            return $this->things;
-        }
-
-        private ?string $section = null;
-        private array $things = [];
+        private             ?string $section = null;
+        public private(set) array   $things = [];
     }
 }
 ?>

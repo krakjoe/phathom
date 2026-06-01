@@ -17,13 +17,9 @@ final class Test extends \PHPUnit\Framework\TestCase
     
         $grammar = new \pharos\phathom\Grammar($file);
         $parser  = new \pharos\phathom\Parser($grammar, $content);
-        $result  = $parser->parse();
 
-        $this->assertSame($result->getThings(), [
-            0 => [
-                0 => "two",
-                1 => "24"
-            ]    
+        $this->assertSame($parser->parse(), [
+            0 => ["two" => "24"],
         ]);
     }
 
@@ -35,17 +31,10 @@ final class Test extends \PHPUnit\Framework\TestCase
         
         $grammar = new \pharos\phathom\Grammar($file);
         $parser  = new \pharos\phathom\Parser($grammar, $content);
-        $result  = $parser->parse();
 
-        $this->assertSame($result->getThings(), [
-            0 => [
-                0 => "one",
-                1 => "42"
-            ], 
-            1 => [
-                0 => "two",
-                1 => "24"
-            ]    
+        $this->assertSame($parser->parse(), [
+            0 => ["one" => "42"], 
+            1 => ["two" => "24"],
         ]);
     }
 }

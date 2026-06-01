@@ -9,18 +9,6 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->file = new \pharos\phathom\File(__FILE__);
     }
 
-    public function testUndeclared() : void {
-        $file = $this->file
-            ->relative("Undeclared.grammar");
-
-        $this->expectException(
-            \pharos\phathom\Exception\Undeclared::class);
-        $this->expectExceptionMessageMatches(
-            "/does not declare a context/");
-
-        new \pharos\phathom\Grammar($file);
-    }
-
     public function testNonexistent() : void {
         $file = $this->file
             ->relative("Nonexistent.grammar");

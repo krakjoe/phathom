@@ -17,24 +17,19 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         $grammar = new \pharos\phathom\Grammar($file);
         $parser  = new \pharos\phathom\Parser($grammar, $content);
-        $result  = $parser->parse();
 
-        $this->assertSame($result->getThings(), [
+        $this->assertSame($parser->parse(), [
             0 => [
-                0 => "one",
-                1 => "42"
+                "one" => "42"
             ],
             1 => [
-                0 => "two",
-                1 => "24"
+                "two" => "24"
             ],
             2 => [
-                0 => 42,
-                1 => 24
+                42 => 24
             ],
             3 => [
-                0 => "three",
-                1 => [
+                "three" => [
                     "A", "B", "C"
                 ]
             ]
@@ -109,24 +104,19 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         $grammar = new \pharos\phathom\Grammar($file);
         $parser  = new \pharos\phathom\Parser($grammar, $content);
-        $result  = $parser->parse();
 
-        $this->assertSame($result->getThings(), [
+        $this->assertSame($parser->parse(), [
             0 => [
-                0 => "one",
-                1 => "42"
+                "one" => "42"
             ],
             1 => [
-                0 => "two",
-                1 => "24"
+                "two" => "24"
             ],
             2 => [
-                0 => 42,
-                1 => 24
+                42 => 24
             ],
             3 => [
-                0 => "three",
-                1 => [
+                "three" => [
                     "A", "B", "C"
                 ]
             ]
@@ -157,12 +147,10 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         $grammar = new \pharos\phathom\Grammar($file);
         $parser  = new \pharos\phathom\Parser($grammar, $content);
-        $result  = $parser->parse();
 
-        $this->assertSame($result->getThings(), [
+        $this->assertSame($parser->parse(), [
             0 => [
-                0 => "one",
-                1 => "42"
+                "one" => "42"
             ]
         ]);
     }

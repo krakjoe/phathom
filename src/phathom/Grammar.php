@@ -7,35 +7,59 @@ namespace pharos\phathom
    
     final class Grammar
     {
-        private             ?Lexer  $lexer     = null;
-
-        private              array  $abstracts  = [
+        /* raw members */
+        private             array   $included   = [];   /* raw include list                             */
+        private             array   $directives = [];   /* raw directive information                    */
+        private             array   $rules      = [];   /* raw rules                                    */
+    
+        /* parsed members */
+        private             ?Lexer  $lexer     = null;  /* declared lexer                               */
+        private              array  $abstracts  = [     /* declared abstracts                           */
             'token'   =>     '\pharos\phathom\Token',
-            'context' =>     null,
+            'context' =>     '\pharos\phathom\Context',
         ];
-        public private(set) string $token;             /* concrete Token implementation */
-        public private(set) string $context;           /* concrete Context implementation */
 
-        private             array   $rules     = [];   /* raw rules from grammar file parse       */
-        private             array   $compiled  = [];   /* desugared rules used by the Earley loop */
-        private             array   $terminals = [];   /* terminal name => true                   */
-        private             array   $patterns  = [];   /* pattern terminal name => true           */
-        private             string  $start;            /* name of starting rule, unit or last */
+        /* compiled members */
+        public private(set) string  $token;             /* compiled concrete Token implementation       */
+        public private(set) string  $context;           /* compiled concrete Context implementation     */
+        private             array   $compiled   = [];   /* compiled rules used by the Earley loop       */
+        private             array   $terminals  = [];   /* compiled terminals name => const int Token:: */
+        private             array   $patterns   = [];   /* compiled patterns name => const int Token::  */
+        private             string  $start;             /* compiled name of starting rule, unit or last */
 
         public function __construct(
             public private(set)  File   $file,
             public private(set) ?Assets $assets = null) {
+            $this->lexer =
+                new Lexer();
+            $this->parse();
+        }
 
-            new Grammar\Parser($this);
+        private function parse() : void {
+            $parser = new Grammar\Parser($this->file);
+            [
+                $this->included,
+                $this->directives,
+                $this->rules,
+            ] = $parser->parse();
 
-            if ($this->lexer === null) {
-                throw new UndeclaredException(
-                    "$this->file does not declare a lexer");
+            foreach ($this->directives['lexer'] as $path => $location) {
+                $this->lexer
+                    ->merge(new File($path));
             }
 
-            if ($this->abstracts['context'] === null) {
-                throw new UndeclaredException(
-                    "$this->file does not declare a context");
+            if ($this->directives['context'] !== false) {
+                $this->setAbstract(
+                    'context',
+                    (string) $this->directives['context'],
+                    $this->abstracts['context']);
+            }
+
+            if ($this->directives['token'] !== false) {
+                $this->setAbstract(
+                    'token',
+                    (string) $this->directives['token'],
+                    $this->abstracts['token']);
             }
 
             if (empty($this->rules)) {
@@ -44,14 +68,6 @@ namespace pharos\phathom
             }
 
             $this->compile();
-        }
-
-        public function complexAlternative(string $rule, array $symbols, int|false $priority, ?string $action = null): void {
-            $this->rules[$rule][] = Grammar\Alternative::complex($symbols, $priority, $action);
-        }
-
-        public function simpleAlternative(string $rule, Grammar\Symbol $symbol): void {
-            $this->rules[$rule][] = Grammar\Alternative::simple($symbol);
         }
 
         private function compile(): void {
@@ -83,7 +99,7 @@ namespace pharos\phathom
             unset($this->rules);
         }
 
-        public function execute(Context $context): Context {
+        public function execute(Context $context): mixed {
             $tokens =
                 $this->lexer
                     ->tokenize(
@@ -107,28 +123,10 @@ namespace pharos\phathom
                     $context,
                     $chart);
 
-            $evaluator->enter($this->start, $tokens, $limit);
-
-            return $context;
+            return $evaluator->enter($this->start, $tokens, $limit);
         }
 
-        public function setLexer(string $location): void {
-            if ($this->lexer !== null) {
-                throw new DirectiveException(
-                    "lexer already declared as {$this->lexer->file}");
-            }
-
-            $this->lexer = new Lexer(
-                $this->file->relative($location));
-        }
-
-        public function setAbstract(string $type, string $abstract, string $parent) : void {
-            if ($this->abstracts[$type] !== null &&
-                $this->abstracts[$type] !== $parent) {
-                throw new DirectiveException(
-                    "{$type} already declared as {$this->abstracts[$type]}");
-            }
-
+        private function setAbstract(string $type, string $abstract, string $parent) : void {
             if (!\class_exists($abstract)) {
                 throw new DirectiveException(
                     "{$abstract} does not exist, it must be autoloadable");

@@ -1,10 +1,8 @@
 lexer: "../Quantifiers.lexer";
 
-context: "\pharos\phathom\tests\Grammar\File";
-
 item: 
     (ALPHA EQUALS NUM) {
-        return $this->returnThings((string) $1, (string) $3);
+        return [(string) $1 => (string) $3];
     };
 
 unit:

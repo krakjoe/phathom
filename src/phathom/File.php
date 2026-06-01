@@ -49,6 +49,16 @@ namespace pharos\phathom
             return $this->buffer;
         }
 
+        public function realpath(string $path) : string|false {
+            return \realpath(\sprintf(
+                "%s%s%s",
+                $this->kind == FILE::DIRECTORY ?
+                    $this->path : \dirname($this->path),
+                \DIRECTORY_SEPARATOR,
+                $path
+            ));
+        }
+
         public function relative(string $path) : self {
             return new self(\sprintf(
                 "%s%s%s",

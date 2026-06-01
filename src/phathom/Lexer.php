@@ -8,41 +8,48 @@ namespace pharos\phathom
 
     final class Lexer
     {
-        public private(set) array|bool $config;
+        public private(set) array $config = [];
+        private string|false      $skipping  = false;
+        private array             $consuming = [];
 
-        private string|false $skipping  = false;
-        private array        $consuming = [];
-
-        public function __construct(
-            public private(set) File $file) {
-            $this->config =
+        public function merge(File $file) : void {
+            $config =
                 @\parse_ini_string(
-                    $this->file->contents(), true);
+                    $file->contents(), true);
 
-            if ($this->config === false) {
+            if ($config === false) {
                 throw new IOException(
-                    "$this->file does not contain valid configuration (ini syntax)");
+                    "$file does not contain valid configuration (ini syntax)");
             }
 
-            foreach ($this->config as $name => &$config) {
-                $config['added'] = false;
+            foreach ($config as $name => &$token) {
+                if (isset($this->config[$name])) {
+                    throw new IOException(
+                        "$file cannot redefine \"$name\", ". 
+                            "already defined in {$this->config[$name]['file']}");
+                }
+
+                $token['added'] = false;
+                $token['file']  =
+                    (string) $file;
             }
 
-            $this->compile();
+            $this->config = \array_merge($this->config, $config);
         }
 
         public function known(string $token): bool {
             return isset($this->config[$token]);
         }
 
-        public function add(array $patterns): void {
+        public function add(File $file, array $patterns): void {
             foreach ($patterns as $pattern) {
                 $this->config[$pattern] = [
                     'pattern' => $pattern,
                     'added'   => true,
+                    'file'    =>
+                        (string) $file,
                 ];
             }
-            $this->compile();
         }
 
         private static function delimiter(string $delimiter) : string {
@@ -57,7 +64,7 @@ namespace pharos\phathom
             }
         }
 
-        private function unwrap(string $pattern): array {
+        private function unwrap(string $pattern, string $file): array {
             $delim =
                 $pattern[0];
             switch ($delim) {
@@ -69,7 +76,7 @@ namespace pharos\phathom
                             "non-whitespace, ".
                             "non-backslash, ".
                         "got backslash",
-                        $pattern, $this->file
+                        $pattern, $file
                     ));
 
                 default:
@@ -82,7 +89,7 @@ namespace pharos\phathom
                                 "non-whitespace, ".
                                 "non-backslash, ".
                             "got %s",
-                            $pattern, $this->file,
+                            $pattern, $file,
                             \ctype_alnum($delim) ?
                                 "alphanumeric" :
                                 "whitespace"
@@ -100,7 +107,7 @@ namespace pharos\phathom
                     "%s in %s is improperly delimited, ".
                     "starting delimiter %s, ".
                     "expected ending delimiter %s",
-                    $pattern, $this->file,
+                    $pattern, $file,
                     $delim,
                     Lexer::delimiter($delim)
                 ));
@@ -130,7 +137,7 @@ namespace pharos\phathom
 
             foreach ($this->config as $name => &$config) {
                 [$pattern, $flags] =
-                    $this->unwrap($config['pattern']);
+                    $this->unwrap($config['pattern'], $config['file']);
 
                 $inner = \strlen($flags)
                     ? "(?{$flags}:{$pattern})"
@@ -167,9 +174,9 @@ namespace pharos\phathom
                     $error =
                         \error_get_last();
                     throw new RegexException(\sprintf(
-                        "%s in %s failed to compile, ".
+                        "%s failed to compile, ".
                             "PCRE reported: %s",
-                        $name, $this->file,
+                        $name,
                         \preg_replace(
                             '/^[a-z_]+\(\): /i', '',
                             $error['message'])

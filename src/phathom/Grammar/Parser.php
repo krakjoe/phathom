@@ -1,94 +1,63 @@
 <?php
 namespace pharos\phathom\Grammar {
-    use \pharos\phathom\Grammar;
+    use \pharos\phathom\File;
 
     use \pharos\phathom\Exception\Unexpected as UnexpectedException;
+    use \pharos\phathom\Exception\Directive  as DirectiveException;
 
     final class Parser {
-        public private(set) Grammar $grammar;
-        private             array   $included = [];
+        private Lexer $lexer;
 
         public function __construct(
-            Grammar $grammar
+            public private(set) File    $file,
+            private             array   $included = [],
+            private             array   $directives = [
+                'lexer'   => [],
+                'context' => false,
+                'token'   => false,
+            ],
+            private             array   $rules = [],
         ) {
-            $this->grammar = $grammar;
+            $this->lexer = new Lexer($this->file);
 
-            $file =
-                $this->grammar->file;
-            $lexer = new Lexer($file);
-
-            $this->included[$file->path] = [
-                'location' => [
-                    'path' => $file->path,
+            if (!isset($this->included[$this->file->path])) {
+                $this->included[$this->file->path] = [
+                    'path'     => $this->file->path,
                     'position' => 0,
-                ],
-                'lexer' => $lexer
-            ];
-
-            $this->parse(
-                $lexer->tokenize());
-        }
-
-        private function directive(Token $ident, Token $string) : void {
-            switch (\strtolower($ident->value)) {
-                case "lexer":
-                    $this->grammar->setLexer($string->value);
-                break;
-
-                case "token":
-                    $this->grammar->setAbstract(
-                        'token',
-                        $string->value,
-                        '\pharos\phathom\Token');
-                break;
-
-                case "context":
-                    $this->grammar->setAbstract(
-                        'context',
-                        $string->value,
-                        '\pharos\phathom\Context');
-                break;
-
-                case "include":
-                    $file =
-                        $this->grammar
-                            ->file
-                            ->relative(
-                                $string->value);
-
-                    if (isset($this->included[$file->path])) {
-                        throw UnexpectedException::include(
-                            $ident,
-                            $string->value,
-                            $this->included[
-                                $file->path
-                            ]['location']);
-                    }
-
-                    $lexer = new Lexer($file);
-
-                    $this->included[$file->path] = [
-                        'location' => $ident->location,
-                        'lexer'    => $lexer
-                    ];
-
-                    $this->parse(
-                        $lexer->tokenize());
-                break;
-
-                default:
-                    throw UnexpectedException::directive(
-                        $ident, [
-                            'lexer',
-                            'token',
-                            'context',
-                            'include']);
+                ];
             }
         }
 
-        private function parse(array $tokens): void {
-            $position = 0;
-            $count    = \count($tokens);
+        private function include(Token $directive, Token $include) : array {
+            $file =
+                $this->file
+                    ->relative((string) $include);
+
+            if (isset($this->included[$file->path])) {
+                throw UnexpectedException::include(
+                    $directive,
+                    (string) $include,
+                    $this->included[
+                        $file->path
+                    ]);
+            }
+
+            $this->included[$file->path] =
+                $directive->location;
+
+            $parser = new self(
+                $file,
+                $this->included,
+                $this->directives,
+                $this->rules);
+
+            return $parser->parse();
+        }
+
+        public function parse(): array {
+            $tokens     = $this->lexer->tokenize();
+            $position   = 0;
+            $count      = \count($tokens);
 
             $eof = function() use(&$position, $tokens) : bool {
                 return ($tokens[$position]->type == Token::EOF);
@@ -120,8 +89,7 @@ namespace pharos\phathom\Grammar {
 
                                     if ($peek()->type === Token::PRIORITY) {
                                         $priority =
-                                            (int) $consume() /* PRIORITY */
-                                                ->value;
+                                            (int) (string) $consume(); /* PRIORITY */
                                     }
                                     break;
                                 }
@@ -132,8 +100,7 @@ namespace pharos\phathom\Grammar {
 
                                     if ($peek()->type == Token::QUANTIFIER) {
                                         $quantify =
-                                            $consume()
-                                                ->value; /* QUANTIFIER */
+                                            (string) $consume(); /* QUANTIFIER */
                                     } else {
                                         $quantify = null;
                                     }
@@ -149,15 +116,13 @@ namespace pharos\phathom\Grammar {
 
                             if ($peek()->type === Token::ACTION) {
                                 $action = 
-                                    $consume(); /* ACTION */
-                                $this->grammar
-                                    ->complexAlternative(
-                                        $ident->value, $symbols, $priority, $action->value);
+                                    (string) $consume(); /* ACTION */
                             } else {
-                                $this->grammar
-                                    ->complexAlternative(
-                                        $ident->value, $symbols, $priority);
+                                $action = null;
                             }
+
+                            $this->rules[(string) $ident][] =
+                                Alternative::complex($symbols, $priority, $action);
                             break;
 
                         case Token::IDENT:
@@ -171,19 +136,59 @@ namespace pharos\phathom\Grammar {
                                 $quantify = null;
                             }
 
-                            $this->grammar->simpleAlternative(
-                                $ident->value,
-                                new Symbol(
-                                    $token->type,
-                                    $token->value,
-                                    $token->location,
-                                    Quantifier::from($quantify)));
+                            $this->rules[(string) $ident][] =
+                                Alternative::simple(
+                                    new Symbol(
+                                        $token->type,
+                                        $token->value,
+                                        $token->location,
+                                        Quantifier::from($quantify)));
                         break;
 
                         case Token::STRING:
                             $string =
                                 $consume(); /* STRING */
-                            $this->directive($ident, $string);
+                            switch ((string) $ident) {                                    
+                                case 'token':
+                                case 'context':
+                                    if ($this->directives[(string) $ident] !== false) {
+                                        throw DirectiveException::abstract(
+                                            $ident,
+                                            $this->directives);
+                                    }
+
+                                    $this->directives[(string)$ident] = $string;
+                                break;
+
+                                case 'lexer':
+                                    $path = $this->file
+                                        ->realpath((string) $string);
+                                    if ($path === false) {
+                                        throw DirectiveException::missing($string, $ident);
+                                    } else if (isset($this->directives['lexer'][$path])) {
+                                        throw DirectiveException::lexer(
+                                            $string,
+                                            $this->directives['lexer'][$path]);
+                                    }
+                                    $this->directives['lexer'][$path] = $string;
+                                break;
+
+                                case 'include':
+                                    [
+                                        $this->included,
+                                        $this->directives,
+                                        $this->rules
+                                    ] = $this->include($ident, $string);
+                                break;
+
+                                default:
+                                    throw UnexpectedException::directive(
+                                        $ident, [
+                                            'lexer',
+                                            'token',
+                                            'context',
+                                            'include']);
+                            }
                         break;
                     }
 
@@ -193,6 +198,8 @@ namespace pharos\phathom\Grammar {
                     }
                 }
             }
+
+            return [$this->included, $this->directives, $this->rules];
         }
     }
 }

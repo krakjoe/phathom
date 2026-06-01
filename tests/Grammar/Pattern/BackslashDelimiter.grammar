@@ -1,5 +1,3 @@
 lexer: "Pattern.lexer";
 
-context: "\pharos\phathom\tests\Grammar\File";
-
 malformed: <\\backslashes\\>;

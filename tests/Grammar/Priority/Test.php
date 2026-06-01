@@ -52,12 +52,10 @@ final class Test extends \PHPUnit\Framework\TestCase
         
         $grammar = new \pharos\phathom\Grammar($file);
         $parser = new \pharos\phathom\Parser($grammar, $content);
-        $result = $parser->parse();
-
-        $this->assertSame($result->getThings(), [
+        
+        $this->assertSame($parser->parse(), [
             0 => [
-                0 => "high",
-                1 => "one"
+                "high" => "one"
             ]
         ]);
     }
@@ -81,13 +79,9 @@ final class Test extends \PHPUnit\Framework\TestCase
         
         $grammar = new \pharos\phathom\Grammar($file);
         $parser = new \pharos\phathom\Parser($grammar, $content);
-        $result = $parser->parse();
-
-        $this->assertSame($result->getThings(), [
-            0 => [
-                0 => "high",
-                1 => "one"
-            ]
+        
+        $this->assertSame($parser->parse(), [
+            "high" => "one"
         ]);
     }
 }

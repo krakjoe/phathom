@@ -17,12 +17,9 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         $grammar = new \pharos\phathom\Grammar($file);
         $parser  = new \pharos\phathom\Parser($grammar, $content);
-        $result  = $parser->parse();
-        $this->assertSame($result->getThings(), [
-            0 => [
-                0 => "one",
-                1 => "42"
-            ]
+
+        $this->assertSame($parser->parse(), [
+            "one" => "42",
         ]);
     }
 
@@ -33,8 +30,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectException(
             \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessageMatches(
-            "/Unexpected duplicate include at .*:111, ".
-            ".*Snippet\.grammar already included at .*:83/");
+            "/Unexpected duplicate include at .*:63, ".
+            ".*Snippet\.grammar already included at .*:35/");
 
         new \pharos\phathom\Grammar($file);    
     }
@@ -46,7 +43,7 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectException(
             \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessageMatches(
-            "/Unexpected duplicate include at .*:83, ".
+            "/Unexpected duplicate include at .*:35, ".
             ".*Recursion.grammar already included at .*Recursion.grammar:0/");
 
         new \pharos\phathom\Grammar($file);  

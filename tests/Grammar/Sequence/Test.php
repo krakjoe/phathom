@@ -18,7 +18,10 @@ final class Test extends \PHPUnit\Framework\TestCase
         $grammar = new \pharos\phathom\Grammar($file);
         $parser  = new \pharos\phathom\Parser($grammar, $content);
 
-        $this->assertInstanceOf(
-            \pharos\phathom\Context::class, $parser->parse());
+        $this->assertSame($parser->parse(), [
+            ['one' => 'one'],
+            ['two' => 'two'],
+            ['three' => 'three'],
+        ]);
     }
 }

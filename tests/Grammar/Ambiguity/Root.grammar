@@ -1,7 +1,5 @@
 lexer: "Ambiguity.lexer";
 
-context: "\pharos\phathom\tests\Grammar\File";
-
 unit:
     (ALPHA EQUALS ALPHA) {
         return $this->returnThings("low", (string) $1);

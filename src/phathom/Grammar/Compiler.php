@@ -3,8 +3,8 @@ namespace pharos\phathom\Grammar {
     use \pharos\phathom\File;
     use \pharos\phathom\Lexer;
 
-    use \pharos\phathom\Exception\Undefined as UndefinedException;
-    use \pharos\phathom\Exception\Priority as PriorityException;
+    use \pharos\phathom\Exception\Undefined;
+    use \pharos\phathom\Exception\Priority;
 
     final class Compiler {
         private array  $synthetic = [];
@@ -28,23 +28,14 @@ namespace pharos\phathom\Grammar {
                 foreach ($alternatives as $aid => &$alternative) {
                     if (($prioritized === true  && $alternative->priority === false) ||
                         ($prioritized === false && $alternative->priority !== false)) {
-                        throw new PriorityException(\sprintf(
-                            "Priority annotation inconsistent for ".
-                            "alternative %d at '%s' in %s",
-                            $aid + 1,
-                            $rule,
-                            $this->file
-                        ));
+                        throw Priority::inconsistent(
+                            $this->file, $rule, $aid + 1);
                     }
 
                     if ($prioritized === true) {
                         if (\in_array($alternative->priority, $priorities)) {
-                            throw new PriorityException(\sprintf(
-                                "Priority annotation ambiguous for ".
-                                "alternative %d at '%s' in %s",
-                                $aid + 1,
-                                $rule,
-                                $this->file));
+                            throw Priority::ambiguous(
+                                $this->file, $rule, $aid + 1);
                         }
                         $priorities[] =
                             $alternative->priority;
@@ -63,11 +54,7 @@ namespace pharos\phathom\Grammar {
                 }
 
                 if ($prioritized && \count($alternatives) === 1) {
-                    throw new PriorityException(\sprintf(
-                        "Priority annotation inert for ".
-                        "single alternative at '%s' in %s",
-                        $rule,
-                        $this->file));
+                    throw Priority::inert($this->file, $rule);
                 }
             }
 
@@ -86,16 +73,11 @@ namespace pharos\phathom\Grammar {
 
                 default:
                     if (!$this->lexer->known($symbol->name)) {
-                        throw new UndefinedException(\sprintf(
-                            "Undefined symbol '%s' at '%s' in %s",
-                            $symbol->name,
-                            $rule,
-                            $this->file
-                        ));
+                        throw Undefined::symbol(
+                            $this->file, $rule, $symbol->name);
                     }
 
-                    $this->terminals[$symbol->name] =
-                        $this->lexer->config[$symbol->name]['const'];
+                    $this->terminals[$symbol->name] = true;
             }
         }
 
@@ -138,26 +120,31 @@ namespace pharos\phathom\Grammar {
             $symbol = new Symbol($symbol->type, $name, $symbol->location);
         }
 
-        private function compilePatterns() : void {
-            if (!\count($this->patterns)) {
-                return;
+        private function compileTokens() : void {
+            if (\count($this->patterns)) {
+                $this->lexer->add(
+                    $this->file, \array_keys(
+                        $this->patterns));
+            }
+            $this->lexer->compile();
+        }
+
+        private function compileConstants() : void {
+            foreach (\array_keys($this->terminals) as $terminal) {
+                $this->terminals[$terminal] =
+                    $this->lexer->config[$terminal]['const'];
             }
 
-            $patterns =
-                \array_keys(
-                    $this->patterns);
-
-            $this->lexer->add($patterns);
-
-            foreach ($patterns as $name) {
-                $this->patterns[$name] =
-                    $this->lexer->config[$name]['const'];
+            foreach (\array_keys($this->patterns) as $pattern) {
+                $this->patterns[$pattern] =
+                    $this->lexer->config[$pattern]['const'];
             }
         }
 
         public function compile() : array {
             $this->compileRules();
-            $this->compilePatterns();
+            $this->compileTokens();
+            $this->compileConstants();
 
             return [
                 $this->rules,

@@ -1,5 +1,3 @@
 lexer: "Basic/Basic.lexer";
 
-context: "\pharos\phathom\tests\File";
-
 unit: (undefined);

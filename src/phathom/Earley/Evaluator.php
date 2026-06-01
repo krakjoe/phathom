@@ -13,10 +13,8 @@ namespace pharos\phathom\Earley {
             private array   $chart) {}
 
         private function evalItem(Item $item, Alternative $alt, array $tokens): mixed {
-            $synthesized = $alt->synthetic;
-
             if (empty($alt->symbols)) {
-                return $synthesized !== Quantifier::NONE ? [] : null;
+                return $alt->synthetic !== Quantifier::NONE ? [] : null;
             }
 
             $values = $this->collectValues($item, $alt, $tokens);
@@ -30,7 +28,7 @@ namespace pharos\phathom\Earley {
                 return $this->context->$method(...$values);
             }
 
-            return match ($synthesized) {
+            return match ($alt->synthetic) {
                 Quantifier::STAR,
                 Quantifier::PLUS     =>
                     \count($alt->symbols) === 2
@@ -118,7 +116,7 @@ namespace pharos\phathom\Earley {
             return $values;
         }
 
-        public function enter(string $start, array $tokens, int $limit) : void {
+        public function enter(string $start, array $tokens, int $limit) : mixed {
             $item        = null;
             $alt         = null;
             $prioritized = false;
@@ -158,7 +156,7 @@ namespace pharos\phathom\Earley {
                     $tokens);
             }
 
-            $this->evalItem($item, $alt, $tokens);
+            return $this->evalItem($item, $alt, $tokens);
         }
     }
 }

@@ -1,20 +1,18 @@
 lexer: "Pattern.lexer";
 
-context: "\pharos\phathom\tests\Grammar\File";
-
 ICASE:   </[a-z]/i>;
 NUMERIC: </\d+/>;
 
 first: (ALPHA EQUALS NUMERIC) {
-    return $this->returnThings((string) $1, (string) $3);
+    return [(string) $1 => (string) $3];
 };
 
 second: (NUMERIC EQUALS NUMERIC) {
-    return $this->returnThings((int) (string) $1, (int) (string) $3);
+    return [(int) (string) $1 => (int) (string) $3];
 };
 
 third: (ALPHA EQUALS ICASE+) {
-    return $this->returnThings((string) $1, array_map('strval', $3));
+    return [(string) $1 => array_map('strval', $3)];
 };
 
 line: first  |

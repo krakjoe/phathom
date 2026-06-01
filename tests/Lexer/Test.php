@@ -14,27 +14,28 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectExceptionMessageMatches(
             "/does not contain valid configuration \(ini syntax\)/");
 
-        new \pharos\phathom\Lexer(
-            $this->file->relative("Malformed.lexer"));
+        $lexer = new \pharos\phathom\Lexer();
+        $lexer->merge($this->file->relative("Malformed.lexer"));
     }
 
     public function testConstructorContent() : void {
-        $lexer = new \pharos\phathom\Lexer(
-            $this->file->relative("Content.lexer"));
+        $lexer = new \pharos\phathom\Lexer();
+        $lexer->merge($this->file->relative("Content.lexer"));
 
         $this->assertInstanceOf(\pharos\phathom\Lexer::class, $lexer);
     }
 
     public function testConstructorEmpty() : void {
-        $empty = new \pharos\phathom\Lexer(
-            $this->file->relative("Empty.lexer"));
+        $empty = new \pharos\phathom\Lexer();
+        $empty->merge($this->file->relative("Empty.lexer"));
 
         $this->assertInstanceOf(\pharos\phathom\Lexer::class, $empty);
     }
 
     public function testSkipping() : void {
-        $content = new \pharos\phathom\Lexer(
-            $this->file->relative("Content.lexer"));
+        $content = new \pharos\phathom\Lexer();
+        $content->merge($this->file->relative("Content.lexer"));
+        $content->compile();
 
         $path = \sprintf(
             "%s%sSkipping.content",

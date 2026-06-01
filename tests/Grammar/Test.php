@@ -14,9 +14,9 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("Unlexed.grammar");
 
         $this->expectException(
-            \pharos\phathom\Exception\Undeclared::class);
+            \pharos\phathom\Exception\Undefined::class);
         $this->expectExceptionMessageMatches(
-            "/does not declare a lexer/");
+            "/Undefined symbol/");
 
         new \pharos\phathom\Grammar($file);
     }

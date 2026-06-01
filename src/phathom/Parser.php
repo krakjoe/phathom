@@ -9,7 +9,7 @@ namespace pharos\phathom
             public private(set) File|Buffer  $input) {
         }
 
-        public function parse() : Context {
+        public function parse() : mixed {
             $context =
                 $this->grammar
                     ->factory($this);

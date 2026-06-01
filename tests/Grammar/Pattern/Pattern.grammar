@@ -1,19 +1,17 @@
 lexer: "Pattern.lexer";
 
-context: "\pharos\phathom\tests\Grammar\File";
-
 numeric: </\d+/>;
 
 first: (ALPHA EQUALS numeric) {
-    return $this->returnThings((string) $1, (string) $3);
+    return [(string) $1 => (string) $3];
 };
 
 second: (numeric EQUALS </\d+/>) {
-    return $this->returnThings((int) (string) $1, (int) (string) $3);
+    return [(int) (string) $1 => (int) (string) $3];
 };
 
 third: (ALPHA EQUALS </[A-Z]/>+) {
-    return $this->returnThings((string) $1, array_map('strval', $3));
+    return [(string) $1 => array_map('strval', $3)];
 };
 
 line: first  |

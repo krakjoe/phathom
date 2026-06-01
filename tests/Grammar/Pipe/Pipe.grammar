@@ -14,4 +14,4 @@ item:
 
 line: section | item;
 
-unit: line*;
+unit: (line*) { return $this->things; };

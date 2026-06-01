@@ -13,24 +13,28 @@ Grammar files drive phathom's Earley parsing engine. A grammar file contains:
 
 Form: `directive: "string";`
 
-| Directive | Explanation                                                             | Required |
-|-----------|-------------------------------------------------------------------------|----------|
-| `lexer`   | Path, relative to the current grammar file, of the lexer `.ini`         |    yes   |
-| `context` | Fully-qualified class name of a descendant of `\pharos\phathom\Context` |    yes   |
-| `token`   | Fully-qualified class name of a descendant of `\pharos\phathom\Token`   |    no    |
-| `include` | Path, relative to the current grammar file, of another grammar file     |    no    |
+| Directive | Explanation                                                             | Required | Repeatable |
+|-----------|-------------------------------------------------------------------------|----------|------------|
+| `context` | Fully-qualified class name of a descendant of `\pharos\phathom\Context` |    no    |     no     |
+| `token`   | Fully-qualified class name of a descendant of `\pharos\phathom\Token`   |    no    |     no     |
+| `lexer`   | Path, relative to the current grammar file, of a lexer `.ini`           |    no    |     yes    |
+| `include` | Path, relative to the current grammar file, of another grammar file     |    no    |     yes    |
 
 ### `lexer`
 
-Specifies the lexer configuration file (INI format) to use when tokenizing input.
+Specifies a lexer configuration file (INI format) to use when tokenizing input.
 
 ```
 lexer: "tokens.lexer";
 ```
 
+*Note: `lexer` is repeatable.*
+
+*See: [LEXER.md](LEXER.md)*
+
 ### `context`
 
-Names the PHP class that receives parsed values through action callbacks.
+FQCN for scope of action code, the engine will derive a `Context` from this class.
 
 ```
 context: "\MyApp\Context";
@@ -38,9 +42,11 @@ context: "\MyApp\Context";
 
 *The class must extend `\pharos\phathom\Context`.*
 
+**The class `pharos\phathom\Context` will be used when no `context` directive is used`
+
 ### `token`
 
-Names the (abstract) PHP class that represents parsed values through action callbacks.
+FQCN (abstract) that represents parsed values, the engine will derive a `Token` from this class.
 
 ```
 token: "\MyApp\Token";
@@ -52,46 +58,15 @@ token: "\MyApp\Token";
 
 ### `include`
 
-Merges another grammar file's rules into the current grammar.
-Included files do not need their own `lexer` or `context` directives — they inherit those
-from the including file.
+Merges another grammar into the current grammar.
+
+Included files support all directives (although `token` and `context` are not repeatable).
 
 ```
 include: "expressions.grammar";
 ```
 
 *Circular and duplicate includes are detected and rejected at parse time.*
-
----
-
-## Lexer Files
-
-Lexer files are INI files. Each section defines one token type.
-
-```ini
-[TOKEN_NAME]
-pattern = "/regex/"
-skip    = true        ; optional — matched text is discarded (e.g. whitespace)
-```
-
-**Example:**
-
-```ini
-[ALPHA]
-pattern = "/[a-zA-Z]+/"
-
-[NUM]
-pattern = "/[0-9]+/"
-
-[EQUALS]
-pattern = "/=/"
-
-[WHITESPACE]
-pattern = "/\s+/"
-skip = true
-```
-
-Token names defined here are available as terminals in grammar rules.
 
 ---
 
@@ -107,12 +82,16 @@ rule-name: alternative | alternative | ... ;
 Alternatives are separated by `|`.  Each alternative is either a bare quantifiable symbol
 or a parenthesised expression optionally followed by a priority and/or an action block.
 
+**Note: the start rule is `unit`; if `unit` is not present, the last rule to be defined will be used**
+
 ### Symbols
 
 A symbol is either:
 
 - an **ident** — a token name from the lexer or the name of another rule
 - a **pattern** — an inline regex enclosed in `< >` (see [Inline Patterns](#inline-patterns))
+
+*Note: unknown symbols will throw `Exception\Undefined` at compile time*
 
 Every symbol may carry an optional [quantifier](#quantifiers).
 
@@ -178,15 +157,17 @@ line: (ALPHA EQUALS ALPHA) [1] { return $this->make("low",  $1); }
     ;
 ```
 
-Priority annotations must be present for *all* alternatives in a rule, or *none*, missing priority annotations will raise `Exception\Priority` at compile time.
+Priority annotations must be present for *all* alternatives in a rule, or *none*, missing priority annotations will raise `Exception\Priority` at compile time (ie, when a Grammar is constructed).
 
 A priority annotation on a rule with a single alternative expression is inert, and will raise `Exception\Priority` at compile time.
 
-Priority annotations have rule-scope, ie: they determine how to resolve ambiguity in a single rule, but do not effect the priorities of a consumer of that rule.
-
 Priority annotations must be unique (with respect to the rule of the alternative, not globally); equal priorities among alternatives will raise `Exception\Priority` at compile time.
 
-At execution time, where input is ambiguous because multiple parse paths exists and priority annotations are missing `Exception\Ambiguity` will be raised.
+Priority annotations have rule-scope, ie: they determine how to resolve ambiguity in a single rule, but do not effect the priorities of a consumer of that rule.
+
+Where input is ambiguous because multiple parse paths exists and priority annotations are missing `Exception\Ambiguity` will be raised.
+
+*Note: `Exception\Priority` is a compile time only exception, `Exception\Ambiguity` is an execution time only exception.*
 
 ### Actions
 
@@ -205,8 +186,7 @@ item: (ALPHA EQUALS NUM) {
 
 *Note: we know that ALPHA and NUM are instanceof `Token`, casting to string retrieves the value of the Token object*
 
-The return value of the action becomes the semantic value of the matched rule for use
-by other rules.
+The return value of the action becomes the semantic value of the matched rule for use by other rules.
 
 #### `$n` substitution
 
