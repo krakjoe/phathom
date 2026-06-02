@@ -20,33 +20,19 @@ Form: `directive: "string";`
 | `lexer`   | Path, relative to the current grammar file, of a lexer `.ini`           |    no    |     yes    |
 | `include` | Path, relative to the current grammar file, of another grammar file     |    no    |     yes    |
 
-### `lexer`
-
-Specifies a lexer configuration file (INI format) to use when tokenizing input.
-
-```
-lexer: "tokens.lexer";
-```
-
-*Note: `lexer` is repeatable.*
-
-*See: [LEXER.md](LEXER.md)*
-
 ### `context`
 
-FQCN for scope of action code, the engine will derive a `Context` from this class.
+FQCN of descendant of `pharos\phathom\Context` for scope of action code; the engine will derive a concrete `Context` from this class.
 
 ```
 context: "\MyApp\Context";
 ```
 
-*The class must extend `\pharos\phathom\Context`.*
-
-**The class `pharos\phathom\Context` will be used when no `context` directive is used`
+**The class `pharos\phathom\Context` will be used when no `context` directive is used**
 
 ### `token`
 
-FQCN (abstract) that represents parsed values, the engine will derive a `Token` from this class.
+FQCN of abstract descenant of `\pharos\phathom\Token` that represents parsed values; the engine will derive a `Token` from this class.
 
 ```
 token: "\MyApp\Token";
@@ -54,7 +40,7 @@ token: "\MyApp\Token";
 
 *The class must extend the abstract `\pharos\phathom\Token`.*
 
-**The abstract `pharos\phathom\Token` will be used when no `token` directive is used`
+**The abstract `pharos\phathom\Token` will be used when no `token` directive is used**
 
 ### `include`
 
@@ -66,8 +52,21 @@ Included files support all directives (although `token` and `context` are not re
 include: "expressions.grammar";
 ```
 
+*Paths are relative to the current grammar*
+
 *Circular and duplicate includes are detected and rejected at parse time.*
 
+### `lexer`
+
+Specifies a lexer configuration file (INI format) to merge into the current grammar.
+
+```
+lexer: "tokens.lexer";
+```
+
+*Paths are relative to the current grammar*
+
+*See: [LEXER.md](LEXER.md)*
 ---
 
 ## Rules
@@ -272,6 +271,14 @@ $parser =
 
 $result = $parser->parse();
 ```
+
+---
+
+## Modularity
+
+In the general parser framework case, grammar files are monolithic (the zend language parser is 2k lines for example): If a new feature is added, you have to pick apart at least one giant file to implement it.
+
+For phathom, grammar files are modular - they may merge additional lexer configuration and *append alternatives for rules defined in other grammar*.
 
 ---
 
