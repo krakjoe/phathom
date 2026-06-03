@@ -164,4 +164,21 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->assertInstanceOf(
             \pharos\phathom\Grammar::class, $parser->grammar);
     }
+
+    public function testBasicTrailing() : void {
+        $file = $this->file
+            ->relative("Basic.grammar");
+        $content = $this->file
+            ->relative("BasicTrailing.content");
+
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser  = new \pharos\phathom\Parser($grammar, $content);
+
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
+        $this->expectExceptionMessageMatches(
+            "/Unexpected character \";\"/");
+
+        $parser->parse();
+    }
 }

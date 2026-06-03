@@ -107,7 +107,7 @@ namespace pharos\phathom
                     $input,
                     $this->lexer,
                     $this->compiled,
-                    $this->start,                    
+                    $this->start,
                     $this->token);
 
             [

@@ -135,6 +135,10 @@ namespace pharos\phathom\Earley {
                 }
             }
 
+            $this->lexer->scan(
+                $this->input, $position,
+                [], $this->class);
+
             return [$chart, $tokens, \count($tokens)];
         }
     }
