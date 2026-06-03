@@ -68,8 +68,8 @@ namespace pharos\phathom\Earley {
                                 dot:         $prev->dot + 1,
                                 origin:      $prev->origin,
                                 backs:       [new Back(
-                                    prev:  \WeakReference::create($prev),
-                                    child: \WeakReference::create($item),
+                                    prev:  $prev,
+                                    child: $item,
                                     token: null)],
                                 alternative: $palt));
                         }
@@ -82,7 +82,7 @@ namespace pharos\phathom\Earley {
                                 dot:         $item->dot + 1,
                                 origin:      $item->origin,
                                 backs:       [new Back(
-                                    prev:  \WeakReference::create($item),
+                                    prev:  $item,
                                     child: null,
                                     token: $i)],
                                 alternative: $item->alternative));
