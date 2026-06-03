@@ -35,3 +35,7 @@ There are two distinct motivations for using real files over closures (or any ot
 Real files are the only thing maximally compatible with opcache (and so JIT), any other strategy will pay significant penalties in terms of performance.
 
 The internal state of a Grammar object must be serializable in order for them to be cached between requests, written to disk, or otherwise sent over the wire complete.
+
+#### Caution
+
+Assets are automatically regenerated when content changes, but at regeneration time we cannot know which file we are replacing, and since it has a different file name, deployments that regularly change their grammars will need to prune their assets directory.

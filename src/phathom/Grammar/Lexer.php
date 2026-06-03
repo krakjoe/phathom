@@ -13,7 +13,7 @@ namespace pharos\phathom\Grammar {
         /**
          * ── Grammar file ─────────────────────────────────────────────────
          *
-         *   ident        := [^\s#:|<>(){}+*?"';]+
+         *   ident        := [^\s#:|<>(){}+*?"';-]+
          *   pattern      := '<' [^>]+ '>'
          *   quantifier   := [+*?]
          *   priority     := '[' [0-9]+ ']'
@@ -363,7 +363,7 @@ namespace pharos\phathom\Grammar {
             return [$content, $start];
         }
 
-        public function scan() : bool {
+        private function scan() : bool {
             if ($this->position >= $this->length) {
                 return false;
             }
@@ -374,6 +374,7 @@ namespace pharos\phathom\Grammar {
             }
 
             switch ($this->buffer[$this->position]) {
+                case '-':
                 case '#':
                 case ';':
                 case ':':

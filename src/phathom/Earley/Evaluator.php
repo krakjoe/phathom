@@ -47,7 +47,7 @@ namespace pharos\phathom\Earley {
                 return false;
             }
 
-            return $back->child->alternative->priority;
+            return $back->child->get()->alternative->priority;
         }
 
         private function selectBack(array $backs, array $tokens) : Back {
@@ -57,7 +57,7 @@ namespace pharos\phathom\Earley {
 
             if ($prioritized === false) {
                 if (\count($backs) > 1) {
-                    $child = $selected->child;
+                    $child = $selected->child->get();
                     throw AmbiguityException::range(
                         $this->context,
                         $child->rule,
@@ -94,7 +94,7 @@ namespace pharos\phathom\Earley {
                     $this->selectBack(
                         $cur->backs, $tokens);
                 $backs[$pos] = $back;
-                $cur         = $back->prev;
+                $cur         = $back->prev->get();
             }
 
             $values = \array_fill(0, $limit, null);
@@ -104,7 +104,7 @@ namespace pharos\phathom\Earley {
                     $values[$pos] =
                         $tokens[$back->token];
                 } else {
-                    $nitem = $back->child;
+                    $nitem = $back->child->get();
                     $values[$pos] =
                         $this->evalItem(
                             $nitem,
