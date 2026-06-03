@@ -10,11 +10,12 @@ namespace pharos\phathom\tests {
 
             $buffer = new Buffer($source, $contents);
 
-            $this->assertSame($buffer->contents(), $contents);
+            $this->assertSame($buffer->contents, $contents);
             $this->assertSame((string) $buffer, $source);
             $this->assertSame($buffer->__debugInfo(), [
                 'path' => $source,
             ]);
+            $this->assertSame($buffer->length, \strlen($contents));
         }
     }
 }

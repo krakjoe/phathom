@@ -6,7 +6,7 @@ namespace pharos\phathom\Grammar {
 
     final class Lexer {
         public private(set) File         $file;
-        private             string|false $buffer;
+        private             string       $buffer;
         private             int          $length;
         private             int          $position;
 
@@ -155,8 +155,10 @@ namespace pharos\phathom\Grammar {
 
         public function __construct(File $file) {
             $this->file     = $file;
-            $this->buffer   = $this->file->contents();
-            $this->length   = \strlen($this->buffer);
+            $this->buffer   =
+                $this->file->contents;
+            $this->length   =
+                $this->file->length;
             $this->position = 0;
         }
 

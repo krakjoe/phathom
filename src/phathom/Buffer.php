@@ -1,9 +1,14 @@
 <?php
 namespace pharos\phathom {
     final class Buffer implements Interface\Buffer {
+        public int $length;
+
         public function __construct(
             private string $source,
-            private string $contents) {}
+            public string $contents) {
+                $this->length =
+                    \strlen($contents);
+        }
 
         public function __toString() : string {
             return $this->source;
@@ -13,10 +18,6 @@ namespace pharos\phathom {
             return [
                 'path' => (string) $this,
             ];
-        }
-
-        public function contents() : string {
-            return $this->contents;
         }
     }
 }

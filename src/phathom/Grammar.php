@@ -100,21 +100,21 @@ namespace pharos\phathom
         }
 
         public function execute(Context $context): mixed {
-            $tokens =
-                $this->lexer
-                    ->tokenize(
-                        $context->parser
-                            ->input,
-                        $this->token);
-            $limit = \count($tokens);
+            $input = $context->parser->input;
 
             $builder =
                 new Earley\Chart(
+                    $input,
+                    $this->lexer,
                     $this->compiled,
-                    $this->start,
-                    $tokens, $limit);
+                    $this->start,                    
+                    $this->token);
 
-            $chart = $builder->build();
+            [
+                $chart,
+                $tokens,
+                $limit
+            ] = $builder->build();
 
             $evaluator =
                 new Earley\Evaluator(

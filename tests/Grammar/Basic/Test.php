@@ -38,7 +38,7 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("Basic.content");
 
         $input = new \pharos\phathom\Buffer(
-            "buffer", $test->contents());
+            "buffer", $test->contents);
 
         $grammar = new \pharos\phathom\Grammar($file);
         $parser  = new \pharos\phathom\Parser($grammar, $input);
@@ -97,6 +97,23 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("Basic.grammar");
         $content = $this->file
             ->relative("BasicNoparse.content");
+
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser  = new \pharos\phathom\Parser($grammar, $content);
+
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
+        $this->expectExceptionMessageMatches(
+            "/Unexpected character/");
+
+        $parser->parse();
+    }
+
+    public function testBasicIncomplete() : void {
+        $file = $this->file
+            ->relative("Basic.grammar");
+        $content = $this->file
+            ->relative("BasicIncomplete.content");
 
         $grammar = new \pharos\phathom\Grammar($file);
         $parser  = new \pharos\phathom\Parser($grammar, $content);

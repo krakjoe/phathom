@@ -27,8 +27,17 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = new \pharos\phathom\File(__FILE__);
 
         $this->assertSame(
-            $file->contents(),
-            $file->contents());
+            $file->contents,
+            $file->contents);
+    }
+
+    public function testLength() : void {
+        $file = new \pharos\phathom\File(__FILE__);
+
+        $this->assertSame(
+            $file->length,
+            \strlen(
+                \file_get_contents(__FILE__)));
     }
 
     public function testEmptiness() : void {
@@ -37,7 +46,7 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = new \pharos\phathom\File($meta['uri']);
 
         $buffer =
-            $file->contents();
+            $file->contents;
         $this->assertEmpty($buffer);
         $this->assertTrue($buffer !== false);
     }
@@ -60,7 +69,7 @@ final class Test extends \PHPUnit\Framework\TestCase
 
     public function testSerialization() : void {
         $file = new \pharos\phathom\File(__FILE__);
-        $file->contents();
+        $_ = $file->contents;
 
         $object = \unserialize(
             \serialize($file));
@@ -71,7 +80,7 @@ final class Test extends \PHPUnit\Framework\TestCase
 
     public function testDebug() : void {
         $file = new \pharos\phathom\File(__FILE__);
-        $file->contents();
+        $_ = $file->contents;
 
         $this->assertSame($file->__debugInfo(), [
             'path' => __FILE__,

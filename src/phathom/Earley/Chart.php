@@ -1,16 +1,22 @@
 <?php
 namespace pharos\phathom\Earley {
+    use \pharos\phathom\Lexer;
+    use \pharos\phathom\File;
+    use \pharos\phathom\Buffer;
+
     final class Chart {
         public function __construct(
-            private array  $rules,
-            private string $start,
-            private array  $tokens,
-            private int    $limit) {}
+            private File|Buffer $input,
+            private Lexer       $lexer,
+            private array       $rules,
+            private string      $start,
+            private string      $class) {}
 
         public function build(): array {
-            $index   = [];
-            $waiting = [];
-            $chart   = \array_fill(0, $this->limit + 1, []);
+            $index    = [];
+            $waiting  = [];
+            $tokens   = [];
+            $chart    = [[]];
 
             $add = function (int $pos, Item $item) use (&$index, &$chart, &$waiting): void {
                 $slot = &$index[$pos][$item->rule][$item->alt][$item->dot][$item->origin];
@@ -51,8 +57,12 @@ namespace pharos\phathom\Earley {
                     alternative: $alternative));
             }
 
-            for ($i = 0; $i <= $this->limit; $i++) {
-                $j = 0;
+            $position = 0;
+
+            for ($i = 0; isset($chart[$i]); $i++) {
+                $j        = 0;
+                $expected = [];
+
                 while ($j < \count($chart[$i])) {
                     $item   = $chart[$i][$j++];
                     $alt    = $item->alternative;
@@ -74,19 +84,8 @@ namespace pharos\phathom\Earley {
                                 alternative: $palt));
                         }
                     } elseif (($scanning = $dotted->terminal) !== false) {
-                        /* Scan */
-                        if ($i < $this->limit && $this->tokens[$i]->type === $scanning) {
-                            $add($i + 1, new Item(
-                                rule:        $item->rule,
-                                alt:         $item->alt,
-                                dot:         $item->dot + 1,
-                                origin:      $item->origin,
-                                backs:       [new Back(
-                                    prev:  $item,
-                                    child: null,
-                                    token: $i)],
-                                alternative: $item->alternative));
-                        }
+                        /* Scan — collect expected terminals */
+                        $expected[$scanning] = true;
                     } else {
                         /* Predict */
                         foreach ($this->rules[$dotted->name] as $aid => $alternative) {
@@ -100,10 +99,45 @@ namespace pharos\phathom\Earley {
                         }
                     }
                 }
+
+                if (!$expected) {
+                    break;
+                }
+
+                $token =
+                    $this->lexer->scan(
+                        $this->input, $position,
+                        $expected, $this->class);
+
+                if ($token === null) {
+                    break;
+                }
+
+                $ti      = \count($tokens);
+                $tokens[] = $token;
+                $chart[]  = [];
+
+                foreach ($chart[$i] as $item) {
+                    $dotted = $item->alternative->symbols[$item->dot] ?? null;
+                    if ($dotted === null || $dotted->terminal !== $token->type) {
+                        continue;
+                    }
+                    $add($i + 1, new Item(
+                        rule:        $item->rule,
+                        alt:         $item->alt,
+                        dot:         $item->dot + 1,
+                        origin:      $item->origin,
+                        backs:       [new Back(
+                            prev:  $item,
+                            child: null,
+                            token: $ti)],
+                        alternative: $item->alternative));
+                }
             }
 
-            return $chart;
+            return [$chart, $tokens, \count($tokens)];
         }
     }
 }
+
 ?>

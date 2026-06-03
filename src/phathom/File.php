@@ -8,10 +8,48 @@ namespace pharos\phathom
         const int REGULAR   = 1;
         const int DIRECTORY = 2;
 
-        public private(set) string $path;
-        public private(set) int    $kind;
-
+        public private(set) string       $path;
+        public private(set) int          $kind;
         private             string|false $buffer = false;
+        private             int|false    $limit  = false;
+        
+        public string $contents {
+            get {
+                if ($this->buffer !== false) {
+                    return $this->buffer;
+                }
+
+                // @codeCoverageIgnoreStart
+                $this->buffer = @\file_get_contents($this->path);
+
+                if ($this->buffer === false) {
+                    throw new IOException(
+                        "{$this->path} cannot be read");
+                }
+                // @codeCoverageIgnoreEnd
+
+                return $this->buffer;
+            }
+        }
+
+        public int $length {
+            get {
+                if ($this->limit !== false) {
+                    return $this->limit;
+                }
+
+                if ($this->buffer === false) {
+                    $this->limit =
+                        \strlen(
+                            $this->contents);
+                    return $this->limit;
+                }
+
+                $this->limit =
+                    \strlen($this->buffer);
+                return $this->limit;
+            }
+        }
 
         public function __construct(string $path) {
             $realpath = \realpath($path);
@@ -30,23 +68,6 @@ namespace pharos\phathom
                 $this->kind =
                     FILE::REGULAR;
             }
-        }
-
-        public function contents() : string {
-            if ($this->buffer !== false) {
-                return $this->buffer;
-            }
-
-            // @codeCoverageIgnoreStart
-            $this->buffer = @\file_get_contents($this->path);
-
-            if ($this->buffer === false) {
-                throw new IOException(
-                    "{$this->path} cannot be read");
-            }
-            // @codeCoverageIgnoreEnd
-
-            return $this->buffer;
         }
 
         public function realpath(string $path) : string|false {

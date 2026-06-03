@@ -62,6 +62,6 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->assertSame(0,  $tokens[0]->location['position']);
         $this->assertSame(7,  $tokens[1]->location['position']);
         $this->assertSame(18, $tokens[2]->location['position']);
-        $this->assertSame(32, $tokens[3]->location['position']);
+        $this->assertSame(28, $tokens[3]->location['position']);
     }
 }
