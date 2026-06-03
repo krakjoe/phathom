@@ -111,8 +111,6 @@ namespace pharos\phathom
             $builder =
                 new Earley\Chart(
                     $this->compiled,
-                    $this->terminals,
-                    $this->patterns,
                     $this->start,
                     $tokens, $limit);
 

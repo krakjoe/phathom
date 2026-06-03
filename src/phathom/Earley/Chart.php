@@ -3,28 +3,42 @@ namespace pharos\phathom\Earley {
     final class Chart {
         public function __construct(
             private array  $rules,
-            private array  $terminals,
-            private array  $patterns,
             private string $start,
             private array  $tokens,
             private int    $limit) {}
 
         public function build(): array {
-            $index = [];
-            $chart = \array_fill(0, $this->limit + 1, []);
+            $index   = [];
+            $waiting = [];
+            $chart   = \array_fill(0, $this->limit + 1, []);
 
-            $add = function (int $pos, Item $item) use (&$index, &$chart): void {
+            $add = function (int $pos, Item $item) use (&$index, &$chart, &$waiting): void {
                 $slot = &$index[$pos][$item->rule][$item->alt][$item->dot][$item->origin];
 
-                if (!isset($slot)) {
-                    $item->pos     = $pos;
-                    $slot          = $item;
-                    $chart[$pos][] = $item;
-                } elseif (!empty($item->backs)) {
+                if (isset($slot)) {
+                    if (empty($item->backs)) {
+                        return;
+                    }
                     foreach ($item->backs as $back) {
                         $slot->backs[] = $back;
                     }
+                    return;
                 }
+
+                $item->pos     = $pos;
+                $slot          = $item;
+                $chart[$pos][] = $item;
+
+                if (!isset($item->alternative->symbols[$item->dot])) {
+                    return;
+                }
+
+                $dotted = $item
+                    ->alternative
+                    ->symbols[
+                        $item->dot];
+
+                $waiting[$pos][$dotted->name][] = $item;
             };
 
             foreach ($this->rules[$this->start] as $aid => $alternative) {
@@ -46,29 +60,21 @@ namespace pharos\phathom\Earley {
 
                     if ($dotted === null) {
                         /* Complete */
-                        foreach ($chart[$item->origin] as $prev) {
+                        foreach ($waiting[$item->origin][$item->rule] ?? [] as $prev) {
                             $palt = $prev->alternative;
-                            $psym = $palt->symbols[$prev->dot] ?? null;
-
-                            if ($psym !== null && $psym->name === $item->rule) {
-                                $add($i, new Item(
-                                    rule:        $prev->rule,
-                                    alt:         $prev->alt,
-                                    dot:         $prev->dot + 1,
-                                    origin:      $prev->origin,
-                                    backs:       [new Back(
-                                        prev:  $prev,
-                                        child: $item,
-                                        token: null)],
-                                    alternative: $palt));
-                            }
+                            $add($i, new Item(
+                                rule:        $prev->rule,
+                                alt:         $prev->alt,
+                                dot:         $prev->dot + 1,
+                                origin:      $prev->origin,
+                                backs:       [new Back(
+                                    prev:  $prev,
+                                    child: $item,
+                                    token: null)],
+                                alternative: $palt));
                         }
-                    } elseif (isset($this->terminals[$dotted->name]) ||
-                              isset($this->patterns[$dotted->name])) {
+                    } elseif (($scanning = $dotted->terminal) !== false) {
                         /* Scan */
-                        $scanning =
-                            $this->terminals[$dotted->name] ??
-                            $this->patterns[$dotted->name];
                         if ($i < $this->limit && $this->tokens[$i]->type === $scanning) {
                             $add($i + 1, new Item(
                                 rule:        $item->rule,

@@ -10,6 +10,7 @@ namespace pharos\phathom\Grammar {
         private array  $synthetic = [];
         private array  $terminals = [];
         private array  $patterns  = [];
+        private array  $symbols   = [];
 
         public function __construct(
             private File  $file,
@@ -79,6 +80,8 @@ namespace pharos\phathom\Grammar {
 
                     $this->terminals[$symbol->name] = true;
             }
+
+            $this->symbols[] = $symbol;
         }
 
         /* Rewrite quantified symbols into synthetic nullable/recursive rules,
@@ -99,7 +102,7 @@ namespace pharos\phathom\Grammar {
                 $self = [
                     new Symbol(Token::IDENT, $name)];
                 $one  = [
-                    new Symbol($symbol->type, $base)];
+                    $this->symbols[] = new Symbol($symbol->type, $base)];
 
                 $synthetic[$name] = match ($symbol->quantifier) {
                     Quantifier::STAR => [
@@ -130,14 +133,21 @@ namespace pharos\phathom\Grammar {
         }
 
         private function compileConstants() : void {
-            foreach (\array_keys($this->terminals) as $terminal) {
-                $this->terminals[$terminal] =
-                    $this->lexer->config[$terminal]['const'];
+            foreach ($this->terminals as $terminal => &$constant) {
+                $constant = $this->lexer
+                    ->config[$terminal]['const'];
             }
 
-            foreach (\array_keys($this->patterns) as $pattern) {
-                $this->patterns[$pattern] =
-                    $this->lexer->config[$pattern]['const'];
+            foreach ($this->patterns as $pattern => &$constant) {
+                $constant = $this->lexer
+                    ->config[$pattern]['const'];
+            }
+
+            foreach ($this->symbols as $symbol) {
+                $symbol->terminal =
+                    $this->terminals[$symbol->name] ??
+                    $this->patterns[$symbol->name]  ??
+                    false;
             }
         }
 
