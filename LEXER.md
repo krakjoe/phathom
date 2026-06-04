@@ -27,6 +27,16 @@ skip = true
 
 Token names (ie `[section]` headers) are available as terminals in grammar rules.
 
+### Context Sensitivity
+
+The `Earley\Chart` and `Lexer` implementations interact to achieve a kind of context sensitivity: during parsing we are already inferring the expected tokens at the current position in the parse, so we pass that information to the Lexer to request that it scans for only the expected tokens at the current position, rather than all tokens defined, at every position.
+
+This is a nice perf optimization and additionally simplifies writing Lexers; you don't need declaratively express that tokens are context-sensitive (thus we don't need to complicate INI format Lexers), their sensitivity in the current context being inferred by the engine.
+
+### Longest Match Tie Breaker
+
+The Lexer will attempt to find the longest match from the expected tokens at the current position, when more than one token of equal length could be constructed for the current position the tie breaker is *declaration order* in the Lexer.
+
 ### Notes
 
 Patterns must include appropriate PCRE delimiters (and escaping), their form will be verified on lexer compilation (triggered by grammar compilation).

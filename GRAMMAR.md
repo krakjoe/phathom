@@ -276,7 +276,7 @@ $result = $parser->parse();
 
 ## Modularity
 
-In the general parser framework case, grammar files are monolithic (the zend language parser is 2k lines for example): If a new feature is added, you have to pick apart at least one giant file to implement it.
+In the general parser framework case, grammar files are monolithic (the zend language parser is ~2k lines for example): If a new feature is added, you have to pick apart at least one giant file to implement it.
 
 For phathom, grammar files are modular - they may merge additional lexer configuration and *append alternatives for rules defined in other grammar*.
 
