@@ -3,6 +3,13 @@ namespace pharos\phathom\Earley {
     use \WeakReference;
 
     final class Back {
+        /*
+        * The normal object destructor (not the GC) can stack overflow on deeply nested trees.
+        *
+        * Weak referencing breaks the cycle that causes that overflow.
+        *
+        * !DON'T CHANGE THIS!
+        */
         private WeakReference  $__prev__;
         private ?WeakReference $__child__;
 
