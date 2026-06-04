@@ -4,7 +4,7 @@ namespace pharos\phathom\Earley {
 
     final class Back {
         /*
-        * The normal object destructor (not the GC) can stack overflow on deeply nested trees.
+        * The normal object destructor (not the GC) can stack overflow due to deep recursion.
         *
         * Weak referencing breaks the cycle that causes that overflow.
         *
