@@ -20,7 +20,7 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         $this->expectException(
             \pharos\phathom\Exception\Ambiguity::class);
-        $this->expectExceptionMessageMatches('/ambiguity/');
+        $this->expectExceptionMessageMatches('/ambiguity.*spanning/');
         $parser->parse();
     }
 
@@ -35,7 +35,23 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         $this->expectException(
             \pharos\phathom\Exception\Ambiguity::class);
-        $this->expectExceptionMessageMatches('/ambiguity/');
+        $this->expectExceptionMessageMatches('/ambiguity.*spanning/');
+        $parser->parse();
+    }
+
+    public function testNullable() : void {
+        $file = $this->file
+            ->relative("Nullable.grammar");
+        $content = new \pharos\phathom\Buffer(
+            "empty", "");
+
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser  = new \pharos\phathom\Parser($grammar, $content);
+
+        $this->expectException(
+            \pharos\phathom\Exception\Ambiguity::class);
+        $this->expectExceptionMessageMatches(
+            '/ambiguity.*matching no tokens/s');
         $parser->parse();
     }
 }

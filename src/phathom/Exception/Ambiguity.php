@@ -14,13 +14,14 @@ namespace pharos\phathom\Exception {
                 "Unresolved ambiguity ".
                     "(multiple parse trees and no priority annotation) ".
                 "for rule '%s' from %s " .
-                "spanning %s to %s",
+                "%s",
                 $rule,
                 $context->parser->grammar->file,
-                $tokens[$start]
-                    ::print($tokens[$start]),
-                $tokens[$end]
-                    ::print($tokens[$end]),
+                $end < $start
+                    ? "matching no tokens"
+                    : \sprintf("spanning %s to %s",
+                        $tokens[$start]::print($tokens[$start]),
+                        $tokens[$end]::print($tokens[$end])),
             ));
         }
     }

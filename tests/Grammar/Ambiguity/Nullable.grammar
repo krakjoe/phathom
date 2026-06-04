@@ -1,0 +1,9 @@
+lexer: "Ambiguity.lexer";
+
+unit: item;
+
+item:
+    (ALPHA?)
+    |
+    (ALPHA?)
+;
