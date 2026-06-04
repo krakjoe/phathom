@@ -18,9 +18,14 @@
       <file>tests/Assets/Test.php</file>
     </testsuite>
 
-    <testsuite name="Lexer">
-      <file>tests/Lexer/Test.php</file>
+    <testsuite name="Lexer\Exceptions">
+      <file>tests/Lexer/Exceptions/Test.php</file>
     </testsuite>
+
+    <testsuite name="Lexer\Scanning">
+      <file>tests/Lexer/Scanning/Test.php</file>
+    </testsuite>
+
     <testsuite name="Grammar\Token">
       <file>tests/Grammar/Token/Test.php</file>
     </testsuite>
@@ -62,6 +67,11 @@
     <testsuite name="Grammar\Sequence">
       <file>tests/Grammar/Sequence/Test.php</file>
     </testsuite>
+
+    <testsuite name="Grammar\Pattern\Exceptions">
+      <file>tests/Grammar/Pattern/Exceptions/Test.php</file>
+    </testsuite>
+
     <testsuite name="Grammar\Pattern">
       <file>tests/Grammar/Pattern/Test.php</file>
     </testsuite>

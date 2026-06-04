@@ -1,0 +1,5 @@
+lexer: "Basic.lexer";
+
+unit: (ALPHA EQUALS NUM) {
+    return [(string) $1 => (string) $3];
+};

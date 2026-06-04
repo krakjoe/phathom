@@ -1,7 +1,0 @@
-lexer: "ZeroMatch.lexer";
-
-item: (TOKEN) {
-    return $1;
-};
-
-unit: item;

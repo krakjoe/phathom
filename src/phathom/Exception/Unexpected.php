@@ -2,49 +2,7 @@
 namespace pharos\phathom\Exception {
     use \pharos\phathom\Grammar\Token;
 
-    final class Unexpected extends \pharos\phathom\Exception {
-
-        private static function explain(array $options) : string {
-            $options = \array_map(function($option) {
-                if (\is_int($option)) {
-                    return Token::string($option);
-                }
-                return $option;
-            }, $options);
-
-            switch (\count($options)) {
-                case 1:
-                    return $options[0];
-
-                case 2:
-                    return \vsprintf("%s or %s", $options);
-
-                default:
-                    $last =
-                        \array_pop($options);
-                    return \sprintf(
-                        "%s, or %s",
-                        \implode(", ", $options),
-                        $last);
-            }
-        }
-
-        public static function directive(Token $token, array $allowed) : Unexpected {
-            return new self(\sprintf(
-                "Unexpected directive, expected %s, ".
-                "got %s",
-                Unexpected::explain($allowed),
-                Token::print($token)));
-        }
-
-        public static function include(Token $token, string $path, array $location) : Unexpected {
-            return new self(\sprintf(
-                "Unexpected duplicate include at %s:%d, ".
-                "%s already included at %s:%d ",
-                $token->location['path'], $token->location['position'],
-                $path, $location['path'], $location['position']));
-        }
-
+    final class Unexpected extends \pharos\phathom\Exception\Lexer {
         public static function initial(Token $token) : Unexpected {
             return new self(\sprintf(
                 "Unexpected %s, initial token must be ".
@@ -59,7 +17,7 @@ namespace pharos\phathom\Exception {
                 "Unexpected %s, %s must be followed by %s, got %s",
                 Token::string($next->type),
                 Token::string($token->type),
-                Unexpected::explain($rules),
+                self::explain($rules),
                 Token::print($next)));
         }
 
@@ -111,15 +69,6 @@ namespace pharos\phathom\Exception {
                 $location['path'], $location['position']));
         }
 
-        public static function character(string $buffer, array $location, array $rules) : Unexpected {
-            return new self(\sprintf(
-                "Unexpected character \"%s\", ".
-                "expected %s at %s:%d",
-                $buffer[$location['position']],
-                Unexpected::explain($rules),
-                $location['path'], $location['position']));
-        }
-
         public static function escape(int $type, array $location, array $delimiters) : Unexpected {
             return new self(\sprintf(
                 "Unexpected escape in %s, ".
@@ -128,6 +77,15 @@ namespace pharos\phathom\Exception {
                 "expected more input at %s:%d",
                 Token::string($type),
                 Token::string($type), $delimiters['open'], $delimiters['close'],
+                $location['path'], $location['position']));
+        }
+
+        public static function character(string $buffer, array $location, array $rules) : Unexpected {
+            return new self(\sprintf(
+                "Unexpected character \"%s\", ".
+                "expected %s at %s:%d",
+                $buffer[$location['position']],
+                self::explain($rules),
                 $location['path'], $location['position']));
         }
     }

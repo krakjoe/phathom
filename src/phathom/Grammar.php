@@ -3,7 +3,6 @@ namespace pharos\phathom
 {    
     use \pharos\phathom\Exception\Undeclared as UndeclaredException;
     use \pharos\phathom\Exception\Execute    as ExecuteException;
-    use \pharos\phathom\Exception\Directive  as DirectiveException;
    
     final class Grammar
     {
@@ -13,8 +12,8 @@ namespace pharos\phathom
         private             array   $rules      = [];   /* raw rules                                    */
     
         /* parsed members */
-        private             ?Lexer  $lexer     = null;  /* declared lexer                               */
-        private              array  $abstracts  = [     /* declared abstracts                           */
+        private              Lexer  $lexer;             /* declared lexers                              */
+        private              array  $abstracts = [      /* declared abstracts                           */
             'token'   =>     '\pharos\phathom\Token',
             'context' =>     '\pharos\phathom\Context',
         ];
@@ -49,17 +48,13 @@ namespace pharos\phathom
             }
 
             if ($this->directives['context'] !== false) {
-                $this->setAbstract(
-                    'context',
-                    (string) $this->directives['context'],
-                    $this->abstracts['context']);
+                $this->abstracts['context'] = (string)
+                    $this->directives['context'];
             }
 
             if ($this->directives['token'] !== false) {
-                $this->setAbstract(
-                    'token',
-                    (string) $this->directives['token'],
-                    $this->abstracts['token']);
+                $this->abstracts['token'] = (string)
+                    $this->directives['token'];
             }
 
             if (empty($this->rules)) {
@@ -122,24 +117,6 @@ namespace pharos\phathom
                     $chart);
 
             return $evaluator->enter($this->start, $tokens, $limit);
-        }
-
-        private function setAbstract(string $type, string $abstract, string $parent) : void {
-            if (!\class_exists($abstract)) {
-                throw new DirectiveException(
-                    "{$abstract} does not exist, it must be autoloadable");
-            }
-
-            $parents = \array_map(function(string $parent) : string {
-                return "\\$parent";
-            }, \class_parents($abstract));
-
-            if (!\in_array($parent, $parents)) {
-                throw new DirectiveException(
-                    "{$abstract} does not extend {$parent}");
-            }
-
-            $this->abstracts[$type] = $abstract;
         }
 
         public function factory(Parser $parser): Context {

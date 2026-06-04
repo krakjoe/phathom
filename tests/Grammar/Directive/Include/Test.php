@@ -28,10 +28,11 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("Duplicate.grammar");
 
         $this->expectException(
-            \pharos\phathom\Exception\Unexpected::class);
+            \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessageMatches(
-            "/Unexpected duplicate include at .*:63, ".
-            ".*Snippet\.grammar already included at .*:35/");
+            "/include for Snippet.grammar ".
+                "at .*Duplicate.grammar:63, ".
+            "already included at .*Duplicate.grammar:35/");
 
         new \pharos\phathom\Grammar($file);    
     }
@@ -41,10 +42,11 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("Recursion.grammar");
 
         $this->expectException(
-            \pharos\phathom\Exception\Unexpected::class);
+            \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessageMatches(
-            "/Unexpected duplicate include at .*:35, ".
-            ".*Recursion.grammar already included at .*Recursion.grammar:0/");
+            "/include for Recursion.grammar ".
+                "at .*Recursion.grammar:35, ".
+            "already included at .*Recursion.grammar:0/");
 
         new \pharos\phathom\Grammar($file);  
     }

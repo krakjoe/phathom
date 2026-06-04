@@ -2,14 +2,6 @@
 namespace pharos\phathom\tests\Grammar\Generator {
     class TestAssets extends \PHPUnit\Framework\TestCase {
         public function testExpectations() : void {
-            $lexer = new \pharos\phathom\Lexer(
-                new \pharos\phathom\File(
-                    \sprintf("%s%s..%s..%sLexer%sContent.lexer",
-                        \dirname(__FILE__),
-                        \DIRECTORY_SEPARATOR,
-                        \DIRECTORY_SEPARATOR,
-                        \DIRECTORY_SEPARATOR,
-                        \DIRECTORY_SEPARATOR)));
             $symbols = [];
             $generator =
                 new \pharos\phathom\Grammar\Generator(
@@ -17,8 +9,8 @@ namespace pharos\phathom\tests\Grammar\Generator {
                         'token'   => '\\pharos\\phathom\\tests\\Grammar\\Generator\\Token',
                         'context' => '\\pharos\\phathom\\tests\\Grammar\\Generator\\Context'
                     ], 
-                    $lexer,
-                    [], []);
+                    new \pharos\phathom\Lexer(),
+                    []);
 
             $symbols[] = $generator->generate();
             $symbols[] = $generator->generate();

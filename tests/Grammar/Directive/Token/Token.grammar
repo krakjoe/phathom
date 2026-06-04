@@ -1,0 +1,5 @@
+token: "\pharos\phathom\tests\Grammar\Directive\Token\Token";
+
+unit: (</.+/>) {
+    return $1;
+};

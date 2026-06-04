@@ -427,7 +427,9 @@ namespace pharos\phathom\Grammar {
                     if (!\in_array(
                             $next->type, $rules['allow'], true)) {
                         throw UnexpectedException::token(
-                            $token, $next, $rules['allow']);
+                            $token, $next, \array_map(function($rule) {
+                                return Token::string($rule);
+                            }, $rules['allow']));
                     }
                 }
 
@@ -583,6 +585,15 @@ namespace pharos\phathom\Grammar {
             return $tokens;
         }
 
+        /**
+         * The contract of this function must always be to return a validated
+         * token stream.
+         * 
+         * The consumer should not have to use the result defensively.
+         * 
+         * In pratice this means maintaining the specification table properly
+         *      (according to grammar specification).
+         */
         public function tokenize() : array {
             return $this->validate(
                 $this->collect());

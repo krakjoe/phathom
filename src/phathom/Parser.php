@@ -1,6 +1,5 @@
 <?php
-
-namespace pharos\phathom 
+namespace pharos\phathom
 {
     final class Parser 
     {

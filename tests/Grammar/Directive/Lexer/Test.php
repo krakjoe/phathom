@@ -32,16 +32,4 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         new \pharos\phathom\Grammar($file);    
     }
-
-    public function testRedefine() : void {
-        $file = $this->file
-            ->relative("Redefine.grammar");
-
-        $this->expectException(
-            \pharos\phathom\Exception\IO::class);
-        $this->expectExceptionMessageMatches(
-            "/cannot redefine/");
-
-        new \pharos\phathom\Grammar($file);    
-    }
 }

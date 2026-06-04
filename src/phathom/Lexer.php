@@ -1,9 +1,8 @@
 <?php
-
 namespace pharos\phathom
 {
-    use \pharos\phathom\Exception\IO as IOException;
-    use \pharos\phathom\Exception\Regex as RegexException;
+    use \pharos\phathom\Exception\Lexer      as LexerException;
+    use \pharos\phathom\Exception\Regex      as RegexException;
     use \pharos\phathom\Exception\Unexpected as UnexpectedException;
 
     final class Lexer
@@ -18,38 +17,91 @@ namespace pharos\phathom
                 @\parse_ini_string(
                     $file->contents, true);
 
-            if ($config === false) {
-                throw new IOException(
-                    "$file does not contain valid configuration (ini syntax)");
+            if ($config === false || !\count($config)) {
+                throw LexerException::noconfig($file);
             }
 
             foreach ($config as $name => &$token) {
-                if (isset($this->config[$name])) {
-                    throw new IOException(
-                        "$file cannot redefine \"$name\", ". 
-                            "already defined in {$this->config[$name]['file']}");
-                }
-
                 $token['added'] = false;
                 $token['file']  =
                     (string) $file;
+                $this->verify(
+                    $file, $name, $token);
             }
 
             $this->config = \array_merge($this->config, $config);
+        }
+
+        public function add(File $file, array $patterns): void {
+            foreach ($patterns as $pattern) {
+                $token = [
+                    'pattern' => $pattern,
+                    'added'   => true,
+                    'file'    =>
+                        (string) $file,
+                ];
+                $this->verify(
+                    $file, $pattern, $token);
+                $this->config[$pattern] = $token;
+            }
         }
 
         public function known(string $token): bool {
             return isset($this->config[$token]);
         }
 
-        public function add(File $file, array $patterns): void {
-            foreach ($patterns as $pattern) {
-                $this->config[$pattern] = [
-                    'pattern' => $pattern,
-                    'added'   => true,
-                    'file'    =>
-                        (string) $file,
-                ];
+        private function verify(File $file, string $name, array $config) : void {
+            if (!$config['added'] && isset($this->config[$name])) {
+                throw LexerException::redefine(
+                    $file, $name, $config, $this->config[$name]);
+            }
+
+            if (!isset($config['pattern'])) {
+                throw LexerException::nopattern($file, $name);
+            }
+
+            $delimiter =
+                $config['pattern'][0];
+            switch ($delimiter) {
+                case "\\":
+                    throw RegexException::illegal(
+                        $file, $name, $config, "backslash");
+
+                default:
+                    if (\ctype_alnum($delimiter) ||
+                        \ctype_space($delimiter)) {
+                        throw RegexException::illegal(
+                            $file, $name, $config,
+                                \ctype_alnum($delimiter) ?
+                                    "alphanumeric" :
+                                    "whitespace");
+                    }
+            }
+
+            $expected = Lexer::delimiter($delimiter);
+
+            if (\strrpos(
+                    $config['pattern'],
+                    $expected, 1) === false) {
+                throw RegexException::improper(
+                    $file, $name, $config, $delimiter, $expected);
+            }
+
+            \error_clear_last();
+
+            $result =
+                @\preg_match($config['pattern'], '');
+            if ($result === false) {
+                $error =
+                    \error_get_last();
+                throw RegexException::compile(
+                    $file, $name, $config,
+                    \preg_replace(
+                        '/^[a-z_]+\(\): /i', '',
+                        $error['message']));
+            } else if ($result >= 1) {
+                throw LexerException::nocontent(
+                    $file, $name, $config);
             }
         }
 
@@ -68,52 +120,10 @@ namespace pharos\phathom
         private function unwrap(string $pattern, string $file): array {
             $delim =
                 $pattern[0];
-            switch ($delim) {
-                case "\\":
-                    throw new RegexException(\sprintf(
-                        "%s in %s uses an illegal delimiter, ".
-                        "expected ".
-                            "non-alphanumeric, ".
-                            "non-whitespace, ".
-                            "non-backslash, ".
-                        "got backslash",
-                        $pattern, $file
-                    ));
-
-                default:
-                    if (\ctype_alnum($delim) ||
-                        \ctype_space($delim)) {
-                        throw new RegexException(\sprintf(
-                            "%s in %s uses an illegal delimiter, ".
-                            "expected ".
-                                "non-alphanumeric, ".
-                                "non-whitespace, ".
-                                "non-backslash, ".
-                            "got %s",
-                            $pattern, $file,
-                            \ctype_alnum($delim) ?
-                                "alphanumeric" :
-                                "whitespace"
-                        ));
-                    }
-            }
-
             $end  =
                 \strrpos(
                     $pattern,
                     Lexer::delimiter($delim), 1);
-
-            if ($end === false) {
-                throw new RegexException(\sprintf(
-                    "%s in %s is improperly delimited, ".
-                    "starting delimiter %s, ".
-                    "expected ending delimiter %s",
-                    $pattern, $file,
-                    $delim,
-                    Lexer::delimiter($delim)
-                ));
-            }
-
             return [
                 \substr($pattern, 1, $end - 1),
                 \substr($pattern, $end + 1),
@@ -160,33 +170,6 @@ namespace pharos\phathom
                 $this->wrap($skipping, '+');
             $this->consuming = $consuming;
             $this->constants = $constants;
-
-            $this->verify();
-        }
-
-        private function verify(): void {
-            $patterns = $this->consuming;
-
-            if ($this->skipping !== false) {
-                $patterns[] = $this->skipping;
-            }
-
-            foreach ($patterns as $const => $pattern) {
-                \error_clear_last();
-
-                if (@\preg_match($pattern, '') === false) {
-                    $error =
-                        \error_get_last();
-                    throw new RegexException(\sprintf(
-                        "%s failed to compile, ".
-                            "PCRE reported: %s",
-                        $this->constants[$const] ?? '(skip)',
-                        \preg_replace(
-                            '/^[a-z_]+\(\): /i', '',
-                            $error['message'])
-                    ));
-                }
-            }
         }
 
         public function scan(
@@ -207,11 +190,8 @@ namespace pharos\phathom
 
                 if ($skipped === false) {
                     // @codeCoverageIgnoreStart
-                    throw new RegexException(\sprintf(
-                        "skipping failed at %s:%d, ".
-                            "PCRE reported: %s",
-                        $input, $position,
-                        \preg_last_error_msg()));
+                    throw RegexException::skipping(
+                        $input, $position);
                     // @codeCoverageIgnoreEnd
                 }
 
@@ -226,7 +206,6 @@ namespace pharos\phathom
             $type   = null;
             $value  = null;
             $length = 0;
-            $empty  = false;
 
             foreach (
                 \array_intersect_key(
@@ -236,11 +215,11 @@ namespace pharos\phathom
 
                 if ($matched === false) {
                     // @codeCoverageIgnoreStart
-                    throw new RegexException(\sprintf(
-                        "matching %s failed at %s:%d, ".
-                            "PCRE reported: %s",
-                        $this->constants[$const], $input, $position,
-                        \preg_last_error_msg()));
+                    throw RegexException::matching(
+                        $input, $position,
+                        $this->constants[$const],
+                        $this->config[
+                            $this->constants[$const]]);
                     // @codeCoverageIgnoreEnd
                 }
 
@@ -248,10 +227,7 @@ namespace pharos\phathom
                     continue;
                 }
 
-                if (($match = \strlen($matches[0])) === 0) {
-                    $empty = $const;
-                    continue;
-                }
+                $match = \strlen($matches[0]);
 
                 if ($match > $length) {
                     $length = $match;
@@ -261,13 +237,6 @@ namespace pharos\phathom
             }
 
             if ($type === null) {
-                if ($empty !== false) {
-                    throw new RegexException(\sprintf(
-                        "matching %s failed at %s:%d, ".
-                        "pattern matches zero characters",
-                        $this->constants[$empty], $input, $position));
-                }
-
                 throw UnexpectedException::character(
                     $input->contents, [
                         'path'     => $input,
@@ -289,25 +258,6 @@ namespace pharos\phathom
             $position += $length;
 
             return $token;
-        }
-
-        public function tokenize(File|Buffer $input, string $class = Token::class): array {
-            $tokens   = [];
-            $position = 0;
-
-            while ($position < $input->length) {
-                $token = $this->scan(
-                    $input, $position,
-                    $this->consuming, $class);
-
-                if ($token === null) {
-                    break;
-                }
-
-                $tokens[] = $token;
-            }
-
-            return $tokens;
         }
     }
 }

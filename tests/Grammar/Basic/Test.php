@@ -148,9 +148,9 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("BasicUnrecognizedDirective.grammar");
         
         $this->expectException(
-            \pharos\phathom\Exception\Unexpected::class);
+            \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessage(
-            "Unexpected directive, expected ".
+            "Unknown directive, expected ".
                 "lexer, token, context, or include, ".
             "got IDENT(unrecognized)");
 
@@ -184,7 +184,7 @@ final class Test extends \PHPUnit\Framework\TestCase
 
     public function testBasicTrailing() : void {
         $file = $this->file
-            ->relative("Basic.grammar");
+            ->relative("BasicTrailing.grammar");
         $content = $this->file
             ->relative("BasicTrailing.content");
 
@@ -194,7 +194,7 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectException(
             \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessageMatches(
-            "/Unexpected character \";\"/");
+            "/Unexpected character \";\", expected end of input/");
 
         $parser->parse();
     }

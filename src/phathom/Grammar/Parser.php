@@ -2,7 +2,6 @@
 namespace pharos\phathom\Grammar {
     use \pharos\phathom\File;
 
-    use \pharos\phathom\Exception\Unexpected as UnexpectedException;
     use \pharos\phathom\Exception\Directive  as DirectiveException;
 
     final class Parser {
@@ -34,7 +33,7 @@ namespace pharos\phathom\Grammar {
                     ->relative((string) $include);
 
             if (isset($this->included[$file->path])) {
-                throw UnexpectedException::include(
+                throw DirectiveException::include(
                     $directive,
                     (string) $include,
                     $this->included[
@@ -54,6 +53,46 @@ namespace pharos\phathom\Grammar {
             return $parser->parse();
         }
 
+        private function abstract(Token $ident, Token $string) : void {
+            $directive = (string) $ident;
+
+            if ($this->directives[$directive] !== false) {
+                throw DirectiveException::abstract(
+                    $ident,
+                    $this->directives);
+            }
+
+            $abstract  = (string) $string;
+
+            if (!\class_exists($abstract)) {
+                throw new DirectiveException(
+                    "{$abstract} does not exist, it must be autoloadable");
+            }
+
+            $parents = \array_map(function(string $parent) : string {
+                return "\\$parent";
+            }, \class_parents($abstract));
+
+            if (!\in_array($parent = match($directive) {
+                'token'   => '\pharos\phathom\Token',
+                'context' => '\pharos\phathom\Context'
+            }, $parents)) {
+                throw new DirectiveException(
+                    "{$abstract} does not extend {$parent}");
+            }
+
+            $this->directives[$directive] = $string;
+        }
+
+        /**
+         * The contract of this function must always be to return valid AST
+         * 
+         * IE, the consumer should not have to use the structures defensively
+         *      (they are all over hot paths).
+         * 
+         * In practice this means, check files exists and abstracts are the correct
+         * shape.
+         */
         public function parse(): array {
             $tokens     = $this->lexer->tokenize();
             $position   = 0;
@@ -151,13 +190,7 @@ namespace pharos\phathom\Grammar {
                             switch ((string) $ident) {                                    
                                 case 'token':
                                 case 'context':
-                                    if ($this->directives[(string) $ident] !== false) {
-                                        throw DirectiveException::abstract(
-                                            $ident,
-                                            $this->directives);
-                                    }
-
-                                    $this->directives[(string)$ident] = $string;
+                                    $this->abstract($ident, $string);
                                 break;
 
                                 case 'lexer':
@@ -182,7 +215,7 @@ namespace pharos\phathom\Grammar {
                                 break;
 
                                 default:
-                                    throw UnexpectedException::directive(
+                                    throw DirectiveException::unknown(
                                         $ident, [
                                             'lexer',
                                             'token',
