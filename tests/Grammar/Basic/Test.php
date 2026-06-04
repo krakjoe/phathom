@@ -109,6 +109,23 @@ final class Test extends \PHPUnit\Framework\TestCase
         $parser->parse();
     }
 
+    public function testBasicNomatchEmpty() : void {
+        $file = $this->file
+            ->relative("Basic.grammar");
+        $content = $this->file
+            ->relative("BasicNomatchEmpty.content");
+
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser  = new \pharos\phathom\Parser($grammar, $content);
+
+        $this->expectException(
+            \pharos\phathom\Exception\Execute::class);
+        $this->expectExceptionMessageMatches(
+            "/no input available/");
+
+        $parser->parse();
+    }
+
     public function testBasicIncomplete() : void {
         $file = $this->file
             ->relative("Basic.grammar");
