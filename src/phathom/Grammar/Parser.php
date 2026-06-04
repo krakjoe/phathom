@@ -85,10 +85,9 @@ namespace pharos\phathom\Grammar {
         }
 
         /**
-         * The contract of this function must always be to return valid AST
+         * The contract of this function must always be to return valid structures.
          * 
-         * IE, the consumer should not have to use the structures defensively
-         *      (they are all over hot paths).
+         * IE, the consumer should not have to use the structures defensively.
          * 
          * In practice this means, check files exists and abstracts are the correct
          * shape.
