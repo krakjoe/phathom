@@ -7,7 +7,6 @@ namespace pharos\phathom\Grammar {
     use \pharos\phathom\Exception\Priority;
 
     final class Compiler {
-        private array  $synthetic = [];
         private array  $terminals = [];
         private array  $patterns  = [];
         private array  $symbols   = [];
@@ -98,7 +97,7 @@ namespace pharos\phathom\Grammar {
                     $base,
                     Quantifier::name($symbol->quantifier));
 
-            if (!isset($this->synthetic[$name])) {
+            if (!isset($synthetic[$name])) {
                 $self = [
                     new Symbol(Token::IDENT, $name)];
                 $one  = [

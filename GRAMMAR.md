@@ -111,11 +111,11 @@ The compiler rewrites quantified references into synthetic rules automatically.
 
 | Quantifier | Meaning              | Synthetic expansion                                 |
 |------------|----------------------|-----------------------------------------------------|
-| `+`        | one or more          | `__X_plus__ : X \| __X_plus__ X`                   |
-| `*`        | zero or more         | `__X_star__ : ε \| __X_star__ X`                   |
+| `+`        | one or more          | `__X_plus__ : X \| __X_plus__ X`                    |
+| `*`        | zero or more         | `__X_star__ : ε \| __X_star__ X`                    |
 | `?`        | zero or one (optional) | `__X_opt__ : ε \| X`                              |
 
-Actions on synthetic rules receive an array (for `+` and `*`) or a single value / `null` (for `?`).
+Quantified symbols are represented by arrays, unfound optional symbols being an empty array.
 
 **Examples:**
 
