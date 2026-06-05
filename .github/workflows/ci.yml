@@ -24,7 +24,7 @@ jobs:
         run: composer install --no-interaction --prefer-dist
 
       - name: Run tests with coverage
-        run: vendor/bin/phpunit --coverage-clover coverage.xml
+        run: vendor/bin/phpunit --coverage-clover coverage.xml --coverage-text
 
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
