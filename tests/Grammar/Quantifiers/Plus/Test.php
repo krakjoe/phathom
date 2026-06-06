@@ -16,9 +16,9 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("PlusOne.content");
     
         $grammar = new \pharos\phathom\Grammar($file);
-        $parser  = new \pharos\phathom\Parser($grammar, $content);
+        $parser  = new \pharos\phathom\Parser($grammar);
 
-        $this->assertSame($parser->parse(), [
+        $this->assertSame($parser->parse($content), [
             0 => ["two" => "24"],
         ]);
     }
@@ -30,9 +30,9 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("PlusMore.content");
         
         $grammar = new \pharos\phathom\Grammar($file);
-        $parser  = new \pharos\phathom\Parser($grammar, $content);
+        $parser  = new \pharos\phathom\Parser($grammar);
 
-        $this->assertSame($parser->parse(), [
+        $this->assertSame($parser->parse($content), [
             0 => ["one" => "42"], 
             1 => ["two" => "24"],
         ]);

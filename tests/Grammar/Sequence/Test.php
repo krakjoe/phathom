@@ -16,9 +16,9 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("Sequence.content");
 
         $grammar = new \pharos\phathom\Grammar($file);
-        $parser  = new \pharos\phathom\Parser($grammar, $content);
+        $parser  = new \pharos\phathom\Parser($grammar);
 
-        $this->assertSame($parser->parse(), [
+        $this->assertSame($parser->parse($content), [
             ['one' => 'one'],
             ['two' => 'two'],
             ['three' => 'three'],

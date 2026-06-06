@@ -16,9 +16,9 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("Pattern.content");
 
         $grammar = new \pharos\phathom\Grammar($file);
-        $parser  = new \pharos\phathom\Parser($grammar, $content);
+        $parser  = new \pharos\phathom\Parser($grammar);
 
-        $this->assertSame($parser->parse(), [
+        $this->assertSame($parser->parse($content), [
             0 => [
                 "one" => "42"
             ],
@@ -43,9 +43,9 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("Pattern.content");
 
         $grammar = new \pharos\phathom\Grammar($file);
-        $parser  = new \pharos\phathom\Parser($grammar, $content);
+        $parser  = new \pharos\phathom\Parser($grammar);
 
-        $this->assertSame($parser->parse(), [
+        $this->assertSame($parser->parse($content), [
             0 => [
                 "one" => "42"
             ],
@@ -70,9 +70,9 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("TrailingSkip.content");
 
         $grammar = new \pharos\phathom\Grammar($file);
-        $parser  = new \pharos\phathom\Parser($grammar, $content);
+        $parser  = new \pharos\phathom\Parser($grammar);
 
-        $this->assertSame($parser->parse(), [
+        $this->assertSame($parser->parse($content), [
             0 => [
                 "one" => "42"
             ]

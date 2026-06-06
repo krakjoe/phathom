@@ -49,11 +49,12 @@ final class Test extends \PHPUnit\Framework\TestCase
         $file = $this->file
             ->relative("Token.grammar");
         $grammar = new \pharos\phathom\Grammar($file);
-        $parser = new \pharos\phathom\Parser($grammar,
-            new \pharos\phathom\Buffer(
-                "test input", "hello world"));
+        $parser = new \pharos\phathom\Parser($grammar);
         $this->assertInstanceOf(
             \pharos\phathom\tests\Grammar\Directive\Token\Token::class,
-            $parser->parse());
+            $parser->parse(
+                new \pharos\phathom\Buffer(
+                    "test input", "hello world")
+            ));
     }
 }

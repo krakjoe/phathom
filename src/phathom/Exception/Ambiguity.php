@@ -16,7 +16,7 @@ namespace pharos\phathom\Exception {
                 "for rule '%s' from %s " .
                 "%s",
                 $rule,
-                $context->parser->grammar->file,
+                $context->grammar->file,
                 $end < $start
                     ? "matching no tokens"
                     : \sprintf("spanning %s to %s",

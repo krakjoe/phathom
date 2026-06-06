@@ -1,20 +1,21 @@
 <?php
 namespace pharos\phathom
 {
-    final class Parser 
+    final class Parser
     {
-        public function __construct(
-            public private(set) Grammar      $grammar,
-            public private(set) File|Buffer  $input) {
+        public private(set) Context  $context;
+               private      \Closure $parser;
+
+        public function __construct(Grammar $grammar) {
+            $this->context =
+                $grammar->factory();
+            $this->parser =
+                $grammar->execute(...);
         }
 
-        public function parse() : mixed {
-            $context =
-                $this->grammar
-                    ->factory($this);
-
-            return $this->grammar
-                ->execute($context);
+        public function parse(File|Buffer $input) : mixed {
+            return ($this->parser)(
+                $this->context, $input);
         }
     }
 }

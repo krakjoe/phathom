@@ -9,22 +9,22 @@ namespace pharos\phathom
         /* raw members */
         private             array   $included   = [];   /* raw include list                             */
         private             array   $directives = [];   /* raw directive information                    */
-        private             array   $rules      = [];   /* raw rules                                    */
+        private             array   $parsed     = [];   /* raw rules                                    */
     
         /* parsed members */
-        private              Lexer  $lexer;             /* declared lexers                              */
+        public private(set)  Lexer  $lexer;             /* declared lexers                              */
         private              array  $abstracts = [      /* declared abstracts                           */
             'token'   =>     '\pharos\phathom\Token',
             'context' =>     '\pharos\phathom\Context',
         ];
 
         /* compiled members */
-        public private(set) string  $token;             /* compiled concrete Token implementation       */
         public private(set) string  $context;           /* compiled concrete Context implementation     */
-        private             array   $compiled   = [];   /* compiled rules used by the Earley loop       */
-        private             array   $terminals  = [];   /* compiled terminals name => const int Token:: */
-        private             array   $patterns   = [];   /* compiled patterns name => const int Token::  */
-        private             string  $start;             /* compiled name of starting rule, unit or last */
+        public private(set) string  $token;             /* compiled concrete Token implementation       */
+        public private(set) array   $rules      = [];   /* compiled rules used by the Earley loop       */
+        public private(set) array   $terminals  = [];   /* compiled terminals name => const int Token:: */
+        public private(set) array   $patterns   = [];   /* compiled patterns name => const int Token::  */
+        public private(set) string  $start;             /* compiled name of starting rule, unit or last */
 
         public function __construct(
             public private(set)  File   $file,
@@ -39,7 +39,7 @@ namespace pharos\phathom
             [
                 $this->included,
                 $this->directives,
-                $this->rules,
+                $this->parsed,
             ] = $parser->parse();
 
             foreach ($this->directives['lexer'] as $path => $location) {
@@ -57,7 +57,7 @@ namespace pharos\phathom
                     $this->directives['token'];
             }
 
-            if (empty($this->rules)) {
+            if (empty($this->parsed)) {
                 throw new UndeclaredException(
                     "$this->file does not declare any rules");
             }
@@ -70,9 +70,9 @@ namespace pharos\phathom
                 new Grammar\Compiler(
                     $this->file,
                     $this->lexer,
-                    $this->rules);
+                    $this->parsed);
             [
-                $this->compiled,
+                $this->rules,
                 $this->terminals,
                 $this->patterns
             ] = $compiler->compile();
@@ -81,46 +81,27 @@ namespace pharos\phathom
                     $this->assets,
                     $this->abstracts,
                     $this->lexer,
-                    $this->compiled);
+                    $this->rules);
             [
                 $this->token,
                 $this->context
             ] = $generator->generate();
 
-            $this->start = isset($this->rules['unit'])
+            $this->start = isset($this->parsed['unit'])
                 ? 'unit'
-                : \array_key_last($this->rules);
+                : \array_key_last($this->parsed);
 
-            unset($this->rules);
+            unset($this->parsed);
         }
 
-        public function execute(Context $context): mixed {
-            $input = $context->parser->input;
-
-            $builder =
-                new Earley\Chart(
-                    $input,
-                    $this->lexer,
-                    $this->compiled,
-                    $this->start,
-                    $this->token);
-
-            [
-                $chart,
-                $tokens,
-                $limit
-            ] = $builder->build();
-
-            $evaluator =
-                new Earley\Evaluator(
-                    $context,
-                    $chart);
-
-            return $evaluator->enter($this->start, $tokens, $limit);
+        public function execute(Context $context, File|Buffer $input): mixed {
+            $chart =
+                new Earley\Chart($this, $input);
+            return new Earley\Evaluator($chart, $context)();
         }
 
-        public function factory(Parser $parser): Context {
-            return new $this->context($parser);
+        public function factory(): Context {
+            return new $this->context($this);
         }
 
         public function __serialize() : array {
@@ -129,7 +110,7 @@ namespace pharos\phathom
                 'assets'    => $this->assets,
                 'lexer'     => $this->lexer,
                 'abstracts' => $this->abstracts,
-                'compiled'  => $this->compiled,
+                'rules'     => $this->rules,
                 'terminals' => $this->terminals,
                 'patterns'  => $this->patterns,
                 'start'     => $this->start,
@@ -146,7 +127,7 @@ namespace pharos\phathom
                     $this->assets,
                     $this->abstracts,
                     $this->lexer,
-                    $this->compiled);
+                    $this->rules);
             [
                 $this->token,
                 $this->context

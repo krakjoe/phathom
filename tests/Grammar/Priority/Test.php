@@ -51,9 +51,9 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("Priority.content");
         
         $grammar = new \pharos\phathom\Grammar($file);
-        $parser = new \pharos\phathom\Parser($grammar, $content);
+        $parser = new \pharos\phathom\Parser($grammar);
         
-        $this->assertSame($parser->parse(), [
+        $this->assertSame($parser->parse($content), [
             0 => [
                 "high" => "one"
             ]
@@ -78,9 +78,9 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("Priority.content");
         
         $grammar = new \pharos\phathom\Grammar($file);
-        $parser = new \pharos\phathom\Parser($grammar, $content);
+        $parser = new \pharos\phathom\Parser($grammar);
         
-        $this->assertSame($parser->parse(), [
+        $this->assertSame($parser->parse($content), [
             "high" => "one"
         ]);
     }

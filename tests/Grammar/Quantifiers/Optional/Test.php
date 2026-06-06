@@ -16,9 +16,9 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("OptionalZero.content");
 
         $grammar = new \pharos\phathom\Grammar($file);
-        $parser  = new \pharos\phathom\Parser($grammar, $content);
+        $parser  = new \pharos\phathom\Parser($grammar);
 
-        $this->assertSame($parser->parse(), []);
+        $this->assertSame($parser->parse($content), []);
     }
 
     public function testOptionalOne() : void {
@@ -28,9 +28,9 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("OptionalOne.content");
 
         $grammar = new \pharos\phathom\Grammar($file);
-        $parser  = new \pharos\phathom\Parser($grammar, $content);
+        $parser  = new \pharos\phathom\Parser($grammar);
 
-        $this->assertSame($parser->parse(),[
+        $this->assertSame($parser->parse($content),[
             "one" => "42",
         ]);
     }

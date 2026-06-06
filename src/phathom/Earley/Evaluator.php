@@ -1,5 +1,8 @@
 <?php
 namespace pharos\phathom\Earley {
+    use \pharos\phathom\File;
+    use \pharos\phathom\Buffer;
+    use \pharos\phathom\Grammar;
     use \pharos\phathom\Context;
     use \pharos\phathom\Grammar\Alternative;
     use \pharos\phathom\Grammar\Quantifier;
@@ -8,9 +11,20 @@ namespace pharos\phathom\Earley {
     use \pharos\phathom\Exception\Execute   as ExecuteException;
 
     final class Evaluator {
-        public function __construct(
-            private Context $context,
-            private array   $chart) {}
+        private string      $start;
+        private array       $tokens;
+        private int         $limit;
+        private array       $path;
+        private array       $actions = [[]];
+        private Context     $context;
+
+        public function __construct(Chart $chart, Context $context) {
+            $this->start   = $chart->start;
+            $this->tokens  = $chart->tokens;
+            $this->limit   = $chart->limit;
+            $this->path    = $chart->path;
+            $this->context = $context;
+        }
 
         private function evalItem(Item $item, Alternative $alt, array $tokens): mixed {
             if (empty($alt->symbols)) {
@@ -20,12 +34,25 @@ namespace pharos\phathom\Earley {
             $values = $this->collectValues($item, $alt, $tokens);
 
             if ($alt->action !== null) {
-                $method =
-                    \sprintf(
-                        '__action_%s_%d__',
-                        $item->rule,
-                        $item->alt);
-                return $this->context->$method(...$values);
+                $action =
+                    $this->actions
+                        [$item->rule]
+                        [$item->alt]
+                            ?? null;
+                if ($action === null) {
+                    $method =
+                        \sprintf(
+                            '__action_%s_%d__',
+                            $item->rule,
+                            $item->alt);
+                    $action =
+                        $this->actions
+                            [$item->rule]
+                            [$item->alt] = 
+                                $this->context
+                                    ->$method(...);
+                }
+                return $action(...$values);
             }
 
             return match ($alt->synthetic) {
@@ -116,15 +143,15 @@ namespace pharos\phathom\Earley {
             return $values;
         }
 
-        public function enter(string $start, array $tokens, int $limit) : mixed {
+        public function __invoke() : mixed {
             $item        = null;
             $alt         = null;
             $prioritized = false;
 
-            foreach ($this->chart[$limit] as $nitem) {
+            foreach ($this->path[$this->limit] as $nitem) {
                 $nalt  = $nitem->alternative;
 
-                if ($nitem->rule   !== $start               ||
+                if ($nitem->rule   !== $this->start  ||
                     $nitem->origin !== 0                    ||
                     $nitem->dot    !== \count($nalt->symbols)) {
                     continue;
@@ -138,10 +165,10 @@ namespace pharos\phathom\Earley {
                 } elseif ($prioritized === false) {
                     throw AmbiguityException::range(
                         $this->context,
-                        $start,
-                        $tokens,
+                        $this->start,
+                        $this->tokens,
                         0,
-                        $limit - 1);
+                        $this->limit - 1);
                 } elseif ($nalt->priority > $prioritized) {
                     $item        = $nitem;
                     $alt         = $nalt;
@@ -152,11 +179,11 @@ namespace pharos\phathom\Earley {
             if ($item === null) {
                 throw ExecuteException::nomatch(
                     $this->context,
-                    $start,
-                    $tokens);
+                    $this->start,
+                    $this->tokens);
             }
 
-            return $this->evalItem($item, $alt, $tokens);
+            return $this->evalItem($item, $alt, $this->tokens);
         }
     }
 }

@@ -16,9 +16,9 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("AsterixZero.content");
 
         $grammar = new \pharos\phathom\Grammar($file);
-        $parser  = new \pharos\phathom\Parser($grammar, $content);
+        $parser  = new \pharos\phathom\Parser($grammar);
 
-        $this->assertSame($parser->parse(), []);
+        $this->assertSame($parser->parse($content), []);
     }
 
     public function testAsterixOne() : void {
@@ -28,9 +28,9 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("AsterixOne.content");
 
         $grammar = new \pharos\phathom\Grammar($file);
-        $parser  = new \pharos\phathom\Parser($grammar, $content);
+        $parser  = new \pharos\phathom\Parser($grammar);
 
-        $this->assertSame($parser->parse(), [
+        $this->assertSame($parser->parse($content), [
             0 => ["one" => "42"], 
         ]);
     }
@@ -41,10 +41,10 @@ final class Test extends \PHPUnit\Framework\TestCase
         $content = $this->file
             ->relative("AsterixMore.content");
         $grammar = new \pharos\phathom\Grammar($file);
-        $parser  = new \pharos\phathom\Parser($grammar, $content);
+        $parser  = new \pharos\phathom\Parser($grammar);
 
-        $this->assertSame($parser->parse(), [
-            0 => ["one" => "42"], 
+        $this->assertSame($parser->parse($content), [
+            0 => ["one" => "42"],
             1 => ["two" => "24"],
         ]);
     }

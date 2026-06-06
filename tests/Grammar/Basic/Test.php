@@ -16,9 +16,9 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("Basic.content");
 
         $grammar = new \pharos\phathom\Grammar($file);
-        $parser  = new \pharos\phathom\Parser($grammar, $content);
+        $parser  = new \pharos\phathom\Parser($grammar);
 
-        $this->assertSame($parser->parse(), [
+        $this->assertSame($parser->parse($content), [
             0 => [
                 "one" => "42"
             ],
@@ -28,7 +28,12 @@ final class Test extends \PHPUnit\Framework\TestCase
         ]);
 
         $this->assertInstanceOf(
-            \pharos\phathom\Grammar::class, $parser->grammar);
+            \pharos\phathom\Context::class,
+            $parser->context);
+
+        $this->assertInstanceOf(
+            \pharos\phathom\Grammar::class,
+            $parser->context->grammar);
     }
 
     public function testBasicBufferInput() : void {
@@ -41,9 +46,9 @@ final class Test extends \PHPUnit\Framework\TestCase
             "buffer", $test->contents);
 
         $grammar = new \pharos\phathom\Grammar($file);
-        $parser  = new \pharos\phathom\Parser($grammar, $input);
+        $parser  = new \pharos\phathom\Parser($grammar);
 
-        $this->assertSame($parser->parse(), [
+        $this->assertSame($parser->parse($input), [
             0 => [
                 "one" => "42"
             ],
@@ -53,7 +58,12 @@ final class Test extends \PHPUnit\Framework\TestCase
         ]);
 
         $this->assertInstanceOf(
-            \pharos\phathom\Grammar::class, $parser->grammar);
+            \pharos\phathom\Context::class,
+            $parser->context);
+
+        $this->assertInstanceOf(
+            \pharos\phathom\Grammar::class,
+            $parser->context->grammar);
     }
 
     public function testBasicDefault() : void {
@@ -63,9 +73,9 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("Basic.content");
 
         $grammar = new \pharos\phathom\Grammar($file);
-        $parser  = new \pharos\phathom\Parser($grammar, $content);
+        $parser  = new \pharos\phathom\Parser($grammar);
 
-        $this->assertSame($parser->parse(), [
+        $this->assertSame($parser->parse($content), [
             0 => [
                 "one" => "42"
             ],
@@ -82,14 +92,14 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("BasicNomatch.content");
 
         $grammar = new \pharos\phathom\Grammar($file);
-        $parser  = new \pharos\phathom\Parser($grammar, $content);
+        $parser  = new \pharos\phathom\Parser($grammar);
 
         $this->expectException(
             \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessageMatches(
             "/Unexpected character \";\"/");
 
-        $parser->parse();
+        $parser->parse($content);
     }
 
     public function testBasicNoparse() : void {
@@ -99,14 +109,14 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("BasicNoparse.content");
 
         $grammar = new \pharos\phathom\Grammar($file);
-        $parser  = new \pharos\phathom\Parser($grammar, $content);
+        $parser  = new \pharos\phathom\Parser($grammar);
 
         $this->expectException(
             \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessageMatches(
             "/Unexpected character/");
 
-        $parser->parse();
+        $parser->parse($content);
     }
 
     public function testBasicNomatchEmpty() : void {
@@ -116,14 +126,14 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("BasicNomatchEmpty.content");
 
         $grammar = new \pharos\phathom\Grammar($file);
-        $parser  = new \pharos\phathom\Parser($grammar, $content);
+        $parser  = new \pharos\phathom\Parser($grammar);
 
         $this->expectException(
             \pharos\phathom\Exception\Execute::class);
         $this->expectExceptionMessageMatches(
             "/no input available/");
 
-        $parser->parse();
+        $parser->parse($content);
     }
 
     public function testBasicIncomplete() : void {
@@ -133,14 +143,14 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("BasicIncomplete.content");
 
         $grammar = new \pharos\phathom\Grammar($file);
-        $parser  = new \pharos\phathom\Parser($grammar, $content);
+        $parser  = new \pharos\phathom\Parser($grammar);
 
         $this->expectException(
             \pharos\phathom\Exception\Execute::class);
         $this->expectExceptionMessageMatches(
             "/does not match 'unit'/");
 
-        $parser->parse();
+        $parser->parse($content);
     }
 
     public function testBasicUnrecognizedDirective() : void {
@@ -168,8 +178,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $grammar = \unserialize(
             \serialize($object));
 
-        $parser  = new \pharos\phathom\Parser($grammar, $content);
-        $this->assertSame($parser->parse(), [
+        $parser  = new \pharos\phathom\Parser($grammar);
+        $this->assertSame($parser->parse($content), [
             0 => [
                 "one" => "42"
             ],
@@ -179,7 +189,12 @@ final class Test extends \PHPUnit\Framework\TestCase
         ]);
 
         $this->assertInstanceOf(
-            \pharos\phathom\Grammar::class, $parser->grammar);
+            \pharos\phathom\Context::class,
+            $parser->context);
+
+        $this->assertInstanceOf(
+            \pharos\phathom\Grammar::class,
+            $parser->context->grammar);
     }
 
     public function testBasicTrailing() : void {
@@ -189,13 +204,13 @@ final class Test extends \PHPUnit\Framework\TestCase
             ->relative("BasicTrailing.content");
 
         $grammar = new \pharos\phathom\Grammar($file);
-        $parser  = new \pharos\phathom\Parser($grammar, $content);
+        $parser  = new \pharos\phathom\Parser($grammar);
 
         $this->expectException(
             \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessageMatches(
             "/Unexpected character \";\", expected end of input/");
 
-        $parser->parse();
+        $parser->parse($content);
     }
 }

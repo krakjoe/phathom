@@ -265,11 +265,10 @@ $grammar =
         new File("example.grammar"));
 
 $parser =
-    new \pharos\phathom\Parser(
-        $grammar, 
-        new File("example.conf"));
+    new \pharos\phathom\Parser($grammar);
 
-$result = $parser->parse();
+$result = $parser->parse(
+    new File("example.conf"));
 ```
 
 ---

@@ -1,5 +1,7 @@
 <?php
 namespace pharos\phathom\Exception {
+    use \pharos\phathom\File;
+    use \pharos\phathom\Buffer;
     use \pharos\phathom\Context;
 
     final class Execute extends \pharos\phathom\Exception {
@@ -17,22 +19,20 @@ namespace pharos\phathom\Exception {
                 ];
 
                 return new self(\sprintf(
-                    "Input %s does not match '%s' in %s: ".
+                    "Input does not match '%s' in %s: ".
                     "unexpected tokens from %s, ".
                     "last token %s",
-                    $context->parser->input,
                     $start,
-                    $context->parser->grammar->file,
+                    $context->grammar->file,
                     $first::print($first),
                     $last::print($last)
                 ));
             } else {
                 return new self(\sprintf(
-                    "Input %s does not match '%s' in %s: ".
+                    "Input does not match '%s' in %s: ".
                     "no input available",
-                    $context->parser->input,
                     $start,
-                    $context->parser->grammar->file
+                    $context->grammar->file
                 ));
             }
         }
