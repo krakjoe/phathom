@@ -370,15 +370,13 @@ namespace pharos\phathom\Grammar {
                 return false;
             }
 
-            $character = $this->buffer[$this->position];
+            $character =
+                $this->buffer[
+                    $this->position];
 
             if ($initial === true) {
                 if (\ctype_digit($character)) {
-                    throw UnexpectedException::character(
-                        $this->buffer, [
-                            'path'     => $this->file->path,
-                            'position' => $this->position
-                        ], ['IDENT']);
+                    return false;
                 }
             }
 
