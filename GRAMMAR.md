@@ -74,8 +74,8 @@ lexer: "tokens.lexer";
 A rule gives a name to one or more alternative sequences of symbols.
 
 ```
-rule-name: alternative ;
-rule-name: alternative | alternative | ... ;
+rule: alternative ;
+rule: alternative | alternative | ... ;
 ```
 
 Alternatives are separated by `|`.  Each alternative is either a bare quantifiable symbol
@@ -99,7 +99,7 @@ Every symbol may carry an optional [quantifier](#quantifiers).
 An expression is a parenthesised sequence of one or more quantifiable symbols:
 
 ```
-rule-name: (SYM_A SYM_B SYM_C) ;
+rule: (SYM_A SYM_B SYM_C) ;
 ```
 
 An expression may be followed by a [priority](#priority) and/or an [action](#actions).
