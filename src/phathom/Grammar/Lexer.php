@@ -13,7 +13,7 @@ namespace pharos\phathom\Grammar {
         /**
          * ── Grammar file ─────────────────────────────────────────────────
          *
-         *   ident        := [^\s#:|<>(){}+*?"';-]+
+         *   ident        := [a-zA-Z_][a-zA-Z0-9_]*
          *   pattern      := '<' [^>]+ '>'
          *   quantifier   := [+*?]
          *   priority     := '[' [0-9]+ ']'
@@ -365,35 +365,47 @@ namespace pharos\phathom\Grammar {
             return [$content, $start];
         }
 
-        private function scan() : bool {
+        private function character(bool $initial) : bool {
             if ($this->position >= $this->length) {
                 return false;
             }
 
-            if (!\ctype_print($this->buffer[$this->position]) ||
-                 \ctype_space($this->buffer[$this->position])) {
-                return false;
+            $character = $this->buffer[$this->position];
+
+            if ($initial === true) {
+                if (\ctype_digit($character)) {
+                    throw UnexpectedException::character(
+                        $this->buffer, [
+                            'path'     => $this->file->path,
+                            'position' => $this->position
+                        ], ['IDENT']);
+                }
             }
 
-            switch ($this->buffer[$this->position]) {
-                case '-':
-                case '#':
-                case ';':
-                case ':':
-                case '|':
-                case '<':
-                case '>':
-                case '(':
-                case ')':
-                case '{':
-                case '}':
-                case '+':
-                case '*':
-                case '?':
-                    return false;
-            }
+            return \ctype_alnum($character) || $character === '_';
+        }
 
-            return true;
+        private function ident() : array {
+            if ($this->character(true)) {
+                $start =
+                    $this->position;
+                $content =
+                    $this->buffer[
+                        $this->position++];
+                while ($this->character(false)) {
+                    $content .=
+                        $this->buffer[
+                            $this->position++];
+                }
+
+                return [$content, $start];
+            } else {
+                throw UnexpectedException::character(
+                    $this->buffer, [
+                        'path'     => $this->file->path,
+                        'position' => $this->position
+                    ], ['IDENT']);
+            }
         }
     
         private function validate(array $tokens) : array {
@@ -551,28 +563,14 @@ namespace pharos\phathom\Grammar {
                     break;
 
                     default:
-                        if ($this->scan()) {
-                            $ident = '';
-                            $start =
-                                $this->position;
-                            while ($this->scan()) {
-                                $ident .=
-                                    $this->buffer[
-                                        $this->position++];
-                            }
+                        [$content, $start] =
+                            $this->ident();
 
-                            $tokens[] = new Token(
-                                Token::IDENT, [
-                                    'path'     => $this->file->path,
-                                    'position' => $start,
-                                ], $ident);
-                        } else {
-                            throw UnexpectedException::character(
-                                $this->buffer, [
-                                    'path'     => $this->file->path,
-                                    'position' => $this->position
-                                ], ['IDENT']);
-                        }
+                        $tokens[] = new Token(
+                            Token::IDENT, [
+                                'path'     => $this->file->path,
+                                'position' => $start,
+                            ], $content);
                 }
             }
 

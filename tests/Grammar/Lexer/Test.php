@@ -576,4 +576,18 @@ final class Test extends \PHPUnit\Framework\TestCase
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
+
+    public function testIdentInvalidInitialCharacter() : void {
+        $file = $this->file
+            ->relative("IdentInvalidInitialCharacter.grammar");
+
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
+        $this->expectExceptionMessageMatches(
+            "/Unexpected character \"1\", expected IDENT ".
+                "at .*IdentInvalidInitialCharacter.grammar:0/");
+
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
+        $lexer->tokenize();
+    }
 }

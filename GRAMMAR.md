@@ -284,7 +284,7 @@ For phathom, grammar files are modular - they may merge additional lexer configu
 ## Formal Reference
 
 ```
-ident        := [^\s#:|<>(){}+*?"';-]+
+ident        := [a-zA-Z_][a-zA-Z0-9_]*
 pattern      := '<' [^>]+ '>'
 quantifier   := [+*?]
 priority     := '[' [0-9]+ ']'
