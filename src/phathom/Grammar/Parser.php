@@ -3,10 +3,14 @@ namespace pharos\phathom\Grammar {
     use \pharos\phathom\File;
 
     use \pharos\phathom\Exception\Directive  as DirectiveException;
+    use \pharos\phathom\Exception\Reserved   as ReservedException;
 
     final class Parser {
-        private Lexer $lexer;
+        const array reserve = [
+            'token', 'context', 'lexer', 'include'
+        ];
 
+        private Lexer $lexer;
         public function __construct(
             public private(set) File    $file,
             private             array   $included = [],
@@ -25,6 +29,15 @@ namespace pharos\phathom\Grammar {
                     'position' => 0,
                 ];
             }
+        }
+
+        private static function reserved(Token $ident) : string {
+            if (\in_array((string) $ident, self::reserve)) {
+                throw DirectiveException
+                    ::reserved(
+                        $ident, self::reserve);
+            }
+            return (string) $ident;
         }
 
         private function include(Token $directive, Token $include) : array {
@@ -159,7 +172,7 @@ namespace pharos\phathom\Grammar {
                                 $action = null;
                             }
 
-                            $this->rules[(string) $ident][] =
+                            $this->rules[self::reserved($ident)][] =
                                 Alternative::complex($symbols, $priority, $action);
                             break;
 
@@ -174,7 +187,7 @@ namespace pharos\phathom\Grammar {
                                 $quantify = null;
                             }
 
-                            $this->rules[(string) $ident][] =
+                            $this->rules[self::reserved($ident)][] =
                                 Alternative::simple(
                                     new Symbol(
                                         $token->type,

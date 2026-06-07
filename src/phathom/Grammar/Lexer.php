@@ -41,7 +41,7 @@ namespace pharos\phathom\Grammar {
          * 
          * allow arrays should contain token types allowed in the following token
          **/
-        private static $specification = [
+        const array specification = [
             Token::LIST_START => [
                 'list' => false,
                 'allow' => [
@@ -412,7 +412,7 @@ namespace pharos\phathom\Grammar {
                 $token =
                     $tokens[$position];
                 $specification =
-                    Lexer::$specification[
+                    self::specification[
                         $token->type];
 
                 if ($token->type === Token::LIST_END)   $listing = false;

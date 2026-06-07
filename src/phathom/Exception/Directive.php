@@ -49,6 +49,18 @@ namespace pharos\phathom\Exception {
                 $directive->location['position']
             ));
         }
+
+        public static function reserved(Token $ident, array $reserved) : Directive {
+            return new self(\sprintf(
+                "%s cannot be used as a rule name; ".
+                    "%s are reserved for directives, ".
+                "got %s",
+                (string) $ident,
+                self::explain(
+                    $reserved, 'and'),
+                $ident::print($ident)
+            ));
+        }
     }
 }
 ?>

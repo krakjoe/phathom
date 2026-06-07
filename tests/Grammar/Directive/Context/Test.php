@@ -44,4 +44,19 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         new \pharos\phathom\Grammar($file);
     }
+
+    public function testReserved() : void {
+        $file = $this->file
+            ->relative("Reserved.grammar");
+
+        $this->expectException(
+            \pharos\phathom\Exception\Directive::class);
+        $this->expectExceptionMessageMatches(
+            "/context cannot be used as a rule name; ".
+                "token, context, lexer, and include ".
+            "are reserved for directives, ".
+            "got IDENT\(context\) at .*Reserved.grammar:0/");
+
+        new \pharos\phathom\Grammar($file);
+    }
 }
