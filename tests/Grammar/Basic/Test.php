@@ -66,25 +66,6 @@ final class Test extends \PHPUnit\Framework\TestCase
             $parser->context->grammar);
     }
 
-    public function testBasicDefault() : void {
-        $file = $this->file
-            ->relative("BasicDefault.grammar");
-        $content = $this->file
-            ->relative("Basic.content");
-
-        $grammar = new \pharos\phathom\Grammar($file);
-        $parser  = new \pharos\phathom\Parser($grammar);
-
-        $this->assertSame($parser->parse($content), [
-            0 => [
-                "one" => "42"
-            ],
-            1 => [
-                "two" => "24"
-            ]
-        ]);
-    }
-
     public function testBasicNomatch() : void {
         $file = $this->file
             ->relative("Basic.grammar");
@@ -161,7 +142,7 @@ final class Test extends \PHPUnit\Framework\TestCase
             \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessage(
             "Unknown directive, expected ".
-                "lexer, token, context, or include, ".
+                "token, context, lexer, include, or start, ".
             "got IDENT(unrecognized)");
 
         new \pharos\phathom\Grammar($file);

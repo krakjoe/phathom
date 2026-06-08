@@ -1,3 +1,1 @@
-lexer: "../../Basic/Basic.lexer";
-
 include: "Recursion.grammar";

@@ -1,5 +1,5 @@
 <?php
-namespace pharos\phathom\tests\Grammar;
+namespace pharos\phathom\tests\Grammar\Directive\Start;
 
 final class Test extends \PHPUnit\Framework\TestCase
 {
@@ -9,26 +9,29 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->file = new \pharos\phathom\File(__FILE__);
     }
 
-    public function testUnlexed() : void {
+    public function testDuplicate() : void {
         $file = $this->file
-            ->relative("Unlexed.grammar");
+            ->relative("Duplicate.grammar");
 
         $this->expectException(
-            \pharos\phathom\Exception\Undefined::class);
+            \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessageMatches(
-            "/Undefined symbol/");
+            "/already declared/");
 
         new \pharos\phathom\Grammar($file);
     }
 
-    public function testUnruled() : void {
+    public function testReserved() : void {
         $file = $this->file
-            ->relative("Unruled.grammar");
+            ->relative("Reserved.grammar");
 
         $this->expectException(
-            \pharos\phathom\Exception\Undefined::class);
+            \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessageMatches(
-            "/grammar must contain at least one rule/");
+            "/start cannot be used as a rule name; ".
+                "token, context, lexer, include, and start ".
+            "are reserved for directives, ".
+            "got IDENT\(start\) at .*Reserved.grammar:0/");
 
         new \pharos\phathom\Grammar($file);
     }
@@ -40,7 +43,7 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectException(
             \pharos\phathom\Exception\Undefined::class);
         $this->expectExceptionMessageMatches(
-            "/Undefined symbol 'undefined'/");
+            "/start rule 'undefined'/");
 
         new \pharos\phathom\Grammar($file);
     }

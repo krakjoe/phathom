@@ -4,47 +4,72 @@ namespace pharos\phathom\Exception {
     use \pharos\phathom\File;
 
     final class Directive extends \pharos\phathom\Exception {
-        public static function unknown(Token $token, array $allowed) : Directive {
+        public static function unknown(Token $directive, array $allowed) : Directive {
             return new self(\sprintf(
                 "Unknown directive, expected %s, ".
                 "got %s",
                 self::explain($allowed),
-                $token::print($token)));
+                $directive::print($directive)));
         }
 
-        public static function abstract(Token $directive, array $directives) : Directive {
+        public static function abstract(string $kind, Token $directive, Token $declared) : Directive {
             return new self(\sprintf(
-                "%s already declared as \"%s\" at %s:%d",
-                (string) $directive,
-                (string) $directives[(string) $directive],
-                $directives[(string) $directive]
-                    ->location['path'],
-                $directives[(string) $directive]
-                    ->location['position']
+                "%s cannot be declared ".
+                    "as \"%s\" at %s:%d, ".
+                "%s already declared ".
+                    "as \"%s\" at %s:%d",
+                $kind, (string) $directive,
+                    $directive->location['path'], $directive->location['position'],
+                $kind, (string) $declared,
+                    $declared->location['path'], $declared->location['position'],
             ));
         }
 
-        public static function include(Token $token, string $path, array $duplicate) : Directive {
+        public static function autoload(string $kind, Token $directive) : Directive {
+            return new self(\sprintf(
+                "cannot find %s for %s, ".
+                    "it must be autoloadable ".
+                "at %s:%d",
+                (string) $directive, $kind,
+                $directive->location['path'],
+                $directive->location['position']));
+        }
+
+        public static function parent(string $kind, string $required, Token $directive) : Directive {
+            return new self(\sprintf(
+                "%s must extend %s, %s does not ".
+                "at %s:%d",
+                $kind, $required, (string) $directive,
+                $directive->location['path'],
+                $directive->location['position']));
+        }
+
+        public static function include(Token $directive, array $duplicate) : Directive {
             return new self(\sprintf(
                 "include for %s at %s:%d, ".
                     "already included at %s:%d ",
-                $path, $token->location['path'], $token->location['position'],
-                    $duplicate['path'], $duplicate['position']));
+                (string) $directive,
+                    $directive->location['path'],
+                    $directive->location['position'],
+                $duplicate['path'], $duplicate['position']));
         }
 
-        public static function lexer(Token $location, Token $duplicate) : Directive {
+        public static function lexer(Token $directive, Token $duplicate) : Directive {
             return new self(\sprintf(
-                "%s already loaded at %s:%d",
-                (string) $location,
+                "%s cannot be loaded at %s:%d, ".
+                    "already loaded at %s:%d",
+                (string) $directive,
+                    $directive->location['path'],
+                    $directive->location['position'],
                 $duplicate->location['path'],
                 $duplicate->location['position']
             ));
         }
 
-        public static function missing(Token $location, Token $directive) : Directive {
+        public static function missing(Token $directive) : Directive {
             return new self(\sprintf(
                 "%s cannot be found on the local filesystem at %s:%d",
-                (string) $location,
+                (string) $directive,
                 $directive->location['path'],
                 $directive->location['position']
             ));
@@ -59,6 +84,19 @@ namespace pharos\phathom\Exception {
                 self::explain(
                     $reserved, 'and'),
                 $ident::print($ident)
+            ));
+        }
+
+        public static function start(Token $directive, Token $declared) : Directive {
+            return new self(\sprintf(
+                "start cannot be declared ".
+                    "as \"%s\" at %s:%d, ".
+                "start already declared ".
+                    "as \"%s\" at %s:%d",
+                (string) $directive,
+                $directive->location['path'], $directive->location['position'],
+                (string) $declared,
+                $declared->location['path'], $declared->location['position']
             ));
         }
     }

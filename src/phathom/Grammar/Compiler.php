@@ -7,14 +7,51 @@ namespace pharos\phathom\Grammar {
     use \pharos\phathom\Exception\Priority;
 
     final class Compiler {
+        private string $start     = 'unit';
         private array  $terminals = [];
         private array  $patterns  = [];
         private array  $symbols   = [];
+        private array  $abstracts = [
+            'token'   => '\pharos\phathom\Token',
+            'context' => '\pharos\phathom\Context'
+        ];
 
         public function __construct(
-            private File  $file,
-            private Lexer $lexer,
-            private array $rules) {}
+            private File   $file,
+            private Lexer  $lexer,
+            private array  $directives,
+            private array  $rules) {}
+
+        private function compileDirectives() : void {
+            foreach ($this->directives['lexer'] as $path => $location) {
+                $this->lexer
+                    ->merge(new File($path));
+            }
+
+            if ($this->directives['context'] !== false) {
+                $this->abstracts['context'] = (string)
+                    $this->directives['context'];
+            }
+
+            if ($this->directives['token'] !== false) {
+                $this->abstracts['token'] = (string)
+                    $this->directives['token'];
+            }
+
+            if ($this->directives['start'] !== false) {
+                $this->start = (string)
+                    $this->directives['start'];
+            }
+
+            if (empty($this->rules)) {                
+                throw Undefined::rules($this->file);
+            }
+
+            if (!isset($this->rules[$this->start])) {
+                throw Undefined::start(
+                    $this->file, $this->start);
+            }
+        }
 
         private function compileRules(): void {
             $synthetic = [];
@@ -151,14 +188,17 @@ namespace pharos\phathom\Grammar {
         }
 
         public function compile() : array {
+            $this->compileDirectives();
             $this->compileRules();
             $this->compileTokens();
             $this->compileConstants();
 
             return [
+                $this->start,
                 $this->rules,
                 $this->terminals,
                 $this->patterns,
+                $this->abstracts,
             ];
         }
     }

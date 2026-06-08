@@ -1,9 +1,6 @@
 <?php
 namespace pharos\phathom
-{    
-    use \pharos\phathom\Exception\Undeclared as UndeclaredException;
-    use \pharos\phathom\Exception\Execute    as ExecuteException;
-   
+{   
     final class Grammar
     {
         /* raw members */
@@ -19,12 +16,12 @@ namespace pharos\phathom
         ];
 
         /* compiled members */
-        public private(set) string  $context;           /* compiled concrete Context implementation     */
-        public private(set) string  $token;             /* compiled concrete Token implementation       */
-        public private(set) array   $rules      = [];   /* compiled rules used by the Earley loop       */
-        public private(set) array   $terminals  = [];   /* compiled terminals name => const int Token:: */
-        public private(set) array   $patterns   = [];   /* compiled patterns name => const int Token::  */
-        public private(set) string  $start;             /* compiled name of starting rule, unit or last */
+        public private(set) string  $context;             /* compiled concrete Context implementation     */
+        public private(set) string  $token;               /* compiled concrete Token implementation       */
+        public private(set) string  $start;               /* compiled name of starting rule               */
+        public private(set) array   $rules      = [];     /* compiled rules used by the Earley loop       */
+        public private(set) array   $terminals  = [];     /* compiled terminals name => const int Token:: */
+        public private(set) array   $patterns   = [];     /* compiled patterns name => const int Token::  */
 
         public function __construct(
             public private(set)  File   $file,
@@ -35,32 +32,13 @@ namespace pharos\phathom
         }
 
         private function parse() : void {
-            $parser = new Grammar\Parser($this->file);
+            $parser =
+                new Grammar\Parser($this->file);
             [
                 $this->included,
                 $this->directives,
                 $this->parsed,
             ] = $parser->parse();
-
-            foreach ($this->directives['lexer'] as $path => $location) {
-                $this->lexer
-                    ->merge(new File($path));
-            }
-
-            if ($this->directives['context'] !== false) {
-                $this->abstracts['context'] = (string)
-                    $this->directives['context'];
-            }
-
-            if ($this->directives['token'] !== false) {
-                $this->abstracts['token'] = (string)
-                    $this->directives['token'];
-            }
-
-            if (empty($this->parsed)) {
-                throw new UndeclaredException(
-                    "$this->file does not declare any rules");
-            }
 
             $this->compile();
         }
@@ -70,11 +48,14 @@ namespace pharos\phathom
                 new Grammar\Compiler(
                     $this->file,
                     $this->lexer,
+                    $this->directives,
                     $this->parsed);
             [
+                $this->start,
                 $this->rules,
                 $this->terminals,
-                $this->patterns
+                $this->patterns,
+                $this->abstracts,
             ] = $compiler->compile();
 
             $generator = new Grammar\Generator(
@@ -86,10 +67,6 @@ namespace pharos\phathom
                 $this->token,
                 $this->context
             ] = $generator->generate();
-
-            $this->start = isset($this->parsed['unit'])
-                ? 'unit'
-                : \array_key_last($this->parsed);
 
             unset($this->parsed);
         }

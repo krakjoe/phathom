@@ -2,12 +2,11 @@
 namespace pharos\phathom\Grammar {
     use \pharos\phathom\File;
 
-    use \pharos\phathom\Exception\Directive  as DirectiveException;
-    use \pharos\phathom\Exception\Reserved   as ReservedException;
+    use \pharos\phathom\Exception\Directive;
 
     final class Parser {
         const array reserve = [
-            'token', 'context', 'lexer', 'include'
+            'token', 'context', 'lexer', 'include', 'start'
         ];
 
         private Lexer $lexer;
@@ -18,6 +17,7 @@ namespace pharos\phathom\Grammar {
                 'lexer'   => [],
                 'context' => false,
                 'token'   => false,
+                'start'   => false,
             ],
             private             array   $rules = [],
         ) {
@@ -33,22 +33,29 @@ namespace pharos\phathom\Grammar {
 
         private static function reserved(Token $ident) : string {
             if (\in_array((string) $ident, self::reserve)) {
-                throw DirectiveException
-                    ::reserved(
+                throw Directive::reserved(
                         $ident, self::reserve);
             }
             return (string) $ident;
         }
 
-        private function include(Token $directive, Token $include) : array {
+        private function start(Token $directive) : void {
+            if ($this->directives['start'] !== false) {
+                throw Directive::start(
+                    $directive,
+                    $this->directives['start']);
+            }
+            $this->directives['start'] = $directive;
+        }
+
+        private function include(Token $directive) : array {
             $file =
                 $this->file
-                    ->relative((string) $include);
+                    ->relative((string) $directive);
 
             if (isset($this->included[$file->path])) {
-                throw DirectiveException::include(
+                throw Directive::include(
                     $directive,
-                    (string) $include,
                     $this->included[
                         $file->path
                     ]);
@@ -66,35 +73,34 @@ namespace pharos\phathom\Grammar {
             return $parser->parse();
         }
 
-        private function abstract(Token $ident, Token $string) : void {
-            $directive = (string) $ident;
-
-            if ($this->directives[$directive] !== false) {
-                throw DirectiveException::abstract(
-                    $ident,
-                    $this->directives);
+        private function abstract(string $kind, Token $directive) : void {            
+            if ($this->directives[$kind] !== false) {
+                throw Directive::abstract(
+                    $kind,
+                    $directive,
+                    $this->directives[$kind]);
             }
 
-            $abstract  = (string) $string;
+            $abstract = (string) $directive;
 
             if (!\class_exists($abstract)) {
-                throw new DirectiveException(
-                    "{$abstract} does not exist, it must be autoloadable");
+                throw Directive::autoload(
+                    $kind, $directive);
             }
 
             $parents = \array_map(function(string $parent) : string {
                 return "\\$parent";
             }, \class_parents($abstract));
 
-            if (!\in_array($parent = match($directive) {
+            if (!\in_array($parent = match($kind) {
                 'token'   => '\pharos\phathom\Token',
                 'context' => '\pharos\phathom\Context'
             }, $parents)) {
-                throw new DirectiveException(
-                    "{$abstract} does not extend {$parent}");
+                throw Directive::parent(
+                    $kind, $parent, $directive);
             }
 
-            $this->directives[$directive] = $string;
+            $this->directives[$kind] = $directive;
         }
 
         /**
@@ -197,25 +203,30 @@ namespace pharos\phathom\Grammar {
                         break;
 
                         case Token::STRING:
-                            $string =
+                            $directive =
                                 $consume(); /* STRING */
                             switch ((string) $ident) {                                    
                                 case 'token':
+                                    $this->abstract('token', $directive);
+                                break;
+
                                 case 'context':
-                                    $this->abstract($ident, $string);
+                                    $this->abstract('context', $directive);
                                 break;
 
                                 case 'lexer':
-                                    $path = $this->file
-                                        ->realpath((string) $string);
+                                    $path =
+                                        $this->file
+                                            ->realpath(
+                                                (string) $directive);
                                     if ($path === false) {
-                                        throw DirectiveException::missing($string, $ident);
+                                        throw Directive::missing($directive);
                                     } else if (isset($this->directives['lexer'][$path])) {
-                                        throw DirectiveException::lexer(
-                                            $string,
+                                        throw Directive::lexer(
+                                            $directive,
                                             $this->directives['lexer'][$path]);
                                     }
-                                    $this->directives['lexer'][$path] = $string;
+                                    $this->directives['lexer'][$path] = $directive;
                                 break;
 
                                 case 'include':
@@ -223,16 +234,16 @@ namespace pharos\phathom\Grammar {
                                         $this->included,
                                         $this->directives,
                                         $this->rules
-                                    ] = $this->include($ident, $string);
+                                    ] = $this->include($directive);
+                                break;
+
+                                case 'start':
+                                    $this->start($directive);
                                 break;
 
                                 default:
-                                    throw DirectiveException::unknown(
-                                        $ident, [
-                                            'lexer',
-                                            'token',
-                                            'context',
-                                            'include']);
+                                    throw Directive::unknown(
+                                        $ident, self::reserve);
                             }
                         break;
                     }

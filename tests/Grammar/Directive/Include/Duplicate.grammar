@@ -1,4 +1,2 @@
-lexer: "../../Basic/Basic.lexer";
-
 include: "Snippet.grammar";
 include: "Snippet.grammar";

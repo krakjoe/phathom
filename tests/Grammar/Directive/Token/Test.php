@@ -16,7 +16,7 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectException(
             \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessageMatches(
-            "/does not exist/");
+            "/cannot find .* must be autoloadable/");
 
         new \pharos\phathom\Grammar($file);
     }
@@ -28,7 +28,7 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectException(
             \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessageMatches(
-            "/does not extend/");
+            "/must extend .* does not/");
 
         new \pharos\phathom\Grammar($file);
     }
@@ -66,7 +66,7 @@ final class Test extends \PHPUnit\Framework\TestCase
             \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessageMatches(
             "/token cannot be used as a rule name; ".
-                "token, context, lexer, and include ".
+                "token, context, lexer, include, and start ".
             "are reserved for directives, ".
             "got IDENT\(token\) at .*Reserved.grammar:0/");
 

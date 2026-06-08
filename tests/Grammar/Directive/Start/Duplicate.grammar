@@ -1,0 +1,4 @@
+mine: (<[a-z]+>);
+
+start: "mine";
+start: "failed";

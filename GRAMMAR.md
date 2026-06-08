@@ -15,10 +15,21 @@ Form: `directive: "string";`
 
 | Directive | Explanation                                                             | Required | Repeatable |
 |-----------|-------------------------------------------------------------------------|----------|------------|
+| `start`   | Name of the starting rule                                               |    no    |     no     |
 | `context` | Fully-qualified class name of a descendant of `\pharos\phathom\Context` |    no    |     no     |
 | `token`   | Fully-qualified class name of a descendant of `\pharos\phathom\Token`   |    no    |     no     |
 | `lexer`   | Path, relative to the current grammar file, of a lexer `.ini`           |    no    |     yes    |
 | `include` | Path, relative to the current grammar file, of another grammar file     |    no    |     yes    |
+
+### `start`
+
+Name of the starting rule, which must be available at compile time (ie, may reference a yet-to-be-included rule).
+
+```
+start: "unit";
+```
+
+**The default `unit` will be used when no `start` directive is present**
 
 ### `context`
 
@@ -28,7 +39,7 @@ FQCN of descendant of `pharos\phathom\Context` for scope of action code; the eng
 context: "\MyApp\Context";
 ```
 
-**The class `pharos\phathom\Context` will be used when no `context` directive is used**
+**The class `pharos\phathom\Context` will be used when no `context` directive is present**
 
 ### `token`
 
@@ -40,7 +51,7 @@ token: "\MyApp\Token";
 
 *The class must extend the abstract `\pharos\phathom\Token`.*
 
-**The abstract `pharos\phathom\Token` will be used when no `token` directive is used**
+**The abstract `pharos\phathom\Token` will be used when no `token` directive is present**
 
 ### `include`
 
@@ -80,8 +91,6 @@ rule: alternative | alternative | ... ;
 
 Alternatives are separated by `|`.  Each alternative is either a bare quantifiable symbol
 or a parenthesised expression optionally followed by a priority and/or an action block.
-
-**Note: the start rule is `unit`; if `unit` is not present, the last rule to be defined will be used**
 
 ### Symbols
 

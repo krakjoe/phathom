@@ -1,8 +1,7 @@
 <?php
 namespace pharos\phathom\Grammar {
     use \pharos\phathom\File;
-    
-    use \pharos\phathom\Exception\Unexpected as UnexpectedException;
+    use \pharos\phathom\Exception\Unexpected;
 
     final class Lexer {
         public private(set) File         $file;
@@ -194,7 +193,7 @@ namespace pharos\phathom\Grammar {
             while ($this->position < $this->length && $depth > 0) {
                 if ($this->buffer[$this->position] === '\\') {
                     if (($this->position + 1) >= $this->length) {
-                        throw UnexpectedException::escape($type, [
+                        throw Unexpected::escape($type, [
                             'path'     => $this->file->path,
                             'position' => $this->position
                         ], [
@@ -232,7 +231,7 @@ namespace pharos\phathom\Grammar {
             }
 
             if ($depth !== 0) {
-                throw UnexpectedException::unbalanced(
+                throw Unexpected::unbalanced(
                     $type,
                     $content, [
                         'path'     => $this->file->path,
@@ -244,7 +243,7 @@ namespace pharos\phathom\Grammar {
             }
 
             if (!\strlen($content)) {
-                throw UnexpectedException::empty(
+                throw Unexpected::empty(
                     $type, [
                         'path'     => $this->file->path,
                         'position' => $start,
@@ -297,7 +296,7 @@ namespace pharos\phathom\Grammar {
             }
 
             if (!$terminated) {
-                throw UnexpectedException::unterminated(
+                throw Unexpected::unterminated(
                     Token::STRING,
                     $content, [
                         'path'     => $this->file->path,
@@ -327,7 +326,7 @@ namespace pharos\phathom\Grammar {
                 }
 
                 if (!\ctype_digit($this->buffer[$this->position])) {
-                    throw UnexpectedException::nondigit(
+                    throw Unexpected::nondigit(
                         Token::PRIORITY,
                         $this->buffer[$this->position], [
                             'path'     => $this->file->path,
@@ -340,7 +339,7 @@ namespace pharos\phathom\Grammar {
             }
 
             if (!$terminated) {
-                throw UnexpectedException::unterminated(
+                throw Unexpected::unterminated(
                     Token::PRIORITY,
                     $content, [
                         'path'     => $this->file->path,
@@ -352,7 +351,7 @@ namespace pharos\phathom\Grammar {
             }
 
             if (!\strlen($content)) {
-                throw UnexpectedException::empty(
+                throw Unexpected::empty(
                     Token::PRIORITY, [
                         'path'     => $this->file->path,
                         'position' => $start,
@@ -398,7 +397,7 @@ namespace pharos\phathom\Grammar {
 
                 return [$content, $start];
             } else {
-                throw UnexpectedException::character(
+                throw Unexpected::character(
                     $this->buffer, [
                         'path'     => $this->file->path,
                         'position' => $this->position
@@ -411,7 +410,7 @@ namespace pharos\phathom\Grammar {
 
             if ($tokens[0]->type !== Token::IDENT &&
                 $tokens[0]->type !== Token::EOF) {
-                throw UnexpectedException::initial($tokens[0]);
+                throw Unexpected::initial($tokens[0]);
             }
 
             $listing = false;
@@ -436,7 +435,7 @@ namespace pharos\phathom\Grammar {
 
                     if (!\in_array(
                             $next->type, $rules['allow'], true)) {
-                        throw UnexpectedException::token(
+                        throw Unexpected::token(
                             $token, $next, \array_map(function($rule) {
                                 return Token::string($rule);
                             }, $rules['allow']));

@@ -31,8 +31,8 @@ final class Test extends \PHPUnit\Framework\TestCase
             \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessageMatches(
             "/include for Snippet.grammar ".
-                "at .*Duplicate.grammar:63, ".
-            "already included at .*Duplicate.grammar:35/");
+                "at .*Duplicate.grammar:37, ".
+            "already included at .*Duplicate.grammar:9/");
 
         new \pharos\phathom\Grammar($file);    
     }
@@ -45,7 +45,7 @@ final class Test extends \PHPUnit\Framework\TestCase
             \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessageMatches(
             "/include for Recursion.grammar ".
-                "at .*Recursion.grammar:35, ".
+                "at .*Recursion.grammar:9, ".
             "already included at .*Recursion.grammar:0/");
 
         new \pharos\phathom\Grammar($file);  
@@ -59,7 +59,7 @@ final class Test extends \PHPUnit\Framework\TestCase
             \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessageMatches(
             "/include cannot be used as a rule name; ".
-                "token, context, lexer, and include ".
+                "token, context, lexer, include, and start ".
             "are reserved for directives, ".
             "got IDENT\(include\) at .*Reserved.grammar:0/");
 

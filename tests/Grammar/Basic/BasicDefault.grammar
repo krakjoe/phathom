@@ -1,8 +1,0 @@
-lexer: "Basic.lexer";
-
-item:
-    (ALPHA EQUALS NUM) {
-        return [(string) $1 => (string) $3];
-    };
-
-_: item+;
