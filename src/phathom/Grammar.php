@@ -29,6 +29,8 @@ namespace pharos\phathom
             $this->lexer =
                 new Lexer();
             $this->parse();
+            unset(
+                $this->parsed);
         }
 
         private function parse() : void {
@@ -58,17 +60,19 @@ namespace pharos\phathom
                 $this->abstracts,
             ] = $compiler->compile();
 
+            $this->generate();
+        }
+
+        private function generate() : void {
             $generator = new Grammar\Generator(
-                    $this->assets,
-                    $this->abstracts,
-                    $this->lexer,
-                    $this->rules);
+                $this->assets,
+                $this->abstracts,
+                $this->lexer,
+                $this->rules);
             [
                 $this->token,
                 $this->context
             ] = $generator->generate();
-
-            unset($this->parsed);
         }
 
         public function execute(Context $context, File|Buffer $input): mixed {
@@ -99,16 +103,7 @@ namespace pharos\phathom
                 $this->$member = $value;
             }
 
-            $generator =
-                new Grammar\Generator(
-                    $this->assets,
-                    $this->abstracts,
-                    $this->lexer,
-                    $this->rules);
-            [
-                $this->token,
-                $this->context
-            ] = $generator->generate();
+            $this->generate();
         }
     }
 }
