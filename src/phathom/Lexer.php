@@ -7,10 +7,13 @@ namespace pharos\phathom
 
     final class Lexer
     {
+        const string PATTERN = '@';
+    
         public private(set) array $config     = [];
         private string|false      $skipping   = false;
         private array             $consuming  = [];
         private array             $constants  = [];
+        private array             $patterns   = [];
 
         public function merge(File $file) : void {
             $config =
@@ -144,7 +147,7 @@ namespace pharos\phathom
         public function compile(): void {
             $skipping  = [];
             $consuming = [];
-            $constants     = [];
+            $constants = [];
             $iterator  = 1;
 
             foreach ($this->config as $name => &$config) {
@@ -160,8 +163,7 @@ namespace pharos\phathom
                 if (isset($config['skip']) && $config['skip']) {
                     $skipping[] = $inner;
                 } else {
-                    $consuming[$config['const']] =
-                        $this->wrap([$inner]);
+                    $consuming[$config['const']] = $inner;
                     $constants[$config['const']] = $name;
                 }
             }
@@ -170,6 +172,38 @@ namespace pharos\phathom
                 $this->wrap($skipping, '+');
             $this->consuming = $consuming;
             $this->constants = $constants;
+        }
+
+        private function pattern(array $expected) : string {
+            \ksort($expected);
+
+            $node = &$this->patterns;
+            foreach ($expected as $k => $_) {
+                $node = &$node[$k];
+            }
+
+            if (isset($node[Lexer::PATTERN])) {
+                return $node[Lexer::PATTERN];
+            }
+
+            $parts = [];
+            foreach ($expected as $const => $_) {
+                if (!isset($this->consuming[$const])) {
+                    continue;
+                }
+                $parts[] = \sprintf(
+                    '(?=(?P<_%d>%s))?',
+                    $const,
+                    $this->consuming[$const]);
+            }
+
+            return $node[Lexer::PATTERN] = \sprintf(
+                '/\G%s/',
+                \implode('', $parts));
+        }
+
+        public function expect(array $expected) : void {
+            $this->pattern($expected);
         }
 
         public function scan(
@@ -207,32 +241,32 @@ namespace pharos\phathom
             $value  = null;
             $length = 0;
 
-            foreach (
-                \array_intersect_key(
-                    $this->consuming, $expected) as $const => $pattern) {
-                $matched = @\preg_match(
-                    $pattern, $input->contents, $matches, 0, $position);
+            $matched = @\preg_match(
+                $this->pattern($expected),
+                $input->contents, $matches, 0, $position);
 
-                if ($matched === false) {
-                    // @codeCoverageIgnoreStart
-                    throw RegexException::matching(
-                        $input, $position,
-                        $this->constants[$const],
-                        $this->config[
-                            $this->constants[$const]]);
-                    // @codeCoverageIgnoreEnd
-                }
+            if ($matched === false) {
+                // @codeCoverageIgnoreStart
+                throw RegexException::matching(
+                    $input, $position, '(alternation)', []);
+                // @codeCoverageIgnoreEnd
+            }
 
-                if (!$matched) {
+            foreach ($matches as $name => $capture) {
+                if (!\is_string($name)) {
                     continue;
                 }
 
-                $match = \strlen($matches[0]);
+                $match = \strlen($capture);
+
+                if (!$match) {
+                    continue;
+                }
 
                 if ($match > $length) {
                     $length = $match;
-                    $type   = $const;
-                    $value  = $matches[0];
+                    $type   = (int) \substr($name, 1);
+                    $value  = $capture;
                 }
             }
 

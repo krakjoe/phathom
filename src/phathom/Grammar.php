@@ -59,6 +59,11 @@ namespace pharos\phathom
                 $this->patterns,
                 $this->abstracts,
             ] = $compiler->compile();
+            
+            new Earley\Optimizer(
+                $this->lexer,
+                $this->start,
+                $this->rules);
 
             $this->generate();
         }
