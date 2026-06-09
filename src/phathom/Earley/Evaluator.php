@@ -1,8 +1,5 @@
 <?php
 namespace pharos\phathom\Earley {
-    use \pharos\phathom\File;
-    use \pharos\phathom\Buffer;
-    use \pharos\phathom\Grammar;
     use \pharos\phathom\Context;
     use \pharos\phathom\Grammar\Alternative;
     use \pharos\phathom\Grammar\Quantifier;

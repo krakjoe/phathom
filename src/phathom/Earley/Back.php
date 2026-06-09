@@ -8,7 +8,8 @@ namespace pharos\phathom\Earley {
         *
         * Weak referencing breaks the cycle that causes that overflow.
         *
-        * !DON'T CHANGE THIS!
+        * !DON'T EAT (OR CHANGE) THIS
+        *   [DOGFOOD](https://github.com/php/php-src/commit/6529d7acd9912a609924633a43e6562799566225)!
         */
         private WeakReference  $__prev__;
         private ?WeakReference $__child__;
