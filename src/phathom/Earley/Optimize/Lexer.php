@@ -1,20 +1,14 @@
 <?php
 namespace pharos\phathom\Earley\Optimize {
-    use \pharos\phathom\Interface\Optimizer;
+    use \pharos\phathom\Grammar\Optimization;
     use \pharos\phathom\Earley\Item;
 
-    final class Lexer implements Optimizer {
+    final class Lexer extends Optimization {
         private const string VISITED = '@';
 
         private \Closure $optimize;
 
-        public function __construct(
-            private \pharos\phathom\Lexer  $lexer,
-            private                 string $start,
-            private                 array  $rules,
-            private                 array  $terminals,
-            private                 array  $patterns,
-            private                 array  $abstracts) {
+        public function pass() : void {
             /*
             * We're going to prewarm the pattern cache on lexer by telling it what it may expect
             * at any call to scan for this grammar, this means that no strings are allocated for patterns
@@ -23,9 +17,7 @@ namespace pharos\phathom\Earley\Optimize {
             $this->optimize = 
                 $this->lexer
                     ->expect(...);
-        }
 
-        public function __invoke() : array {
             /* Build the Earley characteristic automaton (LR(0)-style item-set
              * closure with predict+complete).  Each node in the automaton is a
              * predict+complete-closed set of (rule, alt, dot) triples; edges are
@@ -102,15 +94,6 @@ namespace pharos\phathom\Earley\Optimize {
                     }
                 }
             }
-
-            return [
-                $this->lexer,
-                $this->start,
-                $this->rules,
-                $this->terminals,
-                $this->patterns,
-                $this->abstracts
-            ];
         }
 
         /**

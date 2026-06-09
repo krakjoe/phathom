@@ -39,7 +39,7 @@ final class Test extends \PHPUnit\Framework\TestCase {
         $this->expectException(
             \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessageMatches(
-            "/must implement .* does not/");
+            "/must extend .*Optimization.* does not/");
 
         new \pharos\phathom\Grammar($file);
     }

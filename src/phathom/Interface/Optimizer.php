@@ -2,12 +2,16 @@
 namespace pharos\phathom\Interface {
     use \pharos\phathom\Lexer;
 
+    /**
+     * !THIS IS AN INTERNAL INTERFACE!
+     * 
+     * An interface does not provide a strong enough contract for implementations
+     * 
+     * See abstract \pharos\phathom\Grammar\Optimization for details
+     * 
+     * !THIS IS AN INTERNAL INTERFACE!
+     */
     interface Optimizer {
-        /* 
-            Compiler and Grammar are sealed, unsealing them for the purposes of
-            optimization passes makes no sense, so instead Optimizers must accept
-            a deconstruction of the Compiler.
-        */
         public function __construct(
             Lexer  $lexer,
             string $start,
@@ -16,8 +20,9 @@ namespace pharos\phathom\Interface {
             array  $patterns,
             array  $abstracts);
 
-        /* Expected to return reconstruction that mirrors constructor exactly */
-        public function __invoke() : array;
+        public function pass() : void;
+
+        public function reconstruct() : array;
     }
 }
 ?>

@@ -190,7 +190,7 @@ namespace pharos\phathom\Grammar {
 
         private function compileOptimizations() : void {
             foreach ($this->directives['optimizer'] as $optimization => $directive) {
-                $pass =
+                $optimizer =
                     new $optimization(
                         $this->lexer,
                         $this->start,
@@ -198,21 +198,24 @@ namespace pharos\phathom\Grammar {
                         $this->terminals,
                         $this->patterns,
                         $this->abstracts);
+
                 try {
-                    [
-                        $this->lexer,
-                        $this->start,
-                        $this->rules,
-                        $this->terminals,
-                        $this->patterns,
-                        $this->abstracts
-                    ] = $pass();
+                    $optimizer->pass();
                 } catch(\Throwable $thrown) {
                     throw Optimizer::threw(
                         $optimization,
                         $directive,
                         $thrown);
                 }
+
+                [
+                    $this->lexer,
+                    $this->start,
+                    $this->rules,
+                    $this->terminals,
+                    $this->patterns,
+                    $this->abstracts
+                ] = $optimizer->reconstruct();
             }
         }
 

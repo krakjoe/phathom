@@ -1,33 +1,20 @@
 # Optimizations
 
-Optimization passes allow for special preparation of the engine or grammar at compile time.
+Optimization passes allow for special preparation of the grammar at compile time.
 
-The optimization pass unseals the Compiler and passes it deconstructed to the implementation of `\pharos\phathom\Interface\Optimizer`, the implementation is expected to mirror the constructor (ie, return reconstruction) upon invocation:
+The optimization pass unseals the Compiler and passes it deconstructed to the concrete implementation of `\pharos\phathom\Grammar\Optimization`, it then invokes the concrete `pass` method, and requests a reconstruction from the implementation.
+
+Construction of the `Optimization` and reconstruction of `Compiler` after the pass is executed are implemented by the abstract, and cannot be altered.
+
+The concrete implementation only requires `pass` to be implemented:
 
 ```
 namespace my\app\Optimization {
-    use \pharos\phathom\Lexer;
-    use \pharos\phathom\Interface\Optimizer;
-
-    final class Optimization implements Optimizer {
-        public function __construct(
-            private Lexer  $lexer,
-            private string $start,
-            private array  $rules,
-            private array  $terminals,
-            private array  $patterns,
-            private array  $abstracts
-        ) {}
-
-        public function __invoke() : array {
-            return [
-                $this->lexer,
-                $this->start,
-                $this->rules,
-                $this->terminals,
-                $this->patterns,
-                $this->abstracts
-            ];
+    final class Optimization extends \pharos\phathom\Grammar\Optimization {
+        public function pass() : void {
+            /* do things with deconstructed Compiler,
+                for details see the abstract,
+                for example see src/phathom/Earley/Optimize/Lexer.php */
         }
     }
 }

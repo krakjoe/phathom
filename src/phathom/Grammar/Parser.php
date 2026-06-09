@@ -122,14 +122,14 @@ namespace pharos\phathom\Grammar {
                     'optimizer', $directive);
             }
 
-            $interfaces = \array_map(function(string $interface) : string {
-                return "\\$interface";
-            }, \class_implements($interface));
+            $parents = \array_map(function(string $parent) : string {
+                return "\\$parent";
+            }, \class_parents($interface));
 
-            if (!\in_array('\pharos\phathom\Interface\Optimizer', $interfaces)) {
-                throw Directive::interface(
+            if (!\in_array('\pharos\phathom\Grammar\Optimization', $parents)) {
+                throw Directive::parent(
                     'optimizer',
-                    '\pharos\phathom\Interface\Optimizer',
+                    '\pharos\phathom\Grammar\Optimization',
                     $directive);
             }
 
