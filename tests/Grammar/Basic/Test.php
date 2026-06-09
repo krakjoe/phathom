@@ -140,10 +140,10 @@ final class Test extends \PHPUnit\Framework\TestCase
         
         $this->expectException(
             \pharos\phathom\Exception\Directive::class);
-        $this->expectExceptionMessage(
-            "Unknown directive, expected ".
-                "token, context, lexer, include, or start, ".
-            "got IDENT(unrecognized)");
+        $this->expectExceptionMessageMatches(
+            "/Unknown directive, expected ".
+                ".* ".
+            "got IDENT\(unrecognized\)/");
 
         new \pharos\phathom\Grammar($file);
     }

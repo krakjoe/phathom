@@ -1,0 +1,3 @@
+lexer: "../../Basic/Basic.lexer";
+
+optimizer: "stdClass";

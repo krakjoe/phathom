@@ -6,7 +6,7 @@ namespace pharos\phathom\Grammar {
 
     final class Parser {
         const array reserve = [
-            'token', 'context', 'lexer', 'include', 'start'
+            'token', 'context', 'lexer', 'include', 'start', 'optimizer'
         ];
 
         private Lexer $lexer;
@@ -14,10 +14,13 @@ namespace pharos\phathom\Grammar {
             public private(set) File    $file,
             private             array   $included = [],
             private             array   $directives = [
-                'lexer'   => [],
-                'context' => false,
-                'token'   => false,
-                'start'   => false,
+                'lexer'      => [],
+                'context'    => false,
+                'token'      => false,
+                'start'      => false,
+                'optimizer'  => [
+                    '\pharos\phathom\Earley\Optimize\Lexer' => false,
+                ],
             ],
             private             array   $rules = [],
         ) {
@@ -101,6 +104,36 @@ namespace pharos\phathom\Grammar {
             }
 
             $this->directives[$kind] = $directive;
+        }
+
+        public function optimizer(Token $directive) : void {
+            $interface = (string) $directive;
+
+            if (\array_key_exists(
+                    $interface,
+                    $this->directives['optimizer'])) {
+                throw Directive::optimizer(
+                    $directive,
+                    $this->directives['optimizer'][$interface]);
+            }
+
+            if (!\class_exists($interface)) {
+                throw Directive::autoload(
+                    'optimizer', $directive);
+            }
+
+            $interfaces = \array_map(function(string $interface) : string {
+                return "\\$interface";
+            }, \class_implements($interface));
+
+            if (!\in_array('\pharos\phathom\Interface\Optimizer', $interfaces)) {
+                throw Directive::interface(
+                    'optimizer',
+                    '\pharos\phathom\Interface\Optimizer',
+                    $directive);
+            }
+
+            $this->directives['optimizer'][$interface] = $directive;
         }
 
         /**
@@ -239,6 +272,10 @@ namespace pharos\phathom\Grammar {
 
                                 case 'start':
                                     $this->start($directive);
+                                break;
+
+                                case 'optimizer':
+                                    $this->optimizer($directive);
                                 break;
 
                                 default:

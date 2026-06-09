@@ -13,13 +13,14 @@ Grammar files drive phathom's Earley parsing engine. A grammar file contains:
 
 Form: `directive: "string";`
 
-| Directive | Explanation                                                             | Required | Repeatable |
-|-----------|-------------------------------------------------------------------------|----------|------------|
-| `start`   | Name of the starting rule                                               |    no    |     no     |
-| `context` | Fully-qualified class name of a descendant of `\pharos\phathom\Context` |    no    |     no     |
-| `token`   | Fully-qualified class name of a descendant of `\pharos\phathom\Token`   |    no    |     no     |
-| `lexer`   | Path, relative to the current grammar file, of a lexer `.ini`           |    no    |     yes    |
-| `include` | Path, relative to the current grammar file, of another grammar file     |    no    |     yes    |
+| Directive   | Explanation                                                                              | Required | Repeatable |
+|-------------|------------------------------------------------------------------------------------------|----------|------------|
+| `start`     | Name of the starting rule                                                                |    no    |     no     |
+| `context`   | Fully-qualified class name of a descendant of `\pharos\phathom\Context`                  |    no    |     no     |
+| `token`     | Fully-qualified class name of a descendant of `\pharos\phathom\Token`                    |    no    |     no     |
+| `lexer`     | Path, relative to the current grammar file, of a lexer `.ini`                            |    no    |     yes    |
+| `include`   | Path, relative to the current grammar file, of another grammar file                      |    no    |     yes    |
+| `optimizer` | Fully-qualified class name of an implementation of `\pharos\phathom\Interface\Optimizer` |    no    |     yes    |
 
 ### `start`
 
@@ -78,6 +79,19 @@ lexer: "tokens.lexer";
 *Paths are relative to the current grammar*
 
 *See: [LEXER.md](LEXER.md)*
+
+### `optimizer`
+
+FQCN of an implementation of `pharos\phathom\Interface\Optimizer`; the engine will invoke an instance of this object at compile time.
+
+```
+optimizer: "\my\app\optimization";
+```
+
+**`\pharos\phathom\Earley\Optimizer\Lexer` is used by default**
+
+*See: [OPTIMIZATION.md](OPTIMIZATION.md)*
+
 ---
 
 ## Rules

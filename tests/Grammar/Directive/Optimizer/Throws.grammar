@@ -1,0 +1,7 @@
+optimizer: "\pharos\phathom\tests\Grammar\Directive\Optimizer\Throws";
+
+line: (</[a-z]+/>) {
+    return (string) $1;
+};
+
+unit: line+;

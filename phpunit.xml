@@ -50,6 +50,10 @@
       <file>tests/Grammar/Directive/Include/Test.php</file>
     </testsuite>
 
+    <testsuite name="Grammar\Directive\Optimizer">
+      <file>tests/Grammar/Directive/Optimizer/Test.php</file>
+    </testsuite>
+
     <testsuite name="Grammar\Generator">
       <file>tests/Grammar/Generator/TestNoAssets.php</file>
       <file>tests/Grammar/Generator/TestAssets.php</file>

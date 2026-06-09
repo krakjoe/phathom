@@ -1,23 +1,31 @@
 <?php
-namespace pharos\phathom\Earley {
-    use \pharos\phathom\Lexer;
+namespace pharos\phathom\Earley\Optimize {
+    use \pharos\phathom\Interface\Optimizer;
+    use \pharos\phathom\Earley\Item;
 
-    final class Optimizer {
+    final class Lexer implements Optimizer {
         private const string VISITED = '@';
 
+        private \Closure $optimize;
+
         public function __construct(
-            private Lexer  $lexer,
-            private string $start,
-            private array  $rules) {
+            private \pharos\phathom\Lexer  $lexer,
+            private                 string $start,
+            private                 array  $rules,
+            private                 array  $terminals,
+            private                 array  $patterns,
+            private                 array  $abstracts) {
             /*
             * We're going to prewarm the pattern cache on lexer by telling it what it may expect
             * at any call to scan for this grammar, this means that no strings are allocated for patterns
             * during parse time, and all patterns are serialized with the grammar.
             */
-            $optimize = $this
-                ->lexer
+            $this->optimize = 
+                $this->lexer
                     ->expect(...);
+        }
 
+        public function __invoke() : array {
             /* Build the Earley characteristic automaton (LR(0)-style item-set
              * closure with predict+complete).  Each node in the automaton is a
              * predict+complete-closed set of (rule, alt, dot) triples; edges are
@@ -53,11 +61,11 @@ namespace pharos\phathom\Earley {
                     $node = &$node[$item->rule][$item->alt][$item->dot];
                 }
 
-                if (isset($node[Optimizer::VISITED])) {
+                if (isset($node[Lexer::VISITED])) {
                     continue;
                 }
 
-                $node[Optimizer::VISITED] = true;
+                $node[Lexer::VISITED] = true;
 
                 /* Collect expected terminals and group seeds for scan successors */
                 $expected   = [];
@@ -87,13 +95,22 @@ namespace pharos\phathom\Earley {
                 }
 
                 if ($expected) {
-                    $optimize($expected);
+                    ($this->optimize)($expected);
                     foreach ($successors as $items) {
                         $queue[] =
                             $this->collect($items);
                     }
                 }
             }
+
+            return [
+                $this->lexer,
+                $this->start,
+                $this->rules,
+                $this->terminals,
+                $this->patterns,
+                $this->abstracts
+            ];
         }
 
         /**
@@ -209,4 +226,3 @@ namespace pharos\phathom\Earley {
         }
     }
 }
-?>

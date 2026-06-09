@@ -53,7 +53,7 @@ final class Test extends \PHPUnit\Framework\TestCase
             \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessageMatches(
             "/context cannot be used as a rule name; ".
-                "token, context, lexer, include, and start ".
+                ".*context.* ".
             "are reserved for directives, ".
             "got IDENT\(context\) at .*Reserved.grammar:0/");
 

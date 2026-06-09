@@ -25,6 +25,22 @@ namespace pharos\phathom\Exception {
             ));
         }
 
+        public static function optimizer(Token $directive, Token|false $declared) : Directive {
+            return new self(\sprintf(
+                "optimizer \"%s\" cannot be added ".
+                    "at %s:%d, ".
+                "already added ".
+                    "%s",
+                (string) $directive,
+                    $directive->location['path'], $directive->location['position'],
+                    $declared === false ?
+                        \sprintf("(builtin)") :
+                        \sprintf("at %s:%d",
+                            $declared->location['path'],
+                            $declared->location['position']),
+            ));
+        }
+
         public static function autoload(string $kind, Token $directive) : Directive {
             return new self(\sprintf(
                 "cannot find %s for %s, ".
@@ -38,6 +54,15 @@ namespace pharos\phathom\Exception {
         public static function parent(string $kind, string $required, Token $directive) : Directive {
             return new self(\sprintf(
                 "%s must extend %s, %s does not ".
+                "at %s:%d",
+                $kind, $required, (string) $directive,
+                $directive->location['path'],
+                $directive->location['position']));
+        }
+
+        public static function interface(string $kind, string $required, Token $directive) : Directive {
+            return new self(\sprintf(
+                "%s must implement %s, %s does not ".
                 "at %s:%d",
                 $kind, $required, (string) $directive,
                 $directive->location['path'],

@@ -65,8 +65,8 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectException(
             \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessageMatches(
-            "/token cannot be used as a rule name; ".
-                "token, context, lexer, include, and start ".
+            "/token cannot be used as a rule name;".
+                ".*token.* ".
             "are reserved for directives, ".
             "got IDENT\(token\) at .*Reserved.grammar:0/");
 

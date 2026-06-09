@@ -59,7 +59,7 @@ final class Test extends \PHPUnit\Framework\TestCase
             \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessageMatches(
             "/include cannot be used as a rule name; ".
-                "token, context, lexer, include, and start ".
+                ".*include.* ".
             "are reserved for directives, ".
             "got IDENT\(include\) at .*Reserved.grammar:0/");
 

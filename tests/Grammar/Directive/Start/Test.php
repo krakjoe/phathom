@@ -29,7 +29,7 @@ final class Test extends \PHPUnit\Framework\TestCase
             \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessageMatches(
             "/start cannot be used as a rule name; ".
-                "token, context, lexer, include, and start ".
+                ".*start.* ".
             "are reserved for directives, ".
             "got IDENT\(start\) at .*Reserved.grammar:0/");
 

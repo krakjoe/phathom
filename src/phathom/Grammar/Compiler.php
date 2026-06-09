@@ -5,6 +5,7 @@ namespace pharos\phathom\Grammar {
 
     use \pharos\phathom\Exception\Undefined;
     use \pharos\phathom\Exception\Priority;
+    use \pharos\phathom\Exception\Optimizer;
 
     final class Compiler {
         private string $start     = 'unit';
@@ -187,11 +188,40 @@ namespace pharos\phathom\Grammar {
             }
         }
 
+        private function compileOptimizations() : void {
+            foreach ($this->directives['optimizer'] as $optimization => $directive) {
+                $pass =
+                    new $optimization(
+                        $this->lexer,
+                        $this->start,
+                        $this->rules,
+                        $this->terminals,
+                        $this->patterns,
+                        $this->abstracts);
+                try {
+                    [
+                        $this->lexer,
+                        $this->start,
+                        $this->rules,
+                        $this->terminals,
+                        $this->patterns,
+                        $this->abstracts
+                    ] = $pass();
+                } catch(\Throwable $thrown) {
+                    throw Optimizer::threw(
+                        $optimization,
+                        $directive,
+                        $thrown);
+                }
+            }
+        }
+
         public function compile() : array {
             $this->compileDirectives();
             $this->compileRules();
             $this->compileTokens();
             $this->compileConstants();
+            $this->compileOptimizations();
 
             return [
                 $this->start,

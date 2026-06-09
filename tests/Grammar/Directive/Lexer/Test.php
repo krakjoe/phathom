@@ -41,7 +41,7 @@ final class Test extends \PHPUnit\Framework\TestCase
             \pharos\phathom\Exception\Directive::class);
         $this->expectExceptionMessageMatches(
             "/lexer cannot be used as a rule name; ".
-                "token, context, lexer, include, and start ".
+                ".*lexer.* ".
             "are reserved for directives, ".
             "got IDENT\(lexer\) at .*Reserved.grammar:0/");
 
