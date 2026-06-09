@@ -40,7 +40,7 @@ namespace pharos\phathom\Grammar {
          * 
          * allow arrays should contain token types allowed in the following token
          **/
-        const array specification = [
+        private const array specification = [
             Token::LIST_START => [
                 'list' => false,
                 'allow' => [

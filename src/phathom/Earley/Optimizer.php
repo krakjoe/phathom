@@ -3,7 +3,7 @@ namespace pharos\phathom\Earley {
     use \pharos\phathom\Lexer;
 
     final class Optimizer {
-        const string VISITED = '@';
+        private const string VISITED = '@';
 
         public function __construct(
             private Lexer  $lexer,
@@ -31,7 +31,13 @@ namespace pharos\phathom\Earley {
              */
             $initial = [];
             foreach ($this->rules[$this->start] as $aid => $alt) {
-                $initial[] = [$this->start, $aid, 0];
+                $initial[] = new Item(
+                    rule:        $this->start,
+                    alt:         $aid,
+                    dot:         0,
+                    origin:      0,
+                    backs:       [],
+                    alternative: $alt);
             }
 
             $visited = [];
@@ -40,11 +46,11 @@ namespace pharos\phathom\Earley {
             while ($queue) {
                 $state = \array_pop($queue);
 
-                /* Canonical state key: items are already sorted by close();
+                /* Canonical state key: items are already sorted by collect();
                  * walk the trie to detect revisited states without building strings */
                 $node = &$visited;
-                foreach ($state as [$rule, $alt, $dot]) {
-                    $node = &$node[$rule][$alt][$dot];
+                foreach ($state as $item) {
+                    $node = &$node[$item->rule][$item->alt][$item->dot];
                 }
 
                 if (isset($node[Optimizer::VISITED])) {
@@ -57,10 +63,10 @@ namespace pharos\phathom\Earley {
                 $expected   = [];
                 $successors = [];
 
-                foreach ($state as [$rule, $alt, $dot]) {
+                foreach ($state as $item) {
                     $symbol =
-                        $this->rules[$rule][$alt]
-                            ->symbols[$dot] ?? null;
+                        $item->alternative
+                            ->symbols[$item->dot] ?? null;
                     if ($symbol === null) {
                         continue;
                     }
@@ -70,8 +76,14 @@ namespace pharos\phathom\Earley {
                     }
 
                     $expected[$type] = true;
-                    $successors[$type][] = 
-                        [$rule, $alt, $dot + 1];
+                    $successors[$type][] =
+                        new Item(
+                            rule:        $item->rule,
+                            alt:         $item->alt,
+                            dot:         $item->dot + 1,
+                            origin:      0,
+                            backs:       [],
+                            alternative: $item->alternative);
                 }
 
                 if ($expected) {
@@ -102,33 +114,27 @@ namespace pharos\phathom\Earley {
             $items    = [];
             $worklist = [];
 
-            $add = function(string $rule, int $alt, int $dot)
+            $add = function(Item $item)
                         use (&$seen, &$items, &$worklist) : void {
-                $slot = &$seen[$rule][$alt][$dot];
+                $slot = &$seen[$item->rule][$item->alt][$item->dot];
                 if (!isset($slot)) {
-                    $item       = [$rule, $alt, $dot];
                     $worklist[] =
                         $items[] =
                             $slot = $item;
                 }
             };
 
-            foreach ($seeds as [$rule, $alt, $dot]) {
-                $add($rule, $alt, $dot);
+            foreach ($seeds as $item) {
+                $add($item);
             }
 
             while ($worklist) {
-                [$rule, $alt, $dot] =
-                    \array_pop($worklist);
+                $item = \array_pop($worklist);
 
-                $symbols =
-                    $this->rules
-                        [$rule]
-                        [$alt]
-                            ->symbols;
+                $symbols = $item->alternative->symbols;
 
-                if ($dot < \count($symbols)) {
-                    $symbol = $symbols[$dot];
+                if ($item->dot < \count($symbols)) {
+                    $symbol = $symbols[$item->dot];
 
                     if ($symbol->terminal !== false) {
                         continue; /* nothing to predict or advance */
@@ -138,7 +144,13 @@ namespace pharos\phathom\Earley {
                     foreach ($this->rules[
                                 $symbol->name] as 
                                     $aid => $alternative) {
-                        $add($symbol->name, $aid, 0);
+                        $add(new Item(
+                            rule:        $symbol->name,
+                            alt:         $aid,
+                            dot:         0,
+                            origin:      0,
+                            backs:       [],
+                            alternative: $alternative));
                     }
 
                     /* Advance past already-completed $symbol->name: if any completed item
@@ -148,33 +160,50 @@ namespace pharos\phathom\Earley {
                     foreach ($this->rules[
                                 $symbol->name] as 
                                     $aid => $alternative) {
-                        $alen = \count($alternative->symbols);
-                        if (isset($seen[$symbol->name][$aid][$alen])) {
-                            $add($rule, $alt, $dot + 1);
+                        $dot = \count($alternative->symbols);
+                        if (isset($seen[$symbol->name][$aid][$dot])) {
+                            $add(new Item(
+                                rule:        $item->rule,
+                                alt:         $item->alt,
+                                dot:         $item->dot + 1,
+                                origin:      0,
+                                backs:       [],
+                                alternative: $item->alternative));
                             break;
                         }
                     }
                 } else {
                     /* Complete: advance every item in the current state that is
-                     * waiting (dot pointing at non-terminal) for $rule */
-                    foreach ($items as [$wrule, $walt, $wdot]) {
+                     * waiting (dot pointing at non-terminal) for $item->rule */
+                    foreach ($items as $waiting) {
                         $wsymbol =
-                            $this->rules[$wrule][$walt]
-                                ->symbols[$wdot] ?? null;
-                        if ($wsymbol !== null       &&
-                            $wsymbol->terminal === false &&
-                            $wsymbol->name     === $rule) {
-                            $add($wrule, $walt, $wdot + 1);
+                            $waiting->alternative
+                                ->symbols[$waiting->dot] ?? null;
+
+                        if ($wsymbol === null) {
+                            continue;
                         }
+
+                        if ($wsymbol->name !== $item->rule) {
+                            continue;
+                        }
+
+                        $add(new Item(
+                            rule:        $waiting->rule,
+                            alt:         $waiting->alt,
+                            dot:         $waiting->dot + 1,
+                            origin:      0,
+                            backs:       [],
+                            alternative: $waiting->alternative));
                     }
                 }
             }
 
             \usort($items,
-                fn($a, $b) =>
-                    $a[0] <=> $b[0] ?:
-                    $a[1] <=> $b[1] ?:
-                    $a[2] <=> $b[2]);
+                fn(Item $a, Item $b) =>
+                    $a->rule <=> $b->rule ?:
+                    $a->alt  <=> $b->alt  ?:
+                    $a->dot  <=> $b->dot);
 
             return $items;
         }

@@ -7,7 +7,7 @@ namespace pharos\phathom
 
     final class Lexer
     {
-        const string PATTERN = '@';
+        private const string PATTERN = '@';
     
         public private(set) array $config     = [];
         private string|false      $skipping   = false;
