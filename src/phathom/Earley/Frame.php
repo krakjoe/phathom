@@ -1,0 +1,88 @@
+<?php
+namespace pharos\phathom\Earley {
+    use \pharos\phathom\Grammar\Quantifier;
+
+    final class Frame {
+        private const int CALL    = 1;
+        private const int COLLECT = 2;
+
+        private function __construct(
+            private int          $kind,
+            private Item         $item,
+            private array|false  $partial = false,
+            private array|false  $slots   = false,
+        ) {}
+
+        public static function call(Item $item) : Frame {
+            return new self(Frame::CALL, $item);
+        }
+
+        public static function collect(Item $item, array $partial, array $slots) : Frame {
+            return new self(Frame::COLLECT, $item, $partial, $slots);
+        }
+
+        public function __invoke(
+            \Closure  $select,
+            \Closure  $apply,
+            array    &$stack,
+            array    &$values,
+            array     $tokens,
+        ): void {
+            $alternative =
+                $this->item
+                    ->alternative;
+
+            switch ($this->kind) {
+                case Frame::CALL:
+                    if (empty($alternative->symbols)) {
+                        $values[] =
+                            $alternative->synthetic !== Quantifier::NONE ?
+                                [] : null;
+                        return;
+                    }
+
+                    $limit   = \count($alternative->symbols);
+                    $partial = \array_fill(0, $limit, null);
+                    $slots   = [];
+                    $items   = [];
+
+                    $item = $this->item;
+                    for ($pos = $limit - 1; $pos >= 0; $pos--) {
+                        $back = $select($item->backs, $tokens);
+                        if ($back->token !== null) {
+                            $partial[$pos] =
+                                $tokens[$back->token];
+                        } else {
+                            $slots[] = $pos;
+                            $items[] = $back->child;
+                        }
+                        $item = $back->prev;
+                    }
+
+                    if (empty($slots)) {
+                        $values[] = $apply(
+                            $this->item, $partial);
+                        return;
+                    }
+
+                    $stack[] = Frame::collect(
+                        $this->item, $partial, $slots);
+                    foreach ($items as $nitem) {
+                        $stack[] = Frame::call($nitem);
+                    }
+                break;
+
+                case Frame::COLLECT:
+                    foreach ($this->slots as $pos) {
+                        $this->partial[$pos] =
+                            \array_pop($values);
+                    }
+                    $values[] = $apply($this->item, $this->partial);
+                break;
+
+                default: { /* unreachable */ }
+            }
+        }
+    }
+}
+?>

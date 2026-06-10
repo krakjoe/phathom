@@ -1,7 +1,6 @@
 <?php
 namespace pharos\phathom\Earley {
     use \pharos\phathom\Context;
-    use \pharos\phathom\Grammar\Alternative;
     use \pharos\phathom\Grammar\Quantifier;
 
     use \pharos\phathom\Exception\Ambiguity as AmbiguityException;
@@ -23,12 +22,8 @@ namespace pharos\phathom\Earley {
             $this->context = $context;
         }
 
-        private function evalItem(Item $item, Alternative $alt, array $tokens): mixed {
-            if (empty($alt->symbols)) {
-                return $alt->synthetic !== Quantifier::NONE ? [] : null;
-            }
-
-            $values = $this->collectValues($item, $alt, $tokens);
+        private function apply(Item $item, array $values): mixed {
+            $alt = $item->alternative;
 
             if ($alt->action !== null) {
                 $action =
@@ -45,7 +40,7 @@ namespace pharos\phathom\Earley {
                     $action =
                         $this->actions
                             [$item->rule]
-                            [$item->alt] = 
+                            [$item->alt] =
                                 $this->context
                                     ->$method(...);
                 }
@@ -66,18 +61,10 @@ namespace pharos\phathom\Earley {
             };
         }
 
-        private function selectPriority(Back $back) : int|false {
-            if ($back->child === null) {
-                return false;
-            }
-
-            return $back->child->alternative->priority;
-        }
-
-        private function selectBack(array $backs, array $tokens) : Back {
+        private function select(array $backs, array $tokens) : Back {
             $selected    = $backs[0];
             $prioritized =
-                $this->selectPriority($selected);
+                $this->priority($selected);
 
             if ($prioritized === false) {
                 if (\count($backs) > 1) {
@@ -94,7 +81,7 @@ namespace pharos\phathom\Earley {
 
             foreach ($backs as $back) {
                 $priority =
-                    $this->selectPriority($back);
+                    $this->priority($back);
 
                 if ($priority > $prioritized) {
                     $selected     = $back;
@@ -105,39 +92,30 @@ namespace pharos\phathom\Earley {
             return $selected;
         }
 
-        private function collectValues(Item $item, Alternative $alt, array $tokens): array {
-            /* Walk the backs chain right-to-left to collect (pos → back) pairs,
-             * then evaluate left-to-right so side-effects fire in document
-             * order rather than in reverse. */
-            $limit = \count($alt->symbols);
-            $backs = [];
-
-            $cur   = $item;
-            for ($pos = $limit - 1; $pos >= 0; $pos--) {
-                $back =
-                    $this->selectBack(
-                        $cur->backs, $tokens);
-                $backs[$pos] = $back;
-                $cur         = $back->prev;
+        private function priority(Back $back) : int|false {
+            if ($back->child === null) {
+                return false;
             }
 
-            $values = \array_fill(0, $limit, null);
-            for ($pos = 0; $pos < $limit; $pos++) {
-                $back = $backs[$pos];
-                if ($back->token !== null) {
-                    $values[$pos] =
-                        $tokens[$back->token];
-                } else {
-                    $nitem = $back->child;
-                    $values[$pos] =
-                        $this->evalItem(
-                            $nitem,
-                            $nitem->alternative,
-                            $tokens);
-                }
+            return $back->child->alternative->priority;
+        }
+
+        private function execute(Item $item) : mixed {
+            $select = $this->select(...);
+            $apply  = $this->apply(...);
+            $stack  = [Frame::call($item)];
+            $values = [];
+
+            while (($frame = \array_pop($stack))) {
+                $frame(
+                    $select,
+                    $apply,
+                    $stack,
+                    $values,
+                    $this->tokens);
             }
 
-            return $values;
+            return \array_pop($values);
         }
 
         public function __invoke() : mixed {
@@ -149,7 +127,7 @@ namespace pharos\phathom\Earley {
                 $nalt  = $nitem->alternative;
 
                 if ($nitem->rule   !== $this->start  ||
-                    $nitem->origin !== 0                    ||
+                    $nitem->origin !== 0              ||
                     $nitem->dot    !== \count($nalt->symbols)) {
                     continue;
                 }
@@ -157,8 +135,7 @@ namespace pharos\phathom\Earley {
                 if ($item === null) {
                     $item        = $nitem;
                     $alt         = $nalt;
-                    $prioritized =
-                        $nalt->priority;
+                    $prioritized = $nalt->priority;
                 } elseif ($prioritized === false) {
                     throw AmbiguityException::range(
                         $this->context,
@@ -180,7 +157,7 @@ namespace pharos\phathom\Earley {
                     $this->tokens);
             }
 
-            return $this->evalItem($item, $alt, $this->tokens);
+            return $this->execute($item);
         }
     }
 }
