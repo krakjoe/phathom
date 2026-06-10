@@ -25,7 +25,7 @@ namespace pharos\phathom\Earley {
             \Closure  $select,
             \Closure  $apply,
             array    &$stack,
-            array    &$values,
+            array    &$heap,
             array     $tokens,
         ): void {
             $alternative =
@@ -35,7 +35,7 @@ namespace pharos\phathom\Earley {
             switch ($this->kind) {
                 case Frame::SELECT:
                     if (empty($alternative->symbols)) {
-                        $values[] =
+                        $heap[] =
                             $alternative->synthetic !== Quantifier::NONE ?
                                 [] : null;
                         return;
@@ -60,7 +60,7 @@ namespace pharos\phathom\Earley {
                     }
 
                     if (empty($slots)) {
-                        $values[] = $apply(
+                        $heap[] = $apply(
                             $this->item, $partial);
                         return;
                     }
@@ -75,9 +75,9 @@ namespace pharos\phathom\Earley {
                 case Frame::APPLY:
                     foreach ($this->slots as $pos) {
                         $this->partial[$pos] =
-                            \array_pop($values);
+                            \array_pop($heap);
                     }
-                    $values[] = $apply($this->item, $this->partial);
+                    $heap[] = $apply($this->item, $this->partial);
                 break;
 
                 default: { /* unreachable */ }

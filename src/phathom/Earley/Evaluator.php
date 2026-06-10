@@ -104,18 +104,18 @@ namespace pharos\phathom\Earley {
             $select = $this->select(...);
             $apply  = $this->apply(...);
             $stack  = [Frame::select($item)];
-            $values = [];
+            $heap   = [];
 
             while (($frame = \array_pop($stack))) {
                 $frame(
                     $select,
                     $apply,
                     $stack,
-                    $values,
+                    $heap,
                     $this->tokens);
             }
 
-            return \array_pop($values);
+            return \array_pop($heap);
         }
 
         public function __invoke() : mixed {
