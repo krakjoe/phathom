@@ -103,7 +103,7 @@ namespace pharos\phathom\Earley {
         private function execute(Item $item) : mixed {
             $select = $this->select(...);
             $apply  = $this->apply(...);
-            $stack  = [Frame::call($item)];
+            $stack  = [Frame::select($item)];
             $values = [];
 
             while (($frame = \array_pop($stack))) {

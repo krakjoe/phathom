@@ -3,8 +3,8 @@ namespace pharos\phathom\Earley {
     use \pharos\phathom\Grammar\Quantifier;
 
     final class Frame {
-        private const int CALL    = 1;
-        private const int COLLECT = 2;
+        private const int SELECT = 1;
+        private const int APPLY  = 2;
 
         private function __construct(
             private int          $kind,
@@ -13,12 +13,12 @@ namespace pharos\phathom\Earley {
             private array|false  $slots   = false,
         ) {}
 
-        public static function call(Item $item) : Frame {
-            return new self(Frame::CALL, $item);
+        public static function select(Item $item) : Frame {
+            return new self(Frame::SELECT, $item);
         }
 
-        public static function collect(Item $item, array $partial, array $slots) : Frame {
-            return new self(Frame::COLLECT, $item, $partial, $slots);
+        public static function apply(Item $item, array $partial, array $slots) : Frame {
+            return new self(Frame::APPLY, $item, $partial, $slots);
         }
 
         public function __invoke(
@@ -33,7 +33,7 @@ namespace pharos\phathom\Earley {
                     ->alternative;
 
             switch ($this->kind) {
-                case Frame::CALL:
+                case Frame::SELECT:
                     if (empty($alternative->symbols)) {
                         $values[] =
                             $alternative->synthetic !== Quantifier::NONE ?
@@ -65,14 +65,14 @@ namespace pharos\phathom\Earley {
                         return;
                     }
 
-                    $stack[] = Frame::collect(
+                    $stack[] = Frame::apply(
                         $this->item, $partial, $slots);
                     foreach ($items as $nitem) {
-                        $stack[] = Frame::call($nitem);
+                        $stack[] = Frame::select($nitem);
                     }
                 break;
 
-                case Frame::COLLECT:
+                case Frame::APPLY:
                     foreach ($this->slots as $pos) {
                         $this->partial[$pos] =
                             \array_pop($values);
