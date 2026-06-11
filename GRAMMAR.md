@@ -88,7 +88,7 @@ FQCN of a descendant of `pharos\phathom\Grammar\Optimization`; the engine will i
 optimizer: "\my\app\optimization";
 ```
 
-**`\pharos\phathom\Earley\Optimizer\Lexer` is used by default**
+**`\pharos\phathom\Earley\Optimize\Lexer` is used by default**
 
 *See: [OPTIMIZATION.md](OPTIMIZATION.md) for details*
 
@@ -132,11 +132,11 @@ An expression may be followed by a [priority](#priority) and/or an [action](#act
 Quantifiers follow a symbol (inside or outside an expression) and control repetition.
 The compiler rewrites quantified references into synthetic rules automatically.
 
-| Quantifier | Meaning              | Synthetic expansion                                 |
-|------------|----------------------|-----------------------------------------------------|
-| `+`        | one or more          | `__X_plus__ : X \| __X_plus__ X`                    |
-| `*`        | zero or more         | `__X_star__ : ε \| __X_star__ X`                    |
-| `?`        | zero or one (optional) | `__X_opt__ : ε \| X`                              |
+| Quantifier | Meaning                | Synthetic expansion                                 |
+|------------|------------------------|-----------------------------------------------------|
+| `+`        | one or more            | `$X_plus$ : X \| ($X_plus$ X)`                      |
+| `*`        | zero or more           | `$X_star$ : ε \| ($X_star$ X)`                      |
+| `?`        | zero or one (optional) | `$X_opt$ : ε \| X`                                  |
 
 Quantified symbols are represented by arrays, unfound optional symbols being an empty array.
 
