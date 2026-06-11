@@ -19,6 +19,17 @@ namespace pharos\phathom\Exception {
                 $file));
         }
 
+        public static function noident(File $file, string $name) : Lexer {
+            return new self(\sprintf(
+                "Token definition for %s ".
+                    "uses an illegal name, ".
+                        "(ie, it it not compatible with PHP variable names) ".
+                    "names must match [a-zA-Z][a-zA-Z0-9_]* ".
+                "in %s",
+                $name,
+                $file));
+        }
+
         public static function nopattern(File $file, string $name) : Lexer {
             return new self(\sprintf(
                 "Token definition for %s ".

@@ -55,9 +55,15 @@ namespace pharos\phathom
         }
 
         private function verify(File $file, string $name, array $config) : void {
-            if (!$config['added'] && isset($this->config[$name])) {
-                throw LexerException::redefine(
-                    $file, $name, $config, $this->config[$name]);
+            if (!$config['added']) {
+                if (isset($this->config[$name])) {
+                    throw LexerException::redefine(
+                        $file, $name, $config, $this->config[$name]);
+                }
+
+                if (!\preg_match('/^[a-zA-Z][a-zA-Z0-9_]*$/', $name)) {
+                    throw LexerException::noident($file, $name);
+                }
             }
 
             if (!isset($config['pattern'])) {

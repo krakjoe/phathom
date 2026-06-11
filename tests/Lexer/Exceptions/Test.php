@@ -111,6 +111,19 @@ final class Test extends \PHPUnit\Framework\TestCase
         $lexer->merge($this->file->relative("Nopattern.lexer"));
     }
 
+    public function testNoident() : void {
+        $this->expectException(\pharos\phathom\Exception\Lexer::class);
+        $this->expectExceptionMessageMatches(
+            "/Token definition for 0DISALLOWED ".
+                "uses an illegal name, ".
+                    "\(ie, it it not compatible with PHP variable names\) ".
+                "names must match \[a-zA-Z\]\[a-zA-Z0-9_\]\* ".
+            "in .*Noident.lexer/");
+
+        $lexer = new \pharos\phathom\Lexer();
+        $lexer->merge($this->file->relative("Noident.lexer"));
+    }
+
     public function testNocompile() : void {
         $this->expectException(\pharos\phathom\Exception\Lexer::class);
         $this->expectExceptionMessageMatches(
