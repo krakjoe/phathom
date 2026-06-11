@@ -132,7 +132,7 @@ namespace pharos\phathom\Grammar {
         private function compileSynthetic(string $rule, Symbol &$symbol, array &$synthetic) {
             $base  = $symbol->name;
             $name =
-                \sprintf("__%s_%s__",
+                \sprintf("\$%s_%s\$",
                     $base,
                     Quantifier::name($symbol->quantifier));
 
