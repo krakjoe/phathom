@@ -1,4 +1,5 @@
-<?php
+<?php declare(strict_types=1);
+
 namespace pharos\phathom\Grammar {
     final class Symbol {
         public int|false $terminal = false;

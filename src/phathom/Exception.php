@@ -1,4 +1,5 @@
-<?php
+<?php declare(strict_types=1);
+
 namespace pharos\phathom {
     class Exception extends \Exception {
         protected static function explain(array $options, string $condition = 'or') : string {

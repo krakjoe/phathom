@@ -1,4 +1,5 @@
-<?php
+<?php declare(strict_types=1);
+
 namespace pharos\phathom\Grammar {
     use \pharos\phathom\File;
     use \pharos\phathom\Exception\Unexpected;
@@ -182,7 +183,7 @@ namespace pharos\phathom\Grammar {
         }
 
         private function balance(
-                    string $type,
+                    int    $type,
                     string $open,
                     string $close): array {
             $depth   = 1;

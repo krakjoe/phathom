@@ -1,4 +1,5 @@
-<?php
+<?php declare(strict_types=1);
+
 namespace pharos\phathom\Earley\Optimize {
     use \pharos\phathom\Grammar\Optimization;
     use \pharos\phathom\Earley\Item;

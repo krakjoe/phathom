@@ -1,4 +1,5 @@
-<?php
+<?php declare(strict_types=1);
+
 namespace pharos\phathom\Grammar {
     abstract class Optimization implements \pharos\phathom\Interface\Optimizer {
         /* 

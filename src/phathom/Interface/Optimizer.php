@@ -1,4 +1,5 @@
-<?php
+<?php declare(strict_types=1);
+
 namespace pharos\phathom\Interface {
     use \pharos\phathom\Lexer;
 

@@ -1,4 +1,5 @@
-<?php
+<?php declare(strict_types=1);
+
 namespace pharos\phathom\Grammar {
     final class Token extends \pharos\phathom\Token {
         const int IDENT        = 1;

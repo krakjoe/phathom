@@ -1,4 +1,5 @@
-<?php
+<?php declare(strict_types=1);
+
 namespace pharos\phathom\Exception {
     use \pharos\phathom\File;
     use \pharos\phathom\Buffer;

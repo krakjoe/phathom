@@ -1,4 +1,5 @@
-<?php
+<?php declare(strict_types=1);
+
 namespace pharos\phathom\Earley {
     use \pharos\phathom\Context;
     use \pharos\phathom\Grammar\Quantifier;
