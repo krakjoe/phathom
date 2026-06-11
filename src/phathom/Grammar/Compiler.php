@@ -125,9 +125,9 @@ namespace pharos\phathom\Grammar {
         /* Rewrite quantified symbols into synthetic nullable/recursive rules,
          * replacing each quantified reference with the synthetic rule name.
          *
-         *   A*  →  __A_star__ :  ε  |  __A_star__ A     (left-recursive)
-         *   A+  →  __A_plus__ :  A  |  __A_plus__ A     (left-recursive)
-         *   A?  →  __A_opt__  :  ε  |  A
+         *   A*  →  $A_star$ :  ε  |  ($A_star$ A)     (left-recursive)
+         *   A+  →  $A_plus$ :  A  |  ($A_plus$ A)     (left-recursive)
+         *   A?  →  $A_opt$  :  ε  |  A
          */
         private function compileSynthetic(string $rule, Symbol &$symbol, array &$synthetic) {
             $base  = $symbol->name;
