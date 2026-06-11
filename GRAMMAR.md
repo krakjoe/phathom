@@ -34,7 +34,7 @@ start: "unit";
 
 ### `context`
 
-FQCN of descendant of `pharos\phathom\Context` for scope of action code; the engine will derive a concrete `Context` from this class.
+FQCN of a descendant of `pharos\phathom\Context` for scope of action code; the engine will derive a concrete `Context` from this class.
 
 ```
 context: "\MyApp\Context";
@@ -44,13 +44,13 @@ context: "\MyApp\Context";
 
 ### `token`
 
-FQCN of abstract descenant of `\pharos\phathom\Token` that represents parsed values; the engine will derive a `Token` from this class.
+FQCN of an abstract descendant of `\pharos\phathom\Token` that represents parsed values; the engine will derive a `Token` from this class.
 
 ```
 token: "\MyApp\Token";
 ```
 
-*The class must extend the abstract `\pharos\phathom\Token`.*
+*The class must extend the abstract `\pharos\phathom\Token`, without implementing `string`, and so remain abstract.*
 
 **The abstract `pharos\phathom\Token` will be used when no `token` directive is present**
 
@@ -82,7 +82,7 @@ lexer: "tokens.lexer";
 
 ### `optimizer`
 
-FQCN of an implementation of `pharos\phathom\Interface\Optimizer`; the engine will invoke an instance of this object at compile time.
+FQCN of a descendant of `pharos\phathom\Grammar\Optimization`; the engine will invoke an instance of this object at compile time.
 
 ```
 optimizer: "\my\app\optimization";
@@ -90,7 +90,7 @@ optimizer: "\my\app\optimization";
 
 **`\pharos\phathom\Earley\Optimizer\Lexer` is used by default**
 
-*See: [OPTIMIZATION.md](OPTIMIZATION.md)*
+*See: [OPTIMIZATION.md](OPTIMIZATION.md) for details*
 
 ---
 
