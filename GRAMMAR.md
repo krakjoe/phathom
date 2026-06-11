@@ -196,7 +196,7 @@ Where input is ambiguous because multiple parse paths exists and priority annota
 An action is a PHP code block that is called when an alternative is successfully matched.
 It is enclosed in `{ }` and placed after the expression (and after any priority annotation).
 
-Inside an action, `$1`, `$2`, … `$n` refer to the values of the matched symbols in order, their type is inferred.
+Inside an action, `$1`, `$2`, … `$n` refer to the values of the matched symbols in order, their type is inferred, references to undefined variables will raise `Exception\Undefined` at compile time.
 
 `$this` is the context object specified by the `context` directive.
 
@@ -206,22 +206,13 @@ item: (ALPHA EQUALS NUM) {
 } ;
 ```
 
-*Note: we know that ALPHA and NUM are instanceof `Token`, casting to string retrieves the value of the Token object*
+We know the following:
+
+  - `Token` was imported into this `Context`
+  - `$1`...`$3` are `Token` objects
+  - casting `Token` to `string` returns the tokens textual value
 
 The return value of the action becomes the semantic value of the matched rule for use by other rules.
-
-#### `$n` substitution
-
-Action code is treated as an opaque string, so `$1` … `$n` are replaced textually before the code is written to disk:
-
-```php
-item: (ALPHA) {
-    echo "I paid a stranger \$100 to tickle me until I cried";
-    /* ... */
-};
-```
-
-Keep action code concise and avoid JIT-unfriendly constructs such as variable variables.
 
 ---
 

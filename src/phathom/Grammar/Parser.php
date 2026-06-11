@@ -212,7 +212,7 @@ namespace pharos\phathom\Grammar {
                             }
 
                             $this->rules[self::reserved($ident)][] =
-                                Alternative::complex($symbols, $priority, $action);
+                                Alternative::complex($this->file, $symbols, $priority, $action);
                             break;
 
                         case Token::IDENT:
@@ -228,6 +228,7 @@ namespace pharos\phathom\Grammar {
 
                             $this->rules[self::reserved($ident)][] =
                                 Alternative::simple(
+                                    $this->file,
                                     new Symbol(
                                         $token->type,
                                         $token->value,

@@ -33,14 +33,26 @@ final class Test extends \PHPUnit\Framework\TestCase
         new \pharos\phathom\Grammar($file);
     }
 
-    public function testUndefined() : void {
+    public function testUndefinedSymbol() : void {
         $file = $this->file
-            ->relative("Undefined.grammar");
+            ->relative("UndefinedSymbol.grammar");
 
         $this->expectException(
             \pharos\phathom\Exception\Undefined::class);
         $this->expectExceptionMessageMatches(
             "/Undefined symbol 'undefined'/");
+
+        new \pharos\phathom\Grammar($file);
+    }
+
+    public function testUndefinedVariable() : void {
+        $file = $this->file
+            ->relative("UndefinedVariable.grammar");
+
+        $this->expectException(
+            \pharos\phathom\Exception\Undefined::class);
+        $this->expectExceptionMessageMatches(
+            "/Undefined variable '\\$2'/");
 
         new \pharos\phathom\Grammar($file);
     }

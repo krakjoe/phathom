@@ -143,16 +143,16 @@ namespace pharos\phathom\Grammar {
 
                 $synthetic[$name] = match ($symbol->quantifier) {
                     Quantifier::STAR => [
-                        Alternative::synthetic([],                        Quantifier::STAR), /* ε */
-                        Alternative::synthetic(\array_merge($self, $one), Quantifier::STAR), /* A* A */
+                        Alternative::synthetic($this->file, [],                        Quantifier::STAR), /* ε */
+                        Alternative::synthetic($this->file, \array_merge($self, $one), Quantifier::STAR), /* A* A */
                     ],
                     Quantifier::PLUS => [
-                        Alternative::synthetic($one,                      Quantifier::PLUS), /* A */
-                        Alternative::synthetic(\array_merge($self, $one), Quantifier::PLUS), /* A+ A */
+                        Alternative::synthetic($this->file, $one,                      Quantifier::PLUS), /* A */
+                        Alternative::synthetic($this->file, \array_merge($self, $one), Quantifier::PLUS), /* A+ A */
                     ],
                     Quantifier::OPTIONAL => [
-                        Alternative::synthetic([],                        Quantifier::OPTIONAL), /* ε */
-                        Alternative::synthetic($one,                      Quantifier::OPTIONAL), /* A */
+                        Alternative::synthetic($this->file, [],                        Quantifier::OPTIONAL), /* ε */
+                        Alternative::synthetic($this->file, $one,                      Quantifier::OPTIONAL), /* A */
                     ],
                 };
             }

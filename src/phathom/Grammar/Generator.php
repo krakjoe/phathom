@@ -8,6 +8,7 @@ namespace pharos\phathom\Grammar {
 
     use \pharos\phathom\Exception;
     use \pharos\phathom\Exception\IO as IOException;
+    use \pharos\phathom\Exception\Undefined;
 
     final class Generator {
         public function __construct(
@@ -59,6 +60,8 @@ namespace pharos\phathom\Grammar {
                                 $name,
                                 $index,
                                 ... $this->compileContextMethod(
+                                        $name,
+                                        $index,
                                         $alternative));
                         }
                     }
@@ -87,23 +90,13 @@ namespace pharos\phathom\Grammar {
             return [$class, $symbol];
         }
 
-        private function compileContextMethod(Alternative $alternative) : array {
+        private function compileContextMethodParameters(Alternative $alternative, array &$variables) : array {
             $parameters = [];
-            $action     = $alternative->action;
-
             foreach ($alternative->symbols as $index => $symbol) {
                 $parameter =
                     \sprintf(
-                        '$__sym%d__',
-                        $index + 1);
-                $action = \preg_replace(
-                    \sprintf(
-                        '/\$%d(?!\d)/',
-                        $index + 1
-                    ),
-                    $parameter,
-                    $action);
-
+                        '$__sym%d__', $index + 1);
+                $variables[$index + 1] = $parameter;
                 if (!isset($this->rules[$symbol->name])) {
                     $type = "Token";
                 } elseif ($this->rules[$symbol->name][0]->synthetic !== Quantifier::NONE) {
@@ -111,11 +104,47 @@ namespace pharos\phathom\Grammar {
                 } else {
                     $type = 'mixed';
                 }
-
                 $parameters[] = \sprintf("%s %s", $type, $parameter);
             }
+            return $parameters;
+        }
 
-            return [implode(", ", $parameters), $action];
+        private function compileContextMethod(string $rule, int $index, Alternative $alternative) : array {
+            $variables  = [];
+            $parameters = $this->compileContextMethodParameters($alternative, $variables);
+
+            for ($method = '',
+                 $position = 1,
+                 $tokens =
+                    \PHPToken::tokenize(
+                        \sprintf(
+                            "<?php %s", $alternative->action)),
+                $limit = \count($tokens);
+                $token = $tokens[$position]     ?? null,
+                $next  = $tokens[$position + 1] ?? null,
+                $position < $limit;
+                $position++) {
+
+                if ($token->is('$') && $next?->is(\T_LNUMBER)) {
+                    $variable = 
+                        (int) $next->text;
+
+                    if (!isset($variables[$variable])) {
+                        throw Undefined::variable(
+                            $alternative->file,
+                            $rule, $index, $variable);
+                    }
+
+                    $method .=
+                        $variables[$variable];
+                    $position++;
+                    continue;
+                }
+
+                $method .= $token->text;
+            }
+
+            return [implode(", ", $parameters), $method];
         }
 
         private function compileToken() : string {
@@ -161,7 +190,7 @@ namespace pharos\phathom\Grammar {
         private function compileTokenMeta() : array {
             $class = \sprintf(
                 "__%s__",
-                \md5(
+                \hash('sha256',
                     \serialize([
                         $this->abstracts['token'],
                         $this->lexer])));
