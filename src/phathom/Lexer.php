@@ -61,7 +61,7 @@ namespace pharos\phathom
                         $file, $name, $config, $this->config[$name]);
                 }
 
-                if (!\preg_match('/^[a-zA-Z][a-zA-Z0-9_]*$/', $name)) {
+                if (!\preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $name)) {
                     throw LexerException::noident($file, $name);
                 }
             }

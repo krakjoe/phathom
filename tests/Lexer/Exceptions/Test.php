@@ -117,7 +117,7 @@ final class Test extends \PHPUnit\Framework\TestCase
             "/Token definition for 0DISALLOWED ".
                 "uses an illegal name, ".
                     "\(ie, it it not compatible with PHP variable names\) ".
-                "names must match \[a-zA-Z\]\[a-zA-Z0-9_\]\* ".
+                "names must match \[a-zA-Z_\]\[a-zA-Z0-9_\]\* ".
             "in .*Noident.lexer/");
 
         $lexer = new \pharos\phathom\Lexer();

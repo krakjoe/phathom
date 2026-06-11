@@ -24,7 +24,7 @@ namespace pharos\phathom\Exception {
                 "Token definition for %s ".
                     "uses an illegal name, ".
                         "(ie, it it not compatible with PHP variable names) ".
-                    "names must match [a-zA-Z][a-zA-Z0-9_]* ".
+                    "names must match [a-zA-Z_][a-zA-Z0-9_]* ".
                 "in %s",
                 $name,
                 $file));

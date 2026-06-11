@@ -39,7 +39,7 @@ The Lexer will attempt to find the longest match from the expected tokens at the
 
 ### Notes
 
-Token names (ie, section headers) must conform to PHP identifier specification, ie `[a-zA-Z][a-zA-Z0-9_]*`.
+Token names (ie, section headers) must conform to PHP identifier specification, ie `[a-zA-Z_][a-zA-Z0-9_]*`.
 
 Patterns must include appropriate PCRE delimiters (and escaping), their form will be verified on lexer compilation (triggered by grammar compilation).
 
