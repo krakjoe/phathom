@@ -36,7 +36,7 @@ namespace pharos\phathom
                 $token->location['position']);
         }
 
-        public function __toString() : string {
+        final public function __toString() : string {
             return (string) $this->value;
         }
     }

@@ -196,9 +196,16 @@ Where input is ambiguous because multiple parse paths exists and priority annota
 An action is a PHP code block that is called when an alternative is successfully matched.
 It is enclosed in `{ }` and placed after the expression (and after any priority annotation).
 
-Inside an action, `$1`, `$2`, … `$n` refer to the values of the matched symbols in order, their type is inferred, references to undefined variables will raise `Exception\Undefined` at compile time.
+Inside an action: 
 
-`$this` is the context object specified by the `context` directive.
+  - Concrete `Token` is imported into this `Context`
+  - `$this` is the `Context` object derived from the `context` directive (or default `\pharos\phathom\Context`)
+  - `$1`, `$2`, … `$n` refer to the values of the matched symbols in order passed as function arguments
+  - The type of function arguments is inferred:
+    - `Token` for terminal
+    - `array` for synthetic
+    - `mixed` otherwise
+  - References to undefined variables will raise `Exception\Undefined` at compile time
 
 ```
 item: (ALPHA EQUALS NUM) {
@@ -206,11 +213,11 @@ item: (ALPHA EQUALS NUM) {
 } ;
 ```
 
-We know the following:
+Things to know:
 
-  - `Token` was imported into this `Context`
-  - `$1`...`$3` are `Token` objects
-  - casting `Token` to `string` returns the tokens textual value
+  - Casting `Token` to `string` returns the textual value of the token
+  - `$1` ... `$3` are `Token` (in this example case)
+  - `$1->type === Token::ALPHA` and `$3->type === Token::NUM`
 
 The return value of the action becomes the semantic value of the matched rule for use by other rules.
 
