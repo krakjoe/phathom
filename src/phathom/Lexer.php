@@ -153,7 +153,7 @@ namespace pharos\phathom
 
             foreach ($this->config as $name => &$config) {
                 [$pattern, $flags] =
-                    $this->unwrap($config['pattern'], $config['file']);
+                    $this->unwrap($config['pattern']);
 
                 $inner = \strlen($flags)
                     ? "(?{$flags}:{$pattern})"
