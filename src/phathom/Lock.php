@@ -72,6 +72,10 @@ namespace pharos\phathom {
 
             $this->locked = false;
         }
+
+        public function __destruct() {
+            \fclose($this->handle);
+        }
     }
 }
 ?>

@@ -29,8 +29,9 @@ namespace pharos\phathom
             $this->lexer =
                 new Lexer();
             $this->parse();
-            unset(
-                $this->parsed);
+            unset($this->included);
+            unset($this->directives);
+            unset($this->parsed);
         }
 
         private function parse() : void {

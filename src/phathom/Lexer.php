@@ -120,7 +120,7 @@ namespace pharos\phathom
             }
         }
 
-        private function unwrap(string $pattern, string $file): array {
+        private function unwrap(string $pattern): array {
             $delim =
                 $pattern[0];
             $end  =

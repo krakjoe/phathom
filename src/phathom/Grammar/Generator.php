@@ -78,7 +78,7 @@ namespace pharos\phathom\Grammar {
         private function compileContextMeta() : array {
             $class = \sprintf(
                 "__%s__",
-                \md5(
+                \hash('sha256',
                     \serialize([
                         $this->abstracts['context'],
                         $this->rules])));
