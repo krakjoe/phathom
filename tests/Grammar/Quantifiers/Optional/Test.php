@@ -34,4 +34,31 @@ final class Test extends \PHPUnit\Framework\TestCase
             "one" => "42",
         ]);
     }
+
+    public function testDoubleOptionalZero() : void {
+        $file = $this->file
+            ->relative("DoubleOptional.grammar");
+        $content = $this->file
+            ->relative("DoubleOptionalZero.content");
+
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser  = new \pharos\phathom\Parser($grammar);
+
+        $this->assertSame($parser->parse($content), []);
+    }
+
+    public function testDoubleOptionalTwo() : void {
+        $file = $this->file
+            ->relative("DoubleOptional.grammar");
+        $content = $this->file
+            ->relative("DoubleOptionalTwo.content");
+
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser  = new \pharos\phathom\Parser($grammar);
+
+        $this->assertSame($parser->parse($content), [
+            "a" => "1",
+            "b" => "2",
+        ]);
+    }
 }

@@ -98,6 +98,9 @@
     <testsuite name="Grammar\Quantifiers\Optional">
       <file>tests/Grammar/Quantifiers/Optional/Test.php</file>
     </testsuite>
+    <testsuite name="Grammar\Quantifiers\DoubleOptional">
+      <file>tests/Grammar/Quantifiers/DoubleOptional/Test.php</file>
+    </testsuite>
   </testsuites>
   <source>
     <include>

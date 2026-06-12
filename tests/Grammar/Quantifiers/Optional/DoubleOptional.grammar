@@ -1,0 +1,11 @@
+lexer: "../Quantifiers.lexer";
+
+item: 
+    (ALPHA EQUALS NUM) {
+        return [(string) $1 => (string) $3];
+    };
+
+unit:
+    (item? item?) {
+        return array_merge($1, $2);
+    };
