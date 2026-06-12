@@ -184,13 +184,13 @@ namespace pharos\phathom
         private function pattern(array $expected) : string {
             \ksort($expected);
 
-            $node = &$this->patterns;
+            $pattern = &$this->patterns;
             foreach ($expected as $k => $_) {
-                $node = &$node[$k];
+                $pattern = &$pattern[$k];
             }
 
-            if (isset($node[Lexer::PATTERN])) {
-                return $node[Lexer::PATTERN];
+            if (isset($pattern[Lexer::PATTERN])) {
+                return $pattern[Lexer::PATTERN];
             }
 
             $parts = [];
@@ -204,7 +204,7 @@ namespace pharos\phathom
                     $this->consuming[$const]);
             }
 
-            return $node[Lexer::PATTERN] = \sprintf(
+            return $pattern[Lexer::PATTERN] = \sprintf(
                 '/\G%s/',
                 \implode('', $parts));
         }
