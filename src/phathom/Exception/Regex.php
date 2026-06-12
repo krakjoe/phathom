@@ -2,6 +2,7 @@
 
 namespace pharos\phathom\Exception {
     use \pharos\phathom\File;
+    use \pharos\phathom\Buffer;
 
     final class Regex extends \pharos\phathom\Exception\Lexer {
 

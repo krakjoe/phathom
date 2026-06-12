@@ -5,61 +5,44 @@ namespace pharos\phathom\Earley\Optimize {
     use \pharos\phathom\Grammar\Symbol;
     use \pharos\phathom\Earley\Item;
 
+    /*
+    * We're going to prewarm the pattern cache on lexer by telling
+    * it what it may expect at any call to scan for this grammar.
+    * This achieves:
+    *   no regex pattern allocations (in userland) during a parse
+    *   the pattern cache is serialized complete with the grammar
+    */
     final class Lexer extends Optimization {
-        private const string VISITED = '@';
+        private const string OPTIMIZED = '@';
 
-        private \Closure $optimize;
-
-        /* Per-collect state — reset at the top of each collect() call */
         private array $seen     = [];
         private array $items    = [];
         private array $nullable = [];
         private array $waiting  = [];
 
+        /* 
+        * In detail we are building the Earley characteristic automaton:
+        *  (LR(0)-style item-set closure with predict+complete).
+        * Each node in the automaton is a predict+complete-closed set of 
+        *  (rule, alt, dot) triples;
+        * edges are labelled by terminal consts (scan transitions).
+        *
+        * The expected set passed to scan() at any chart position is exactly
+        * the set of terminal consts at the dot across all items in the
+        * corresponding automaton node.
+        */
         public function pass() : void {
-            /*
-            * We're going to prewarm the pattern cache on lexer by telling
-            * it what it may expect at any call to scan for this grammar.
-            * This achieves:
-            *   no regex pattern allocations (in userland) during a parse
-            *   the pattern cache is serialized complete with the grammar
-            */
-            $this->optimize = 
-                $this->lexer
-                    ->expect(...);
-
-            /* In detail we are building the Earley characteristic automaton:
-             *  (LR(0)-style item-set closure with predict+complete).
-             * Each node in the automaton is a predict+complete-closed set of 
-             *  (rule, alt, dot) triples;
-             * edges are labelled by terminal consts (scan transitions).
-             *
-             * The expected set passed to scan() at any chart position is exactly
-             * the set of terminal consts at the dot across all items in the
-             * corresponding automaton node.  Pre-warming the lexer pattern cache
-             * for every such set guarantees that deserialization is always warm —
-             * no cache miss can occur at parse time regardless of input.
-             */
-            $initial =
-                $this->start();
-            $visited = [];
-            $queue   = [$this->collect($initial)];
+            $optimized = [];
+            [
+                $optimize,
+                $queue
+            ] = $this->start();
 
             while (($state = \array_pop($queue))) {
-                /* Canonical state key: items are already sorted by collect();
-                 * walk the trie to detect revisited states without building strings */
-                $node = &$visited;
-                foreach ($state as $item) {
-                    $node = &$node[$item->rule][$item->alt][$item->dot];
-                }
-
-                if (isset($node[Lexer::VISITED])) {
+                if (!$this->optimize($optimized, $state)) {
                     continue;
                 }
 
-                $node[Lexer::VISITED] = true;
-
-                /* Collect expected terminals and group seeds for scan successors */
                 $expected   = [];
                 $successors = [];
 
@@ -87,13 +70,29 @@ namespace pharos\phathom\Earley\Optimize {
                 }
 
                 if ($expected) {
-                    ($this->optimize)($expected);
+                    $optimize($expected);
                     foreach ($successors as $items) {
                         $queue[] =
                             $this->collect($items);
                     }
                 }
             }
+        }
+
+        private function optimize(array &$optimized, array $state) : bool {
+            $optimize = &$optimized;
+            foreach ($state as $item) {
+                $optimize = &$optimize
+                    [$item->rule]
+                    [$item->alt]
+                    [$item->dot];
+            }
+
+            if (isset($optimize[Lexer::OPTIMIZED])) {
+                return false;
+            }
+
+            return ($optimize[Lexer::OPTIMIZED] = true);
         }
 
         private function collect(array $seeds) : array {
@@ -134,7 +133,8 @@ namespace pharos\phathom\Earley\Optimize {
 
             if ($dotted === null) {
                 /* Complete */
-                $this->nullable[$item->rule][] = $item;
+                $this->nullable
+                    [$item->rule][] = $item;
                 $this->complete($item);
                 return;
             }
@@ -143,7 +143,8 @@ namespace pharos\phathom\Earley\Optimize {
                 return; /* terminal — nothing to predict */
             }
 
-            $this->waiting[$dotted->name][] = $item;
+            $this->waiting
+                [$dotted->name][] = $item;
             $this->predict($dotted);
             $this->drain($dotted, $item);
         }
@@ -196,7 +197,12 @@ namespace pharos\phathom\Earley\Optimize {
                     backs:       [],
                     alternative: $alt);
             }
-            return $initial;
+            return [
+                $this->lexer->expect(...),
+                [
+                    $this->collect($initial)
+                ]
+            ];
         }
     }
 }
