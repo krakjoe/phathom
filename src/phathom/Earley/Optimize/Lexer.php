@@ -20,8 +20,8 @@ namespace pharos\phathom\Earley\Optimize {
         private array $nullable = [];
         private array $waiting  = [];
 
-        /* 
-        * In detail we are building the Earley characteristic automaton:
+        /*
+        * In detail we are building an Earl(e)y (AOT) characteristic automaton:
         *  (LR(0)-style item-set closure with predict+complete).
         * Each node in the automaton is a predict+complete-closed set of 
         *  (rule, alt, dot) triples;

@@ -146,6 +146,10 @@ namespace pharos\phathom\Grammar {
          * shape.
          */
         public function parse(): array {
+            /**
+             * !The lack of defensive branches in this function is a result of the contract
+             * of Lexer::tokenize!
+             */
             $tokens     = $this->lexer->tokenize();
             $position   = 0;
             $count      = \count($tokens);
