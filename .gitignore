@@ -1,7 +1,20 @@
+# Runtime Generated
 assets/
-coverage/
-vendor/
 
+# Under Test
+coverage/
 .phpunit.cache/
 
+# Deployment
+vendor/
 composer.lock
+
+# VS Code settings (optional)
+.vscode/
+
+# Core Files
+core.*
+
+# Scratchpads
+/*.php
+/*.diff

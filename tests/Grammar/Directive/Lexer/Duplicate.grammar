@@ -1,2 +1,2 @@
-lexer: "../../Basic/Basic.lexer";
-lexer: "../../Basic/Basic.lexer";
+lexer: "../../Basic/Basic.lexer",
+       "../../Basic/Basic.lexer";

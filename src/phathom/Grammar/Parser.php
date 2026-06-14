@@ -237,7 +237,7 @@ namespace pharos\phathom\Grammar {
                                         Quantifier::from($quantify)));
                         break;
 
-                        case Token::STRING:
+                        case Token::STRING: do {
                             $directive =
                                 $consume(); /* STRING */
                             switch ((string) $ident) {                                    
@@ -284,6 +284,7 @@ namespace pharos\phathom\Grammar {
                                     throw Directive::unknown(
                                         $ident, self::reserve);
                             }
+                        } while ($peek()->type == Token::COMMA && $consume());
                         break;
                     }
 

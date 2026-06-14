@@ -25,9 +25,11 @@ namespace pharos\phathom\Grammar {
          *   string       := quote [^\1]+ quote
          *   alternative  := expression action?
          *                 | quantifiable
-         * 
+         *   comma        := ','
+         *   strings      := string |
+         *                   strings comma string
          *   grammar      := (directive | rule)*
-         *   directive    := ident COLON string end
+         *   directive    := ident COLON strings end
          *   rule         := ident COLON alternative (PIPE alternative)* end
          **/
 
@@ -75,6 +77,12 @@ namespace pharos\phathom\Grammar {
                     Token::PATTERN,
                 ],
             ],
+            Token::COMMA => [
+                'list' => false,
+                'allow' => [
+                    Token::STRING
+                ]
+            ],
             Token::PIPE => [
                 'list' => false,
                 'allow' => [
@@ -108,6 +116,7 @@ namespace pharos\phathom\Grammar {
             Token::STRING => [
                 'list' => false,
                 'allow' => [
+                    Token::COMMA,
                     Token::END,
                 ],
             ],
@@ -470,6 +479,14 @@ namespace pharos\phathom\Grammar {
                     case ';':
                         $tokens[] = new Token(
                             Token::END, [
+                                'path'     => $this->file->path,
+                                'position' => $this->position++,
+                            ]);
+                    break;
+
+                    case ',':
+                        $tokens[] = new Token(
+                            Token::COMMA, [
                                 'path'     => $this->file->path,
                                 'position' => $this->position++,
                             ]);

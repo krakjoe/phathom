@@ -11,7 +11,7 @@ Grammar files drive phathom's Earley parsing engine. A grammar file contains:
 
 ## Directives
 
-Form: `directive: "string";`
+Form: `directive: "string" [, "string"];`
 
 | Directive   | Explanation                                                                          | Required | Repeatable |
 |-------------|--------------------------------------------------------------------------------------|----------|------------|
@@ -317,9 +317,10 @@ quote        := ('\'' | '"')
 string       := quote [^\1]+ quote
 alternative  := expression action?
               | quantifiable
-
+strings      := string
+              | strings comma string
 grammar      := (directive | rule)*
-directive    := ident COLON string end
+directive    := ident COLON strings end
 rule         := ident COLON alternative (PIPE alternative)* end
 ```
 

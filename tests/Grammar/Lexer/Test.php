@@ -359,7 +359,7 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectExceptionMessage(
             "Unexpected QUANTIFIER, ".
             "STRING must be followed by ".
-                "END, ".
+                "COMMA or END, ".
             "got QUANTIFIER");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
