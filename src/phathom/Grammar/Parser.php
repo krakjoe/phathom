@@ -151,7 +151,7 @@ namespace pharos\phathom\Grammar {
             $count      = \count($tokens);
 
             $eof = function() use(&$position, $tokens) : bool {
-                return ($tokens[$position]->type == Token::EOF);
+                return ($tokens[$position]->type === Token::EOF);
             };
 
             $peek = function () use (&$position, $tokens): ?Token {
@@ -189,7 +189,7 @@ namespace pharos\phathom\Grammar {
                                     $listing->type === Token::PATTERN) {
                                     $consume(); /* IDENT | PATTERN */
 
-                                    if ($peek()->type == Token::QUANTIFIER) {
+                                    if ($peek()->type === Token::QUANTIFIER) {
                                         $quantify =
                                             (string) $consume(); /* QUANTIFIER */
                                     } else {
@@ -284,7 +284,7 @@ namespace pharos\phathom\Grammar {
                                     throw Directive::unknown(
                                         $ident, self::reserve);
                             }
-                        } while ($peek()->type == Token::COMMA && $consume());
+                        } while ($peek()->type === Token::COMMA && $consume());
                         break;
                     }
 
