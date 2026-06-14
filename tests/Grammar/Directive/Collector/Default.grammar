@@ -1,0 +1,3 @@
+include: "../../Basic/Basic.grammar";
+
+collector: "default";

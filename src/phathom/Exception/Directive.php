@@ -104,16 +104,27 @@ namespace pharos\phathom\Exception {
             ));
         }
 
-        public static function start(Token $directive, Token $declared) : Directive {
+        public static function declared(string $name, Token $directive, Token $declared) : Directive {
             return new self(\sprintf(
-                "start cannot be declared ".
+                "%s cannot be declared ".
                     "as \"%s\" at %s:%d, ".
-                "start already declared ".
+                "%s already declared ".
                     "as \"%s\" at %s:%d",
-                (string) $directive,
+                $name, (string) $directive,
                 $directive->location['path'], $directive->location['position'],
-                (string) $declared,
+                $name, (string) $declared,
                 $declared->location['path'], $declared->location['position']
+            ));
+        }
+
+        public static function collector(Token $directive, array $policies) : Directive {
+            return new self(\sprintf(
+                "collector cannot be declared as \"%s\", ".
+                    "expected %s ".
+                "at %s:%d",
+                (string) $directive,
+                self::explain($policies),
+                $directive->location['path'], $directive->location['position']
             ));
         }
     }

@@ -7,7 +7,7 @@ namespace pharos\phathom\Grammar {
 
     final class Parser {
         const array reserve = [
-            'token', 'context', 'lexer', 'include', 'start', 'optimizer'
+            'token', 'context', 'lexer', 'include', 'start', 'optimizer', 'collector',
         ];
 
         private Lexer $lexer;
@@ -19,6 +19,7 @@ namespace pharos\phathom\Grammar {
                 'context'    => false,
                 'token'      => false,
                 'start'      => false,
+                'collector'  => false,
                 'optimizer'  => [
                     '\pharos\phathom\Earley\Optimize\Lexer' => false,
                 ],
@@ -45,7 +46,8 @@ namespace pharos\phathom\Grammar {
 
         private function start(Token $directive) : void {
             if ($this->directives['start'] !== false) {
-                throw Directive::start(
+                throw Directive::declared(
+                    'start',
                     $directive,
                     $this->directives['start']);
             }
@@ -135,6 +137,24 @@ namespace pharos\phathom\Grammar {
             }
 
             $this->directives['optimizer'][$interface] = $directive;
+        }
+
+        private function collector(Token $directive) : void {
+            if ($this->directives['collector'] !== false) {
+                throw Directive::declared(
+                    'collector',
+                    $directive,
+                    $this->directives['collector']);
+            }
+
+            if (Collector::from(
+                    (string) $directive) == Collector::UNKNOWN) {
+                throw Directive::collector(
+                    $directive,
+                    Collector::policies);
+            }
+
+            $this->directives['collector'] = $directive;
         }
 
         /**
@@ -282,6 +302,10 @@ namespace pharos\phathom\Grammar {
 
                                 case 'optimizer':
                                     $this->optimizer($directive);
+                                break;
+
+                                case 'collector':
+                                    $this->collector($directive);
                                 break;
 
                                 default:

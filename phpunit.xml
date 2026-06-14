@@ -30,6 +30,10 @@
       <file>tests/Grammar/Token/Test.php</file>
     </testsuite>
 
+    <testsuite name="Grammar\Collector">
+      <file>tests/Grammar/Collector/Test.php</file>
+    </testsuite>
+
     <testsuite name="Grammar\Directive\Start">
       <file>tests/Grammar/Directive/Start/Test.php</file>
     </testsuite>
@@ -52,6 +56,10 @@
 
     <testsuite name="Grammar\Directive\Optimizer">
       <file>tests/Grammar/Directive/Optimizer/Test.php</file>
+    </testsuite>
+
+    <testsuite name="Grammar\Directive\Collector">
+      <file>tests/Grammar/Directive/Collector/Test.php</file>
     </testsuite>
 
     <testsuite name="Grammar\Generator">

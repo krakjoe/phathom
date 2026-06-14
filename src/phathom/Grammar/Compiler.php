@@ -17,6 +17,7 @@ namespace pharos\phathom\Grammar {
             'token'   => '\pharos\phathom\Token',
             'context' => '\pharos\phathom\Context'
         ];
+        private Collector $collector = Collector::DEFAULT;
 
         public function __construct(
             private File   $file,
@@ -43,6 +44,13 @@ namespace pharos\phathom\Grammar {
             if ($this->directives['start'] !== false) {
                 $this->start = (string)
                     $this->directives['start'];
+            }
+
+            if ($this->directives['collector'] !== false) {
+                $this->collector =
+                    Collector::from(
+                        (string)
+                            $this->directives['collector']);
             }
 
             if (empty($this->rules)) {                
@@ -228,6 +236,7 @@ namespace pharos\phathom\Grammar {
             $this->compileOptimizations();
 
             return [
+                $this->collector,
                 $this->start,
                 $this->rules,
                 $this->terminals,

@@ -21,6 +21,7 @@ Form: `directive: "string" [, "string"];`
 | `lexer`     | Path, relative to the current grammar file, of a lexer `.ini`                        |    no    |     yes    |
 | `include`   | Path, relative to the current grammar file, of another grammar file                  |    no    |     yes    |
 | `optimizer` | Fully-qualified class name of a descendant of `\pharos\phathom\Grammar\Optimization` |    no    |     yes    |
+| `collector` | Name of garbage collection policy                                                    |    no    |     no     |
 
 ### `start`
 
@@ -91,6 +92,22 @@ optimizer: "\my\app\optimization";
 **`\pharos\phathom\Earley\Optimize\Lexer` is used by default**
 
 *See: [OPTIMIZATION.md](OPTIMIZATION.md) for details*
+
+### `collector`
+
+```
+collector: "default";
+```
+
+Name of the garbage collection policy:
+
+  - `default` - don't touch the garbage collector
+  - `off`     - disable the garbage collector during pressure
+  - `defer`   - defer the garbage collector during pressure
+
+**`default` is used by default**
+
+*See: [COLLECTOR.md](COLLECTOR.md) for details*
 
 ---
 

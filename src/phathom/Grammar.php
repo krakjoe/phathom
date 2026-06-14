@@ -2,27 +2,31 @@
 
 namespace pharos\phathom
 {   
+    use \pharos\phathom\Grammar\Collector;
+
     final class Grammar
     {
         /* raw members */
-        private             array   $included   = [];   /* raw include list                             */
-        private             array   $directives = [];   /* raw directive information                    */
-        private             array   $parsed     = [];   /* raw rules                                    */
+        private             array     $included   = [];   /* raw include list                             */
+        private             array     $directives = [];   /* raw directive information                    */
+        private             array     $parsed     = [];   /* raw rules                                    */
     
         /* parsed members */
-        public private(set)  Lexer  $lexer;             /* declared lexers                              */
-        private              array  $abstracts = [      /* declared abstracts                           */
+        public private(set)  Lexer    $lexer;             /* declared lexers                              */
+        private              array    $abstracts = [      /* declared abstracts                           */
             'token'   =>     '\pharos\phathom\Token',
             'context' =>     '\pharos\phathom\Context',
         ];
 
         /* compiled members */
-        public private(set) string  $context;             /* compiled concrete Context implementation     */
-        public private(set) string  $token;               /* compiled concrete Token implementation       */
-        public private(set) string  $start;               /* compiled name of starting rule               */
-        public private(set) array   $rules      = [];     /* compiled rules used by the Earley loop       */
-        public private(set) array   $terminals  = [];     /* compiled terminals name => const int Token:: */
-        public private(set) array   $patterns   = [];     /* compiled patterns name => const int Token::  */
+        public private(set) string    $context;           /* compiled concrete Context implementation     */
+        public private(set) string    $token;             /* compiled concrete Token implementation       */
+        public private(set) string    $start;             /* compiled name of starting rule               */
+        public private(set) array     $rules      = [];   /* compiled rules used by the Earley loop       */
+        public private(set) array     $terminals  = [];   /* compiled terminals name => const int Token:: */
+        public private(set) array     $patterns   = [];   /* compiled patterns name => const int Token::  */
+        /* compiled Collector policy */
+        public private(set) Collector $collector  = Collector::DEFAULT;
 
         public function __construct(
             public private(set)  File   $file,
@@ -55,6 +59,7 @@ namespace pharos\phathom
                     $this->directives,
                     $this->parsed);
             [
+                $this->collector,
                 $this->start,
                 $this->rules,
                 $this->terminals,
@@ -78,9 +83,18 @@ namespace pharos\phathom
         }
 
         public function execute(Context $context, File|Buffer $input): mixed {
-            $chart =
+            $collections =
+                Collector::apply($this->collector);
+            try {
+                $chart =
                 new Earley\Chart($this, $input);
-            return new Earley\Evaluator($chart, $context)();
+                $result =
+                    new Earley\Evaluator(
+                        $chart, $context)();
+            } finally {
+                Collector::restore($collections);
+            }
+            return $result;
         }
 
         public function factory(): Context {
