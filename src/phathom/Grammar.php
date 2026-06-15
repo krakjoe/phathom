@@ -111,6 +111,7 @@ namespace pharos\phathom
                 'terminals' => $this->terminals,
                 'patterns'  => $this->patterns,
                 'start'     => $this->start,
+                'collector' => $this->collector,
             ];
         }
 
