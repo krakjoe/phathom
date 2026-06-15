@@ -242,7 +242,9 @@ The return value of the action becomes the semantic value of the matched rule fo
 
 ## Context Class
 
-The context class must extend `\pharos\phathom\Context`, actions may invoke `protected` API.  An instance is created automatically by the parser for each parse.
+The context class must extend `\pharos\phathom\Context`.
+
+An instance is created for each instance of `\pharos\phathom\Parser`, this means that repeated calls to the same instance of `Parser::parse` reuses the same `Context`.
 
 ```php
 namespace MyApp;
