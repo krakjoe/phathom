@@ -34,10 +34,11 @@ jobs:
           flags: php
 
       - name: Upload PHP tests to Codecov
-        uses: codecov/test-results-action@v1
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: junit.xml
+          report_type: test_results
           flags: php
 
   test-ext:
@@ -81,8 +82,9 @@ jobs:
           flags: ext
 
       - name: Upload C tests to Codecov
-        uses: codecov/test-results-action@v1
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: junit-ext.xml
+          report_type: test_results
           flags: ext
