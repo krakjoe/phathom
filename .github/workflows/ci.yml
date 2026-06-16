@@ -24,13 +24,20 @@ jobs:
         run: composer install --no-interaction --prefer-dist
 
       - name: Run tests with coverage
-        run: vendor/bin/phpunit --coverage-clover coverage.xml --coverage-text
+        run: vendor/bin/phpunit --coverage-clover coverage.xml --coverage-text --log-junit junit.xml
 
       - name: Upload PHP coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.xml
+          flags: php
+
+      - name: Upload PHP tests to Codecov
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: junit.xml
           flags: php
 
   test-ext:
@@ -64,10 +71,18 @@ jobs:
         env:
           TEST_PHP_EXECUTABLE: php
           ZEND_DONT_UNLOAD_MODULES: 1
+          PHPUNIT_ARGS: --log-junit ../junit-ext.xml
 
-      - name: Upload C extension coverage to Codecov
+      - name: Upload C coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ext/coverage.info
+          flags: ext
+
+      - name: Upload C tests to Codecov
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: junit-ext.xml
           flags: ext
