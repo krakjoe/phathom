@@ -38,15 +38,15 @@ namespace pharos\phathom\Earley\Optimize {
                 $queue
             ] = $this->start();
 
-            while (($state = \array_pop($queue))) {
-                if (!$this->optimize($optimized, $state)) {
+            while (([$node, $context] = \array_pop($queue))) {
+                if (!$this->optimize($optimized, $node)) {
                     continue;
                 }
 
                 $expected   = [];
                 $successors = [];
 
-                foreach ($state as $item) {
+                foreach ($node as $item) {
                     $symbol =
                         $item->alternative
                             ->symbols[$item->dot] ?? null;
@@ -69,19 +69,57 @@ namespace pharos\phathom\Earley\Optimize {
                             alternative: $item->alternative);
                 }
 
-                if ($expected) {
-                    $optimize($expected);
-                    foreach ($successors as $items) {
-                        $queue[] =
-                            $this->collect($items);
-                    }
+                if (!$expected) {
+                    continue;
+                }
+
+                $optimize($expected);
+
+                foreach ($this->update($node)
+                            as $dotted => $items) {
+                    $context[$dotted] = $items;
+                }
+
+                foreach ($successors as $items) {
+                    $queue[] = [
+                        $this->collect($items, $context),
+                        $context,
+                    ];
                 }
             }
         }
 
-        private function optimize(array &$optimized, array $state) : bool {
+        /*
+        * Returns items from the current node that have a non-terminal at the
+        * dot, grouped by that non-terminal.  Each group replaces the
+        * corresponding context entry, so completions in descendant nodes
+        * advance items from the nearest ancestor that predicted it.
+        */
+        private function update(array $node) : array {
+            $update = [];
+            foreach ($node as $item) {
+                $dotted =
+                    $item->alternative
+                        ->symbols[$item->dot] ?? null;
+                if ($dotted === null) {
+                    continue;
+                }
+
+                if ($dotted->terminal !== false) {
+                    continue;
+                }
+
+                $update[$dotted->name]
+                    [$item->rule]
+                    [$item->alt]
+                    [$item->dot] = $item;
+            }
+            return $update;
+        }
+
+        private function optimize(array &$optimized, array $node) : bool {
             $optimize = &$optimized;
-            foreach ($state as $item) {
+            foreach ($node as $item) {
                 $optimize = &$optimize
                     [$item->rule]
                     [$item->alt]
@@ -95,11 +133,21 @@ namespace pharos\phathom\Earley\Optimize {
             return ($optimize[Lexer::OPTIMIZED] = true);
         }
 
-        private function collect(array $seeds) : array {
+        private function collect(array $seeds, array $context = []) : array {
             $this->seen     = [];
             $this->items    = [];
             $this->nullable = [];
             $this->waiting  = [];
+
+            foreach ($context as $dotted => $rule) {
+                foreach ($rule as $alt) {
+                    foreach ($alt as $dot) {
+                        foreach ($dot as $item) {
+                            $this->waiting[$dotted][] = $item;
+                        }
+                    }
+                }
+            }
 
             foreach ($seeds as $item) {
                 $this->add($item);
@@ -119,7 +167,7 @@ namespace pharos\phathom\Earley\Optimize {
                 [$item->rule]
                 [$item->alt]
                 [$item->dot];
-            
+
             if (isset($slot)) {
                 return;
             }
@@ -200,7 +248,7 @@ namespace pharos\phathom\Earley\Optimize {
             return [
                 $this->lexer->expect(...),
                 [
-                    $this->collect($initial)
+                    [$this->collect($initial), []]
                 ]
             ];
         }

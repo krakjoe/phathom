@@ -4,6 +4,8 @@ assets/
 # Under Test
 coverage/
 .phpunit.cache/
+junit-ext.xml
+junit.xml
 
 # Deployment
 vendor/
