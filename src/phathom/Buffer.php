@@ -2,11 +2,11 @@
 
 namespace pharos\phathom {
     final class Buffer implements Interface\Buffer {
-        public int $length;
+        public private(set) int $length;
 
         public function __construct(
             private string $source,
-            public string $contents) {
+            public private(set) string $contents) {
                 $this->length =
                     \strlen($contents);
         }

@@ -26,8 +26,48 @@ jobs:
       - name: Run tests with coverage
         run: vendor/bin/phpunit --coverage-clover coverage.xml --coverage-text
 
-      - name: Upload coverage to Coveralls
-        uses: coverallsapp/github-action@v2
+      - name: Upload PHP coverage to Codecov
+        uses: codecov/codecov-action@v5
         with:
-          file: coverage.xml
-          format: clover
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.xml
+          flags: php
+
+  test-ext:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: sudo apt-get install -y lcov autoconf make
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          tools: phpize, php-config
+
+      - name: Build extension
+        working-directory: ext
+        run: |
+          phpize
+          ./configure --enable-phathom --with-phathom-coverage
+          make -j$(nproc)
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Run tests and collect coverage
+        working-directory: ext
+        run: make phathom-test-coverage-lcov
+        env:
+          TEST_PHP_EXECUTABLE: php
+          ZEND_DONT_UNLOAD_MODULES: 1
+
+      - name: Upload C extension coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ext/coverage.info
+          flags: ext
