@@ -5,13 +5,6 @@ on:
     branches: ["**"]
   pull_request:
     branches: ["**"]
-  workflow_dispatch:
-    inputs:
-      debug_runner:
-        description: "Enable interactive tmate session in test-ext job"
-        required: false
-        default: false
-        type: boolean
 
 jobs:
   test:
@@ -70,12 +63,6 @@ jobs:
           ./configure --enable-phathom --with-phathom-coverage
           make -j$(nproc)
 
-      - name: Debug runner via tmate
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_runner }}
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: true
-
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist
 
@@ -86,21 +73,6 @@ jobs:
           TEST_PHP_EXECUTABLE: php
           ZEND_DONT_UNLOAD_MODULES: 1
           PHPUNIT_ARGS: --log-junit ../junit-ext.xml
-
-      - name: Collect crash diagnostics
-        if: ${{ failure() }}
-        run: |
-          mkdir -p /tmp/phathom-crash
-          find "$GITHUB_WORKSPACE" -maxdepth 3 -type f \( -name 'core' -o -name 'core.*' -o -name '*.log' -o -name 'junit-ext.xml' -o -name 'coverage.info' \) -exec cp -f {} /tmp/phathom-crash/ \; || true
-          dmesg | tail -n 300 > /tmp/phathom-crash/dmesg-tail.txt || true
-
-      - name: Upload crash diagnostics
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-ext-crash-diagnostics
-          path: /tmp/phathom-crash
-          if-no-files-found: ignore
 
       - name: Upload C coverage to Codecov
         uses: codecov/codecov-action@v5
