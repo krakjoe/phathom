@@ -7,6 +7,10 @@ coverage/
 junit-ext.xml
 junit.xml
 
+# Profiling Junk
+perf.*
+*.gcov
+
 # Deployment
 vendor/
 composer.lock
