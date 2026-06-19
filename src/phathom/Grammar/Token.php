@@ -14,7 +14,7 @@ namespace pharos\phathom\Grammar {
         const int LIST_START   = 30;
         const int LIST_END     = 31;
 
-        const int PRIORITY     = 40;
+        const int ANNOTATION   = 40;
         const int ACTION       = 50;
         const int PIPE         = 60;
         const int END          = 99;
@@ -30,7 +30,7 @@ namespace pharos\phathom\Grammar {
                 case Token::COMMA:      return 'COMMA';
                 case Token::LIST_START: return 'LIST_START';
                 case Token::LIST_END:   return 'LIST_END';
-                case Token::PRIORITY:   return 'PRIORITY';
+                case Token::ANNOTATION: return 'ANNOTATION';
                 case Token::ACTION:     return 'ACTION';
                 case Token::PIPE:       return 'PIPE';
                 case Token::END:        return 'END';

@@ -121,7 +121,7 @@ rule: alternative | alternative | ... ;
 ```
 
 Alternatives are separated by `|`.  Each alternative is either a bare quantifiable symbol
-or a parenthesised expression optionally followed by a priority and/or an action block.
+or a parenthesised expression optionally followed by annotations and/or an action block.
 
 ### Symbols
 
@@ -184,34 +184,65 @@ line: (ALPHA EQUALS numeric)     { return $this->pair((string) $1, (int) (string
     ;
 ```
 
+### Annotations
+
+Annotations follow expressions in the form of `[annotation]`, multiple annotations are accepted.
+
+`annotation` must match `[0-9a-zA-z]+`, illegal annotations will throw `Exception\Unexpected` at compile time.
+
+Unrecognized annotations will throw `Exception\Annotation` at compile time.
+
 ### Priority
 
-When a grammar is ambiguous and multiple parse trees are valid for a single rule, priority annotations select the preferred alternative. Higher integers win.
+Match: `[n]` where `n` is a positive integer.
 
-Form: `[n]` immediately after the closing `)` of an expression:
+When a rule is ambiguous — multiple alternatives can match the same input — priority annotations select the preferred alternative. Higher integers win.
 
 ```
-line: (ALPHA EQUALS ALPHA) [1] { return $this->make("low",  $1); }
-    | (ALPHA EQUALS ALPHA) [2] { return $this->make("high", $1); } 
+line: (ALPHA EQUALS ALPHA) [1] { return "low";  }
+    | (ALPHA EQUALS ALPHA) [2] { return "high"; }
     ;
 ```
 
-Priority annotations must be present for *all* alternatives in a rule, or *none*, missing priority annotations will raise `Exception\Priority` at compile time (ie, when a Grammar is constructed).
+Rules:
 
-A priority annotation on a rule with a single alternative expression is inert, and will raise `Exception\Priority` at compile time.
+- Annotations must be present on **all** alternatives in a rule, or **none** — mixing raises `Exception\Priority`.
+- A single annotated alternative is inert and raises `Exception\Priority`.
+- Priorities must be unique within a rule unless associativity annotations are also present (see [Associativity](#associativity)).
+- Priority is rule-scoped: it does not propagate to rules that reference this one.
 
-Priority annotations must be unique (with respect to the rule of the alternative, not globally); equal priorities among alternatives will raise `Exception\Priority` at compile time.
+Where input is ambiguous and no priority annotations are present, `Exception\Ambiguity` is raised at parse time.
 
-Priority annotations have rule-scope, ie: they determine how to resolve ambiguity in a single rule, but do not effect the priorities of a consumer of that rule.
+*Note: `Exception\Priority` is a compile time exception; `Exception\Ambiguity` is a parse time exception.*
 
-Where input is ambiguous because multiple parse paths exists and priority annotations are missing `Exception\Ambiguity` will be raised.
+### Associativity
 
-*Note: `Exception\Priority` is a compile time only exception, `Exception\Ambiguity` is an execution time only exception.*
+Match: `left`, `right`, or `none`.
+
+When multiple alternatives share the same priority — typically for a recursive rule like `expr → expr OP expr` — associativity annotations break the tie by selecting which parse tree to prefer.
+
+- `[left]` — prefer the left-recursive parse: `(a OP b) OP c`
+- `[right]` — prefer the right-recursive parse: `a OP (b OP c)`
+- `[none]` — explicit absence of associativity; equivalent to omitting the annotation
+
+```
+expr: (expr EQUALS expr) [1][left] { return [$1, $3]; }
+    | (ALPHA)            [1][left] { return (string) $1; }
+    ;
+```
+
+Rules:
+
+- An associativity annotation requires a priority annotation on the same alternative — raises `Exception\Associativity` otherwise.
+- All alternatives sharing a priority must carry the **same** non-`none` associativity annotation — conflicting or absent annotations within a priority group raise `Exception\Associativity`.
+- An associativity annotation on an alternative whose priority is unique within the rule is inert and raises `Exception\Associativity`.
+
+*Note: `Exception\Associativity` is a compile time exception; `Exception\Ambiguity` is a parse time exception.*
 
 ### Actions
 
 An action is a PHP code block that is called when an alternative is successfully matched.
-It is enclosed in `{ }` and placed after the expression (and after any priority annotation).
+It is enclosed in `{ }` and placed after the expression (and after any annotations).
 
 Inside an action: 
 
@@ -327,9 +358,9 @@ For phathom, grammar files are modular - they may merge additional lexer configu
 ident        := [a-zA-Z_][a-zA-Z0-9_]*
 pattern      := '<' [^>]+ '>'
 quantifier   := [+*?]
-priority     := '[' [0-9]+ ']'
+annotation   := '[' [0-9a-zA-Z]+ ']'
 quantifiable := (ident | pattern) quantifier?
-expression   := '(' quantifiable+ ')' priority?
+expression   := '(' quantifiable+ ')' annotation*
 action       := '{' code '}'
 end          := ';'
 quote        := ('\'' | '"')

@@ -1,0 +1,9 @@
+lexer: "Associativity.lexer";
+
+line:
+    (ALPHA EQUALS ALPHA) [left] {
+        return ["left" => (string) $1];
+    }
+;
+
+unit: line+;

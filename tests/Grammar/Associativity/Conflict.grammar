@@ -1,0 +1,13 @@
+lexer: "Associativity.lexer";
+
+line:
+    (ALPHA EQUALS ALPHA) [1][left] {
+        return ["first" => (string) $1];
+    }
+    |
+    (ALPHA EQUALS ALPHA) [1][right] {
+        return ["second" => (string) $1];
+    }
+;
+
+unit: line+;

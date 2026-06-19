@@ -94,6 +94,9 @@
     <testsuite name="Grammar\Priority">
       <file>tests/Grammar/Priority/Test.php</file>
     </testsuite>
+    <testsuite name="Grammar\Associativity">
+      <file>tests/Grammar/Associativity/Test.php</file>
+    </testsuite>
     <testsuite name="Grammar\Ambiguity">
       <file>tests/Grammar/Ambiguity/Test.php</file>
     </testsuite>

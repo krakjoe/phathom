@@ -2,7 +2,7 @@
 
 namespace pharos\phathom {
     class Exception extends \Exception {
-        protected static function explain(array $options, string $condition = 'or') : string {
+        public static function explain(array $options, string $condition = 'or') : string {
             switch (\count($options)) {
                 case 0:
                     return "end of input";

@@ -16,9 +16,9 @@ namespace pharos\phathom\Grammar {
          *   ident        := [a-zA-Z_][a-zA-Z0-9_]*
          *   pattern      := '<' [^>]+ '>'
          *   quantifier   := [+*?]
-         *   priority     := '[' [0-9]+ ']'
+         *   annotation   := '[' [0-9a-zA-Z]+ ']'
          *   quantifiable := (ident | pattern) quantifier?
-         *   expression   := '(' quantifiable+ ')' priority?
+         *   expression   := '(' quantifiable+ ')' annotation*
          *   action       := '{' code '}'
          *   end          := ';'
          *   quote        := ('\'' | '"')
@@ -54,15 +54,16 @@ namespace pharos\phathom\Grammar {
             Token::LIST_END => [
                 'list' => false,
                 'allow' => [
-                    Token::PRIORITY,
+                    Token::ANNOTATION,
                     Token::PIPE,
                     Token::ACTION,
                     Token::END,
                 ],
             ],
-            Token::PRIORITY => [
+            Token::ANNOTATION => [
                 'list' => false,
                 'allow' => [
+                    Token::ANNOTATION,
                     Token::PIPE,
                     Token::ACTION,
                     Token::END,
@@ -320,55 +321,21 @@ namespace pharos\phathom\Grammar {
             return [$content, $start];
         }
 
-        private function priority() : array {
-            $content = '';
-            $start   =
-                $this->position++;
-            $terminated = false;
+        private function annotation() : array {
+            [$content, $start] =
+                $this->balance(
+                    Token::ANNOTATION, '[', ']');
 
-            while ($this->position < $this->length) {
-                if ($this->buffer[
-                        $this->position] === ']') {
-                    $this->position++;
-
-                    $terminated = true;
-                    break;
+            for ($position = 0;
+                 $position < \strlen($content);
+                 $position++) {
+                if (!\ctype_alnum($content[$position])) {
+                    throw Unexpected::annotation(
+                        $content, [
+                            'path' => $this->file->path,
+                            'position' => $start + $position,
+                        ]);
                 }
-
-                if (!\ctype_digit($this->buffer[$this->position])) {
-                    throw Unexpected::nondigit(
-                        Token::PRIORITY,
-                        $this->buffer[$this->position], [
-                            'path'     => $this->file->path,
-                            'position' => $this->position
-                        ]
-                    );
-                }
-
-                $content .= $this->buffer[$this->position++];
-            }
-
-            if (!$terminated) {
-                throw Unexpected::unterminated(
-                    Token::PRIORITY,
-                    $content, [
-                        'path'     => $this->file->path,
-                        'position' => $start
-                    ], [
-                        'open'    => '[',
-                        'close'   => ']',
-                    ]);
-            }
-
-            if (!\strlen($content)) {
-                throw Unexpected::empty(
-                    Token::PRIORITY, [
-                        'path'     => $this->file->path,
-                        'position' => $start,
-                    ], [
-                        'open'     => '[',
-                        'close'    => ']'
-                    ]);
             }
 
             return [$content, $start];
@@ -510,9 +477,9 @@ namespace pharos\phathom\Grammar {
 
                     case '[':
                         [$content, $start] =
-                            $this->priority();
+                            $this->annotation();
                         $tokens[] = new Token(
-                            Token::PRIORITY, [
+                            Token::ANNOTATION, [
                                 'path'     => $this->file->path,
                                 'position' => $start,
                             ], $content);

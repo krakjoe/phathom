@@ -484,61 +484,46 @@ final class Test extends \PHPUnit\Framework\TestCase
         $lexer->tokenize();
     }
 
-    public function testPriorityNotFollowingList() : void {
+    public function testAnnotationNotFollowingList() : void {
         $file = $this->file
-            ->relative("PriorityNotFollowingList.grammar");
+            ->relative("AnnotationNotFollowingList.grammar");
 
         $this->expectException(
             \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
-            "Unexpected PRIORITY, ".
+            "Unexpected ANNOTATION, ".
             "COLON must be followed by ".
                 "IDENT, STRING, LIST_START, or PATTERN, ".
-            "got PRIORITY(42)");
+            "got ANNOTATION(42)");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
-    public function testPriorityEmpty() : void {
+    public function testAnnotationEmpty() : void {
         $file = $this->file
-            ->relative("PriorityEmpty.grammar");
+            ->relative("AnnotationEmpty.grammar");
 
         $this->expectException(
             \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
-            "Unexpected empty PRIORITY, ".
-            "PRIORITY must contain content between ".
+            "Unexpected empty ANNOTATION, ".
+            "ANNOTATION must contain content between ".
             "[ and ]");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
     }
 
-    public function testPriorityNonDigit() : void {
+    public function testAnnotationNonAlphanum() : void {
         $file = $this->file
-            ->relative("PriorityNonDigit.grammar");
+            ->relative("AnnotationNonAlphanum.grammar");
 
         $this->expectException(
             \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
-            "Unexpected non-digit in PRIORITY, ".
-            "PRIORITY may only contain digits, ".
-            "got !");
-
-        $lexer = new \pharos\phathom\Grammar\Lexer($file);
-        $lexer->tokenize();
-    }
-
-    public function testPriorityUnterminated() : void {
-        $file = $this->file
-            ->relative("PriorityUnterminated.grammar");
-
-        $this->expectException(
-            \pharos\phathom\Exception\Unexpected::class);
-        $this->expectExceptionMessage(
-            "Unexpected unterminated PRIORITY, ".
-            "PRIORITY started with [ must be terminated by ]");
+            "Unexpected annotation \"!\", ".
+            "expected [0-9a-zA-Z]+");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();

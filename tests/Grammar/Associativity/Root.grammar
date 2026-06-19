@@ -1,0 +1,7 @@
+lexer: "Associativity.lexer";
+
+unit:
+    (ALPHA EQUALS ALPHA) [1][left] { return "first"; }
+    |
+    (ALPHA EQUALS ALPHA) [1][left] { return "second"; }
+;

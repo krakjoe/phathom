@@ -22,18 +22,6 @@ namespace pharos\phathom\Exception {
                 Token::print($next)));
         }
 
-        public static function nondigit(int $type, string $content, array $location) : Unexpected {
-            return new self(\sprintf(
-                "Unexpected non-digit in %s, " . 
-                "%s may only contain digits, " .
-                "got %s ".
-                "starting at %s:%d",
-                Token::string($type),
-                Token::string($type),
-                $content,
-                $location['path'], $location['position']));
-        }
-
         public static function empty(int $type, array $location, array $delimiters) : Unexpected {
             return new self(\sprintf(
                 "Unexpected empty %s, ".
@@ -88,6 +76,14 @@ namespace pharos\phathom\Exception {
                 $buffer[$location['position']],
                 self::explain($rules),
                 $location['path'], $location['position']));
+        }
+
+        public static function annotation(string $buffer, array $location) : Unexpected {
+            return new self(\sprintf(
+                "Unexpected annotation \"%s\", ".
+                    "expected [0-9a-zA-Z]+ ".
+                "at %s:%d",
+                $buffer, $location['path'], $location['position']));
         }
     }
 }

@@ -6,7 +6,9 @@ namespace pharos\phathom\Grammar {
 
     use \pharos\phathom\Exception\Undefined;
     use \pharos\phathom\Exception\Priority;
+    use \pharos\phathom\Exception\Associativity;
     use \pharos\phathom\Exception\Optimizer;
+    use \pharos\phathom\Grammar\Associativity as AssociativityValue;
 
     final class Compiler {
         private string $start     = 'unit';
@@ -67,45 +69,136 @@ namespace pharos\phathom\Grammar {
             $synthetic = [];
 
             foreach ($this->rules as $rule => &$alternatives) {
-                $priorities  = [];
-                $prioritized =
-                    $alternatives[0]
-                        ->priority !== false;
-
-                foreach ($alternatives as $aid => &$alternative) {
-                    if (($prioritized === true  && $alternative->priority === false) ||
-                        ($prioritized === false && $alternative->priority !== false)) {
-                        throw Priority::inconsistent(
-                            $this->file, $rule, $aid + 1);
-                    }
-
-                    if ($prioritized === true) {
-                        if (\in_array($alternative->priority, $priorities)) {
-                            throw Priority::ambiguous(
-                                $this->file, $rule, $aid + 1);
-                        }
-                        $priorities[] =
-                            $alternative->priority;
-                    }
-
-                    foreach ($alternative->symbols as &$symbol) {
-                        $this->compileSymbol($rule, $symbol);
-
-                        if ($symbol->quantifier === Quantifier::NONE) {
-                            continue;
-                        }
-
-                        $this->compileSynthetic(
-                            $rule, $symbol, $synthetic);
-                    }
-                }
-
-                if ($prioritized && \count($alternatives) === 1) {
-                    throw Priority::inert($this->file, $rule);
-                }
+                $this->compileAlternatives(
+                    $rule, $alternatives, $synthetic);
             }
 
             $this->rules = \array_merge($this->rules, $synthetic);
+        }
+
+        private function compileAlternatives(
+            string $rule, array &$alternatives, array &$synthetic) : void {
+            $priorities   = [];
+            $associations = [];
+
+            foreach ($alternatives as $aid => &$alternative) {
+                $this->compileAlternative(
+                    $rule, $aid, $alternative,
+                    $synthetic, $priorities, $associations);
+            }
+
+            $this->compilePriorities($rule, $priorities, $associations);
+            $this->compileAssociations($rule, $associations);
+        }
+
+        private function compileAlternative(
+            string $rule, int $aid, Alternative $alternative,
+            array &$synthetic, array &$priorities, array &$associations) : void {
+            $this->compilePriority(
+                $rule, $aid, $alternative,
+                $priorities, $associations);
+            $this->compileAssociation(
+                $rule, $aid, $alternative,
+                $priorities, $associations);
+            $this->compileSymbols(
+                $rule, $aid, $alternative, $synthetic);
+        }
+
+        private function compilePriority(
+            string $rule, int $aid, Alternative $alternative,
+            array &$priorities, array &$associations) : void {
+            if ($aid > 0) {
+                $prioritized = \count($priorities) > 0;
+                if (($prioritized  && $alternative->priority === false) ||
+                    (!$prioritized && $alternative->priority !== false)) {
+                    throw Priority::inconsistent(
+                        $this->file, $rule, $aid + 1);
+                }
+            }
+
+            if ($alternative->priority !== false) {
+                $priorities[$aid] = $alternative->priority;
+            }
+        }
+
+        private function compilePriorities(
+            string $rule, array $priorities, array $associations) : void {
+            if (\count($priorities) === 1) {
+                throw Priority::inert($this->file, $rule);
+            }
+
+            $seen = [];
+            foreach ($priorities as $aid => $priority) {
+                if (isset($seen[$priority])) {
+                    // If the group has any explicit assoc, let compileAssociations
+                    // validate it — a consistent assoc (e.g. all [left]) is valid.
+                    $group = $associations[$priority] ?? [];
+                    foreach ($group as $assoc) {
+                        if ($assoc !== AssociativityValue::NONE) {
+                            continue 2;
+                        }
+                    }
+                    throw Priority::ambiguous(
+                        $this->file, $rule, $aid + 1);
+                }
+                $seen[$priority] = true;
+            }
+        }
+
+        private function compileAssociation(
+            string $rule, int $aid, Alternative $alternative,
+            array &$priorities, array &$associations) : void {
+            $assoc = $alternative->associativity;
+
+            if ($assoc !== AssociativityValue::NONE &&
+                $alternative->priority === false) {
+                throw Associativity::inconsistent(
+                    $this->file, $rule, $aid + 1);
+            }
+
+            if ($alternative->priority !== false) {
+                $associations[$alternative->priority][$aid] = $assoc;
+            }
+        }
+
+        private function compileAssociations(
+            string $rule, array $associations) : void {
+            foreach ($associations as $priority => $group) {
+                if (\count($group) === 1) {
+                    $aid = \array_key_first($group);
+                    if ($group[$aid] !== AssociativityValue::NONE) {
+                        throw Associativity::inert(
+                            $this->file, $rule);
+                    }
+                } else {
+                    $first = null;
+                    foreach ($group as $aid => $assoc) {
+                        if ($assoc === AssociativityValue::NONE) {
+                            throw Associativity::ambiguous(
+                                $this->file, $rule, $aid + 1, 'missing');
+                        }
+                        if ($first === null) {
+                            $first = $assoc;
+                        } elseif ($assoc !== $first) {
+                            throw Associativity::ambiguous(
+                                $this->file, $rule, $aid + 1, 'conflict');
+                        }
+                    }
+                }
+            }
+        }
+
+        private function compileSymbols(string $rule, int $aid, Alternative $alternative, array &$synthetic) : void {
+            foreach ($alternative->symbols as &$symbol) {
+                $this->compileSymbol($rule, $symbol);
+
+                if ($symbol->quantifier === Quantifier::NONE) {
+                    continue;
+                }
+
+                $this->compileSynthetic(
+                    $rule, $symbol, $synthetic);
+            }
         }
 
         private function compileSymbol(string $rule, Symbol &$symbol): void {

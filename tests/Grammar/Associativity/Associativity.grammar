@@ -1,0 +1,9 @@
+lexer: "Associativity.lexer";
+
+expr:
+    (expr EQUALS expr) [1][left] { return [$1, $3]; }
+    |
+    (ALPHA) [1][left] { return (string) $1; }
+;
+
+unit: expr;

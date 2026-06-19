@@ -63,34 +63,47 @@ namespace pharos\phathom\Earley {
         }
 
         private function select(array $backs, array $tokens) : Back {
-            $selected    = $backs[0];
+            $selected    = $backs[0]->child;
             $prioritized =
-                $this->priority($selected);
+                $this->priority($backs[0]);
 
             if ($prioritized === false) {
                 if (\count($backs) > 1) {
-                    $child = $selected->child;
                     throw AmbiguityException::range(
                         $this->context,
-                        $child->rule,
+                        $selected->rule,
                         $tokens,
-                        $child->origin,
-                        $child->pos - 1);
+                        $selected->origin,
+                        $selected->pos - 1);
                 }
                 return $backs[0];
             }
 
             foreach ($backs as $back) {
-                $priority =
-                    $this->priority($back);
+                $priority = $this->priority($back);
 
                 if ($priority > $prioritized) {
-                    $selected     = $back;
-                    $prioritized  = $priority;
+                    $selected    = $back->child;
+                    $prioritized = $priority;
+                } elseif ($priority === $prioritized) {
+                    $selected = $this->resolve($selected, $back->child);
                 }
             }
 
-            return $selected;
+            foreach ($backs as $back) {
+                if ($back->child === $selected) {
+                    return $back;
+                }
+            }
+        }
+
+        private function resolve(Item $a, Item $b) : Item {
+            if ($a->alternative->associativity ===
+                    \pharos\phathom\Grammar\Associativity::LEFT) {
+                return $a->origin >= $b->origin ? $a : $b;
+            }
+
+            return $a->origin <= $b->origin ? $a : $b;
         }
 
         private function priority(Back $back) : int|false {
@@ -148,6 +161,9 @@ namespace pharos\phathom\Earley {
                     $item        = $nitem;
                     $alt         = $nalt;
                     $prioritized = $nalt->priority;
+                } elseif ($nalt->priority === $prioritized) {
+                    $item        = $this->resolve($item, $nitem);
+                    $alt         = $item->alternative;
                 }
             }
 

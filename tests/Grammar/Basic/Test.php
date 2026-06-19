@@ -148,6 +148,20 @@ final class Test extends \PHPUnit\Framework\TestCase
         new \pharos\phathom\Grammar($file);
     }
 
+    public function testBasicUnrecognizedAnnotation() : void {
+        $file = $this->file
+            ->relative("BasicUnrecognizedAnnotation.grammar");
+
+        $this->expectException(
+            \pharos\phathom\Exception\Annotation::class);
+        $this->expectExceptionMessageMatches(
+            "/Unknown annotation, ".
+                ".* expected .* ".
+            "got ANNOTATION\(unrecognized\)/");
+
+        new \pharos\phathom\Grammar($file);
+    }
+
     public function testBasicSerialization() : void {
         $file = $this->file
             ->relative("Basic.grammar");

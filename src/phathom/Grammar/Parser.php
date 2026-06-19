@@ -10,6 +10,11 @@ namespace pharos\phathom\Grammar {
             'token', 'context', 'lexer', 'include', 'start', 'optimizer', 'collector',
         ];
 
+        const array annotations = [
+            \pharos\phathom\Grammar\Annotation\Priority::class,
+            \pharos\phathom\Grammar\Annotation\Associativity::class,
+        ];
+
         private Lexer $lexer;
         public function __construct(
             public private(set) File    $file,
@@ -196,15 +201,19 @@ namespace pharos\phathom\Grammar {
                         case Token::LIST_START:
                             $consume(); /* LIST_START */
                             $symbols = [];
-                            $priority = false;
+                            $annotations = false;
 
                             while (($listing = $peek())) {
                                 if ($listing->type === Token::LIST_END) {
                                     $consume(); /* LIST_END */
 
-                                    if ($peek()->type === Token::PRIORITY) {
-                                        $priority =
-                                            (int) (string) $consume(); /* PRIORITY */
+                                    while ($peek()->type === Token::ANNOTATION) {
+                                        if ($annotations === false) {
+                                            $annotations = [];
+                                        }
+                                        $annotations[] =
+                                            Annotation::factory(
+                                                Parser::annotations, $consume()); /* ANNOTATION */
                                     }
                                     break;
                                 }
@@ -237,7 +246,7 @@ namespace pharos\phathom\Grammar {
                             }
 
                             $this->rules[self::reserved($ident)][] =
-                                Alternative::complex($this->file, $symbols, $priority, $action);
+                                Alternative::complex($this->file, $symbols, $annotations, $action);
                             break;
 
                         case Token::IDENT:
