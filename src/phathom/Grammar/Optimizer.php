@@ -1,0 +1,60 @@
+<?php
+namespace pharos\phathom\Grammar {
+    use \pharos\phathom\Lexer;
+    use \pharos\phathom\Exception\Optimizer as Exception;
+
+    final class Optimizer {
+        public function __construct(
+            private Lexer  $lexer,
+            private string $start,
+            private array  $rules,
+            private array  $terminals,
+            private array  $patterns,
+            private array  $literals,
+            private array  $symbols,
+        ) {}
+
+        public function optimize(array $optimizations, bool $generated) : array {            
+            foreach ($optimizations as $optimization => $directive) {
+                $optimizer =
+                    new $optimization(
+                        $this->lexer,
+                        $this->start,
+                        $this->rules,
+                        $this->terminals,
+                        $this->patterns,
+                        $this->literals,
+                        $this->symbols);
+
+                try {
+                    $commit =
+                        $optimizer->pass($generated);
+                } catch(\Throwable $thrown) {
+                    throw Exception::threw(
+                        $optimization,
+                        $directive,
+                        $thrown);
+                }
+
+                if ($commit === true) [
+                    $this->lexer,
+                    $this->start,
+                    $this->rules,
+                    $this->terminals,
+                    $this->patterns,
+                    $this->literals,
+                ] = $optimizer->reconstruct();
+            }
+
+            return [
+                $this->lexer,
+                $this->start,
+                $this->rules,
+                $this->terminals,
+                $this->patterns,
+                $this->literals,
+            ];
+        }
+    }
+}
+?>

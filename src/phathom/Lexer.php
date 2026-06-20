@@ -135,8 +135,12 @@ namespace pharos\phathom
                     $pattern,
                     Lexer::delimiter($delim), 1);
             return [
-                \substr($pattern, 1, $end - 1),
+                $content =
+                    \substr($pattern, 1, $end - 1),
                 \substr($pattern, $end + 1),
+                !\preg_match(
+                    '/[\\\\^$.|?*+()\[\]{}]/',
+                    $content),
             ];
         }
 
@@ -158,14 +162,15 @@ namespace pharos\phathom
             $iterator  = 1;
 
             foreach ($this->config as $name => &$config) {
-                [$pattern, $flags] =
+                [$pattern, $flags, $literal] =
                     $this->unwrap($config['pattern']);
 
                 $inner = \strlen($flags)
                     ? "(?{$flags}:{$pattern})"
                     : "(?:{$pattern})";
 
-                $config['const'] = $iterator++;
+                $config['const']   = $iterator++;
+                $config['literal'] = $literal;
 
                 if (isset($config['skip']) && $config['skip']) {
                     $skipping[] = $inner;
@@ -217,7 +222,8 @@ namespace pharos\phathom
             File|Buffer  $input,
             int         &$position,
             array        $expected,
-            string       $class = Token::class): ?Token {
+            string       $class = Token::class,
+            array        $literals = []): ?Token {
 
             if ($position >= $input->length) {
                 return null;
@@ -287,7 +293,7 @@ namespace pharos\phathom
                                 $this->constants, $expected)));
             }
 
-            $token = new $class(
+            $token = $literals[$type] ?? new $class(
                 $type,
                 [
                     'path'     => $input,

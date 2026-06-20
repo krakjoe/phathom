@@ -19,9 +19,10 @@ namespace pharos\phathom\Grammar\Interface {
             array  $rules,
             array  $terminals,
             array  $patterns,
-            array  $abstracts);
+            array  $literals,
+            array  $symbols);
 
-        public function pass() : void;
+        public function pass(bool $generated) : bool;
 
         public function reconstruct() : array;
     }

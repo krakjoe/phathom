@@ -11,15 +11,16 @@ namespace pharos\phathom\Grammar {
     use \pharos\phathom\Grammar\Associativity as AssociativityValue;
 
     final class Compiler {
-        private string $start     = 'unit';
-        private array  $terminals = [];
-        private array  $patterns  = [];
-        private array  $symbols   = [];
-        private array  $abstracts = [
+        private string     $start     = 'unit';
+        private array      $terminals = [];
+        private array      $patterns  = [];
+        private array      $symbols   = [];
+        private array      $abstracts = [
             'token'   => '\pharos\phathom\Token',
             'context' => '\pharos\phathom\Context'
         ];
-        private Collector $collector = Collector::DEFAULT;
+        private Collector   $collector = Collector::DEFAULT;
+        private array       $optimizations = [];
 
         public function __construct(
             private File   $file,
@@ -55,7 +56,12 @@ namespace pharos\phathom\Grammar {
                             $this->directives['collector']);
             }
 
-            if (empty($this->rules)) {                
+            if ($this->directives['optimizer'] !== false) {
+                $this->optimizations =
+                    $this->directives['optimizer'];
+            }
+
+            if (empty($this->rules)) {
                 throw Undefined::rules($this->file);
             }
 
@@ -169,7 +175,7 @@ namespace pharos\phathom\Grammar {
                     if ($group[$aid] !== AssociativityValue::NONE) {
                         foreach ($alternatives[$aid]->symbols as $symbol) {
                             if ($symbol->name === $rule) {
-                                return;
+                                continue 2;
                             }
                         }
                         throw Associativity::inert($this->file, $rule);
@@ -294,51 +300,20 @@ namespace pharos\phathom\Grammar {
             }
         }
 
-        private function compileOptimizations() : void {
-            foreach ($this->directives['optimizer'] as $optimization => $directive) {
-                $optimizer =
-                    new $optimization(
-                        $this->lexer,
-                        $this->start,
-                        $this->rules,
-                        $this->terminals,
-                        $this->patterns,
-                        $this->abstracts);
-
-                try {
-                    $optimizer->pass();
-                } catch(\Throwable $thrown) {
-                    throw Optimizer::threw(
-                        $optimization,
-                        $directive,
-                        $thrown);
-                }
-
-                [
-                    $this->lexer,
-                    $this->start,
-                    $this->rules,
-                    $this->terminals,
-                    $this->patterns,
-                    $this->abstracts
-                ] = $optimizer->reconstruct();
-            }
-        }
-
         public function compile() : array {
             $this->compileDirectives();
             $this->compileRules();
             $this->compileTokens();
             $this->compileConstants();
-            $this->compileOptimizations();
 
             return [
-                $this->collector,
                 $this->start,
                 $this->rules,
                 $this->terminals,
                 $this->patterns,
                 $this->abstracts,
+                $this->collector,
+                $this->optimizations,
             ];
         }
     }

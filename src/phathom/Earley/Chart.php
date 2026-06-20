@@ -24,7 +24,8 @@ namespace pharos\phathom\Earley {
                 $this->start,
                 $scanner,
                 $class,
-                $rules
+                $literals,
+                $rules,
             ] = $this->start($grammar);
 
             for ($i = 0; isset($this->path[$i]); $i++) {
@@ -57,14 +58,14 @@ namespace pharos\phathom\Earley {
                     break;
                 }
 
-                if (!$this->scan($scanner, $i, $input, $expected, $class)) {
+                if (!$this->scan($scanner, $i, $input, $expected, $class, $literals)) {
                     break;
                 }
             }
 
             $scanner(
                 $input, $this->position,
-                [], $class);
+                [], $class, $literals);
 
             $this->limit = \count($this->tokens);
         }
@@ -85,6 +86,7 @@ namespace pharos\phathom\Earley {
                     $grammar->lexer
                         ->scan(...),
                     $grammar->token,
+                    $grammar->literals,
                     $grammar->rules];
         }
 
@@ -101,11 +103,14 @@ namespace pharos\phathom\Earley {
             }
         }
 
-        private function scan(\Closure $scanner, int $i, File|Buffer $input, array $expected, string $class) : bool {
+        private function scan(
+            \Closure $scanner, 
+            int $i, File|Buffer $input, 
+            array $expected, string $class, array $literals) : bool {
             $token =
                 $scanner(
                     $input, $this->position,
-                    $expected, $class);
+                    $expected, $class, $literals);
 
             if ($token === null) {
                 return false;

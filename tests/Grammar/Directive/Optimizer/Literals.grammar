@@ -1,0 +1,7 @@
+optimizer: "\pharos\phathom\Grammar\Optimize\Literals";
+
+non_literal: </[a-z]+/>;
+
+literal: </text/>;
+
+start: "literal";

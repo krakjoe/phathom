@@ -32,6 +32,20 @@ final class Test extends \PHPUnit\Framework\TestCase
         new \pharos\phathom\Grammar($file);
     }
 
+    public function testSelfRecursive() : void {
+        $file = $this->file
+            ->relative("SelfRecursive.grammar");
+        $content = $this->file
+            ->relative("Associativity.content");
+
+        // Self-recursive [1][left] alternative must not trigger inert;
+        // the non-recursive [2][left] alternative is also valid (unique priority).
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser  = new \pharos\phathom\Parser($grammar);
+
+        $this->assertIsArray($parser->parse($content));
+    }
+
     public function testAmbiguous() : void {
         $file = $this->file
             ->relative("Ambiguous.grammar");

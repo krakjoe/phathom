@@ -3,9 +3,13 @@
 namespace pharos\phathom\Grammar {
     abstract class Optimization implements Interface\Optimization {
         /* 
-            Compiler is sealed, unsealing for the purposes of optimization passes
+            Grammar is sealed, unsealing for the purposes of optimization passes
             makes no sense, so instead Optimizations must accept a deconstruction
-            of Compiler.
+            of Grammar.
+
+            We didn't use references here because spooky action at a distance is spooky.
+
+            In addition, it is convenient if a pass() can refuse to commit changes.
         */
         final public function __construct(
             protected \pharos\phathom\Lexer  $lexer,
@@ -13,12 +17,18 @@ namespace pharos\phathom\Grammar {
             protected                 array  $rules,
             protected                 array  $terminals,
             protected                 array  $patterns,
-            protected                 array  $abstracts
+            protected                 array  $literals,
+            protected                 array  $symbols
         ) {}
 
-        abstract public function pass() : void;
+        /*
+        * $generated shall be true on pass two (ie, post generation)
+        * 
+        * return true to commit changes
+        */
+        abstract public function pass(bool $generated) : bool;
 
-        /* Contractually obliged to return reconstruction of Compiler after pass is executed */
+        /* Contractually obliged to return reconstruction of Grammar where pass commits */
         final public function reconstruct() : array {
             return [
                 $this->lexer,
@@ -26,7 +36,7 @@ namespace pharos\phathom\Grammar {
                 $this->rules,
                 $this->terminals,
                 $this->patterns,
-                $this->abstracts
+                $this->literals,
             ];
         }
     }

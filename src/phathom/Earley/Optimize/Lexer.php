@@ -31,7 +31,12 @@ namespace pharos\phathom\Earley\Optimize {
         * the set of terminal consts at the dot across all items in the
         * corresponding automaton node.
         */
-        public function pass() : void {
+        public function pass(bool $generated) : bool {
+            if ($generated === true) {
+                /* don't take part in post-generation pass */
+                return false;
+            }
+
             $optimized = [];
             [
                 $optimize,
@@ -87,6 +92,9 @@ namespace pharos\phathom\Earley\Optimize {
                     ];
                 }
             }
+
+            /* nothing to commit */
+            return false;
         }
 
         /*

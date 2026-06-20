@@ -87,4 +87,18 @@ final class Test extends \PHPUnit\Framework\TestCase {
             "hello"
         ]);
     }
+
+    public function testLiterals() : void {
+        $file = $this->file
+            ->relative("Literals.grammar");
+        $content = $this->file
+            ->relative("Literals.content");
+
+        $grammar = new \pharos\phathom\Grammar($file);
+        $parser = new \pharos\phathom\Parser($grammar);
+    
+        $this->assertSame(
+            $parser->parse($content),
+            $parser->parse($content));
+    }
 }

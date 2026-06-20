@@ -19,12 +19,13 @@ namespace pharos\phathom
         ];
 
         /* compiled members */
-        public private(set) string    $context;           /* compiled concrete Context implementation     */
-        public private(set) string    $token;             /* compiled concrete Token implementation       */
-        public private(set) string    $start;             /* compiled name of starting rule               */
-        public private(set) array     $rules      = [];   /* compiled rules used by the Earley loop       */
-        public private(set) array     $terminals  = [];   /* compiled terminals name => const int Token:: */
-        public private(set) array     $patterns   = [];   /* compiled patterns name => const int Token::  */
+        public private(set) string    $context;           /* compiled concrete Context implementation       */
+        public private(set) string    $token;             /* compiled concrete Token implementation         */
+        public private(set) string    $start;             /* compiled name of starting rule                 */
+        public private(set) array     $rules      = [];   /* compiled rules used by the Earley loop         */
+        public private(set) array     $terminals  = [];   /* compiled terminals name => const int Token::   */
+        public private(set) array     $patterns   = [];   /* compiled patterns name => const int Token::    */
+        public private(set) array     $literals   = [];   /* optionally compiled const int Token:: => Token */
         /* compiled Collector policy */
         public private(set) Collector $collector  = Collector::DEFAULT;
 
@@ -59,18 +60,50 @@ namespace pharos\phathom
                     $this->directives,
                     $this->parsed);
             [
-                $this->collector,
                 $this->start,
                 $this->rules,
                 $this->terminals,
                 $this->patterns,
                 $this->abstracts,
+                $this->collector,
+                $optimizations,
             ] = $compiler->compile();
 
-            $this->generate();
+            $this->optimize($optimizations, true);
         }
 
-        private function generate() : void {
+        private function optimize(array $optimizations, bool $generate) : void {
+            $optimizer =
+                new Grammar\Optimizer(
+                    $this->lexer,
+                    $this->start,
+                    $this->rules,
+                    $this->terminals,
+                    $this->patterns,
+                    $this->literals,
+                    $generate ? $this->abstracts : [
+                        'token'   => $this->token,
+                        'context' => $this->context,
+                    ]);
+
+            [
+                $this->lexer,
+                $this->start,
+                $this->rules,
+                $this->terminals,
+                $this->patterns,
+                $this->literals,
+            ] = $optimizer->optimize(
+                    $optimizations, !$generate);
+
+            if ($generate === false) {
+                return;
+            }
+
+            $this->generate($optimizations);
+        }
+
+        private function generate(array|false $optimizations) : void {
             $generator = new Grammar\Generator(
                 $this->assets,
                 $this->abstracts,
@@ -80,6 +113,12 @@ namespace pharos\phathom
                 $this->token,
                 $this->context
             ] = $generator->generate();
+
+            if ($optimizations === false) {
+                return;
+            }
+
+            $this->optimize($optimizations, false);
         }
 
         public function execute(Context $context, File|Buffer $input): mixed {
@@ -106,11 +145,12 @@ namespace pharos\phathom
                 'file'      => $this->file,
                 'assets'    => $this->assets,
                 'lexer'     => $this->lexer,
-                'abstracts' => $this->abstracts,
+                'start'     => $this->start,
                 'rules'     => $this->rules,
                 'terminals' => $this->terminals,
                 'patterns'  => $this->patterns,
-                'start'     => $this->start,
+                'literals'  => $this->literals,
+                'abstracts' => $this->abstracts,
                 'collector' => $this->collector,
             ];
         }
@@ -120,7 +160,7 @@ namespace pharos\phathom
                 $this->$member = $value;
             }
 
-            $this->generate();
+            $this->generate(false);
         }
     }
 }
