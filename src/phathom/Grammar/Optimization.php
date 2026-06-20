@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace pharos\phathom\Grammar {
-    abstract class Optimization implements \pharos\phathom\Interface\Optimizer {
+    abstract class Optimization implements Interface\Optimization {
         /* 
             Compiler is sealed, unsealing for the purposes of optimization passes
             makes no sense, so instead Optimizations must accept a deconstruction

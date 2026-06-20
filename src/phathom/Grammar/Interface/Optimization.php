@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace pharos\phathom\Interface {
+namespace pharos\phathom\Grammar\Interface {
     use \pharos\phathom\Lexer;
 
     /**
@@ -12,7 +12,7 @@ namespace pharos\phathom\Interface {
      * 
      * !THIS IS AN INTERNAL INTERFACE!
      */
-    interface Optimizer {
+    interface Optimization {
         public function __construct(
             Lexer  $lexer,
             string $start,

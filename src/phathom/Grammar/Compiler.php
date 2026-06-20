@@ -88,7 +88,7 @@ namespace pharos\phathom\Grammar {
             }
 
             $this->compilePriorities($rule, $priorities, $associations);
-            $this->compileAssociations($rule, $associations);
+            $this->compileAssociations($rule, $alternatives, $associations);
         }
 
         private function compileAlternative(
@@ -162,13 +162,17 @@ namespace pharos\phathom\Grammar {
         }
 
         private function compileAssociations(
-            string $rule, array $associations) : void {
+            string $rule, array $alternatives, array $associations) : void {
             foreach ($associations as $priority => $group) {
                 if (\count($group) === 1) {
                     $aid = \array_key_first($group);
                     if ($group[$aid] !== AssociativityValue::NONE) {
-                        throw Associativity::inert(
-                            $this->file, $rule);
+                        foreach ($alternatives[$aid]->symbols as $symbol) {
+                            if ($symbol->name === $rule) {
+                                return;
+                            }
+                        }
+                        throw Associativity::inert($this->file, $rule);
                     }
                 } else {
                     $first = null;
