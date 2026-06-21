@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace pharos\phathom {
-    use \pharos\phathom\Exception\IO as IOException;
+    use \pharos\phathom\Exception;
 
     final class Lock {
         public private(set)
@@ -12,7 +12,7 @@ namespace pharos\phathom {
         public function __construct(
             public private(set) File $directory) {
             if ($this->directory->kind != FILE::DIRECTORY) {
-                throw new IOException(
+                throw new Exception\IO(
                     "attempt to create guard for non-directory ".
                     "{$this->directory} ".
                     "failed");
@@ -25,7 +25,7 @@ namespace pharos\phathom {
                 (string) $this->guard, "r+");
             if (!\is_resource($this->handle)) {
                 // @codeCoverageIgnoreStart
-                throw new IOException(
+                throw new Exception\IO(
                     "attempt to open ".
                     "{$this->directory}/.guard ".
                     "failed");
@@ -35,7 +35,7 @@ namespace pharos\phathom {
 
         public function acquire() : void {
             if ($this->locked) {
-                throw new IOException(
+                throw new Exception\IO(
                     "attempt to acquire lock for ".
                     "{$this->directory} ".
                     "that was already acquired");
@@ -44,7 +44,7 @@ namespace pharos\phathom {
             if (\flock(
                     $this->handle, \LOCK_EX) === false) {
                 // @codeCoverageIgnoreStart
-                throw new IOException(
+                throw new Exception\IO(
                     "attempt to acquire lock for ".
                     "{$this->directory} ".
                     "failed");
@@ -56,7 +56,7 @@ namespace pharos\phathom {
 
         public function release() : void {
             if (!$this->locked) {
-                throw new IOException(
+                throw new Exception\IO(
                     "attempt to release lock for ".
                     "{$this->directory} ".
                     "that isn't currently acquired");
@@ -64,7 +64,7 @@ namespace pharos\phathom {
 
             if (\flock($this->handle, \LOCK_UN) === false) {
                 // @codeCoverageIgnoreStart
-                throw new IOException(
+                throw new Exception\IO(
                     "attempt to release lock for ".
                     "{$this->directory} ".
                     "failed");

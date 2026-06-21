@@ -1,4 +1,2 @@
-lexer: "../../Basic/Basic.lexer";
-
 context: "\pharos\phathom\tests\File";
 context: "\pharos\phathom\tests\File";

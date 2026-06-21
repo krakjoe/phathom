@@ -2,7 +2,7 @@
 
 namespace pharos\phathom 
 {
-    use \pharos\phathom\Exception\IO as IOException;
+    use \pharos\phathom\Exception;
 
     final class File implements Interface\Buffer
     {
@@ -24,7 +24,7 @@ namespace pharos\phathom
                 $this->buffer = @\file_get_contents($this->path);
 
                 if ($this->buffer === false) {
-                    throw new IOException(
+                    throw new Exception\IO(
                         "{$this->path} cannot be read");
                 }
                 // @codeCoverageIgnoreEnd
@@ -56,7 +56,7 @@ namespace pharos\phathom
             $realpath = \realpath($path);
 
             if ($realpath === false) {
-                throw new IOException(
+                throw new Exception\IO(
                     "{$path} cannot be found on the local filesystem");
             }
 
@@ -97,13 +97,13 @@ namespace pharos\phathom
 
         public function put(string $relative, string $contents) : self {
             if ($this->kind != FILE::DIRECTORY) {
-                throw new IOException(
+                throw new Exception\IO(
                     "{$this->path} is not a directory");
             }
 
             if (!$this->writable()) {
                 // @codeCoverageIgnoreStart
-                throw new IOException(
+                throw new Exception\IO(
                     "{$this->path} is not writable");
                 // @codeCoverageIgnoreEnd
             }
@@ -116,7 +116,7 @@ namespace pharos\phathom
 
             if (\file_put_contents($path, $contents) === false) {
                 // @codeCoverageIgnoreStart
-                throw new IOException(
+                throw new Exception\IO(
                     "cannot write {$path}, write failed");
                 // @codeCoverageIgnoreEnd
             }

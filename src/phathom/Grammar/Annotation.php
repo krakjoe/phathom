@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace pharos\phathom\Grammar {
-    use \pharos\phathom\Exception\Annotation as AnnotationException;
+    use \pharos\phathom\Exception;
 
     final class Annotation {
         public static function factory(
@@ -12,7 +12,7 @@ namespace pharos\phathom\Grammar {
                 }
             }
 
-            throw AnnotationException::unknown($value, $annotations);
+            throw Exception\Annotation::unknown($value, $annotations);
         }
     }
 }

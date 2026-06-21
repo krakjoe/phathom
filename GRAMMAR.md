@@ -1,7 +1,6 @@
-
 # Grammar Files
 
-Grammar files drive phathom's Earley parsing engine. A grammar file contains:
+Grammar files drive phathom's parsing engines. A grammar file contains:
 
   - **directives** — instructions for the grammar parser and compiler
   - **rules**      — definitions of semantic structure with optional actions
@@ -15,13 +14,26 @@ Form: `directive: "string" [, "string"];`
 
 | Directive   | Explanation                                                                          | Required | Repeatable |
 |-------------|--------------------------------------------------------------------------------------|----------|------------|
+| `engine`    | FQCN of an implementation of `\pharos\phathom\Grammar\Interface\Engine`              |    no    |     no     |
 | `start`     | Name of the starting rule                                                            |    no    |     no     |
-| `context`   | Fully-qualified class name of a descendant of `\pharos\phathom\Context`              |    no    |     no     |
-| `token`     | Fully-qualified class name of a descendant of `\pharos\phathom\Token`                |    no    |     no     |
+| `context`   | FQCN of a descendant of `\pharos\phathom\Context`                                    |    no    |     no     |
+| `token`     | FQCN of a descendant of `\pharos\phathom\Token`                                      |    no    |     no     |
 | `lexer`     | Path, relative to the current grammar file, of a lexer `.ini`                        |    no    |     yes    |
 | `include`   | Path, relative to the current grammar file, of another grammar file                  |    no    |     yes    |
-| `optimizer` | Fully-qualified class name of a descendant of `\pharos\phathom\Grammar\Optimization` |    no    |     yes    |
+| `optimizer` | FQCN of a descendant of `\pharos\phathom\Grammar\Optimization`                       |    no    |     yes    |
 | `collector` | Name of garbage collection policy                                                    |    no    |     no     |
+
+### `engine`
+
+FQCN of an implementation of `\pharos\phathom\Grammar\Interface\Engine`.
+
+```
+engine: "\pharos\phathom\GLR\Engine";
+```
+
+**The default `\pharos\phathom\GLR\Engine` will be used when no `engine` directive is present**
+
+*See: [ENGINES.md](ENGINES.md) for details*
 
 ### `start`
 
@@ -89,7 +101,11 @@ FQCN of a descendant of `pharos\phathom\Grammar\Optimization`; the engine will i
 optimizer: "\my\app\optimization";
 ```
 
-**`\pharos\phathom\Earley\Optimize\Lexer` is used by default**
+**`\pharos\phathom\Grammar\Optimize\Lexer` is used by default**
+
+Available Optimizations (not loaded by default):
+
+  - `\pharos\phathom\Grammar\Optimize\Literals`
 
 *See: [OPTIMIZATION.md](OPTIMIZATION.md) for details*
 

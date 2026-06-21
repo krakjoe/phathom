@@ -26,7 +26,7 @@ namespace my\app {
                 return false;
             }
 
-            /* do things with deconstructed Grammar,
+            /* do things with deconstructed Grammar, or Engine::$automaton
                 for details see the abstract,
                 for example see src/phathom/Earley/Optimize/Lexer.php */
 
@@ -45,11 +45,11 @@ optimizer: "\my\app\Optimization";
 
 ## Optimizers
 
-### `\pharos\phathom\Earley\Optimize\Lexer`
+### `\pharos\phathom\Grammar\Optimize\Lexer`
 
 Loaded: `yes`
 
-This pass warms the lexer pattern cache, see the [implementation](src/phathom/Earley/Optimize/Lexer.php) for more details.
+This pass warms the lexer pattern cache, see the [implementation](src/phathom/GLR/Optimize/Lexer.php) for more details.
 
 ### `\pharos\phathom\Grammar\Optimize\Literals`
 

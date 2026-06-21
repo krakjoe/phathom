@@ -61,6 +61,15 @@ namespace pharos\phathom\Exception {
                 $directive->location['position']));
         }
 
+        public static function interface(string $kind, string $required, Token $directive) : Directive {
+            return new self(\sprintf(
+                "%s must implement %s, %s does not ".
+                "at %s:%d",
+                $kind, $required, (string) $directive,
+                $directive->location['path'],
+                $directive->location['position']));
+        }
+
         public static function include(Token $directive, array $duplicate) : Directive {
             return new self(\sprintf(
                 "include for %s at %s:%d, ".

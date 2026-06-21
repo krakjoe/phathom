@@ -1,0 +1,4 @@
+engine: "\pharos\phathom\Earley\Engine",
+        "\pharos\phathom\Earley\Engine";
+
+unit: </[a-z]+/>;

@@ -17,7 +17,7 @@ The assets directory must contain a file named `.guard`.
 A class derived from `\pharos\phathom\Token` (or a user provided abstract, set with the `token` directive) is generated with constant integer identifiers for
 all named token types in the lexer configuration.
 
-*This allows the Earley engine to reference Tokens by integer identifier rather than strings, and exposes the Token in Context, such that the programmer can see location information and token type*
+*This allows the engine to reference Tokens by integer identifier rather than strings, and exposes the Token in Context, such that the programmer can see location information and token type*
 
 ## Context
 

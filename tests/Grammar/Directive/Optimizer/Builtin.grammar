@@ -1,1 +1,1 @@
-optimizer: "\pharos\phathom\Earley\Optimize\Lexer";
+optimizer: "\pharos\phathom\Grammar\Optimize\Lexer";

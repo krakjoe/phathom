@@ -2,16 +2,14 @@
 
 namespace pharos\phathom
 {
-    use \pharos\phathom\Exception\Lexer      as LexerException;
-    use \pharos\phathom\Exception\Regex      as RegexException;
-    use \pharos\phathom\Exception\Unexpected as UnexpectedException;
+    use \pharos\phathom\Exception;
 
     final class Lexer
     {
         private const string PATTERN = '@';
     
         public private(set) array $config     = [];
-        private string|false      $skipping   = false;
+        private array|false       $skipping   = false;
         private array             $consuming  = [];
         private array             $constants  = [];
         private array             $patterns   = [];
@@ -22,7 +20,7 @@ namespace pharos\phathom
                     $file->contents, true);
 
             if ($config === false || !\count($config)) {
-                throw LexerException::noconfig($file);
+                throw Exception\Lexer::noconfig($file);
             }
 
             foreach ($config as $name => &$token) {
@@ -57,30 +55,30 @@ namespace pharos\phathom
         private function verify(File $file, string $name, array $config) : void {
             if (!$config['added']) {
                 if (isset($this->config[$name])) {
-                    throw LexerException::redefine(
+                    throw Exception\Lexer::redefine(
                         $file, $name, $config, $this->config[$name]);
                 }
 
                 if (!\preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $name)) {
-                    throw LexerException::noident($file, $name);
+                    throw Exception\Lexer::noident($file, $name);
                 }
             }
 
             if (!isset($config['pattern'])) {
-                throw LexerException::nopattern($file, $name);
+                throw Exception\Lexer::nopattern($file, $name);
             }
 
             $delimiter =
                 $config['pattern'][0];
             switch ($delimiter) {
                 case "\\":
-                    throw RegexException::illegal(
+                    throw Exception\Regex::illegal(
                         $file, $name, $config, "backslash");
 
                 default:
                     if (\ctype_alnum($delimiter) ||
                         \ctype_space($delimiter)) {
-                        throw RegexException::illegal(
+                        throw Exception\Regex::illegal(
                             $file, $name, $config,
                                 \ctype_alnum($delimiter) ?
                                     "alphanumeric" :
@@ -93,7 +91,7 @@ namespace pharos\phathom
             if (\strrpos(
                     $config['pattern'],
                     $expected, 1) === false) {
-                throw RegexException::improper(
+                throw Exception\Regex::improper(
                     $file, $name, $config, $delimiter, $expected);
             }
 
@@ -104,13 +102,13 @@ namespace pharos\phathom
             if ($result === false) {
                 $error =
                     \error_get_last();
-                throw RegexException::compile(
+                throw Exception\Regex::compile(
                     $file, $name, $config,
                     \preg_replace(
                         '/^[a-z_]+\(\): /i', '',
                         $error['message']));
             } else if ($result >= 1) {
-                throw LexerException::nocontent(
+                throw Exception\Lexer::nocontent(
                     $file, $name, $config);
             }
         }
@@ -144,21 +142,21 @@ namespace pharos\phathom
             ];
         }
 
-        private function wrap(array $patterns, ?string $flags = null): string|false {
-            if (!$patterns) {
+        private function wrap(array|false $patterns, ?string $flags = null): string|false {
+            if ($patterns === false) {
                 return false;
             }
 
             return \sprintf(
                 '/\G(?:%s)%s/',
                 \implode('|',
-                    $patterns), $flags);
+                    \array_filter(
+                        $patterns,
+                        fn($k) => $k !== Lexer::PATTERN,
+                        \ARRAY_FILTER_USE_KEY)), $flags);
         }
 
         public function compile(): void {
-            $skipping  = [];
-            $consuming = [];
-            $constants = [];
             $iterator  = 1;
 
             foreach ($this->config as $name => &$config) {
@@ -173,17 +171,22 @@ namespace pharos\phathom
                 $config['literal'] = $literal;
 
                 if (isset($config['skip']) && $config['skip']) {
-                    $skipping[] = $inner;
+                    if ($this->skipping === false) {
+                        $this->skipping = [];
+                    }
+
+                    $this->skipping[$config['const']] = $inner;
                 } else {
-                    $consuming[$config['const']] = $inner;
-                    $constants[$config['const']] = $name;
+                    $this->consuming[$config['const']] = $inner;
                 }
+
+                $this->constants[$config['const']] = $name;
             }
 
-            $this->skipping  =
-                $this->wrap($skipping, '+');
-            $this->consuming = $consuming;
-            $this->constants = $constants;
+            if ($this->skipping !== false) {
+                $this->skipping[Lexer::PATTERN] =
+                    $this->wrap($this->skipping, '+');
+            }
         }
 
         private function pattern(array $expected) : string {
@@ -231,14 +234,20 @@ namespace pharos\phathom
 
             if ($this->skipping !== false) {
                 $skipped = @\preg_match(
-                    $this->skipping,
+                    $this->skipping[Lexer::PATTERN],
                     $input->contents, $matches,
                     0, $position);
 
                 if ($skipped === false) {
                     // @codeCoverageIgnoreStart
-                    throw RegexException::skipping(
-                        $input, $position);
+                    throw Exception\Regex::skipping(
+                        $input, $position,
+                        \array_values(
+                            \array_intersect_key(
+                                $this->constants, \array_filter(
+                                    $this->skipping,
+                                    fn($k) => $k !== Lexer::PATTERN,
+                                    \ARRAY_FILTER_USE_KEY))));
                     // @codeCoverageIgnoreEnd
                 }
 
@@ -260,8 +269,11 @@ namespace pharos\phathom
 
             if ($matched === false) {
                 // @codeCoverageIgnoreStart
-                throw RegexException::matching(
-                    $input, $position, '(alternation)', []);
+                throw Exception\Regex::matching(
+                    $input, $position,
+                    \array_values(
+                        \array_intersect_key(
+                            $this->constants, $expected)));
                 // @codeCoverageIgnoreEnd
             }
 
@@ -284,7 +296,7 @@ namespace pharos\phathom
             }
 
             if ($type === null) {
-                throw UnexpectedException::character(
+                throw Exception\Unexpected::character(
                     $input->contents, [
                         'path'     => $input,
                         'position' => $position

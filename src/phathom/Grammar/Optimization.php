@@ -1,6 +1,8 @@
 <?php declare(strict_types=1);
 
 namespace pharos\phathom\Grammar {
+    use \pharos\phathom\Lexer;
+
     abstract class Optimization implements Interface\Optimization {
         /* 
             Grammar is sealed, unsealing for the purposes of optimization passes
@@ -9,16 +11,17 @@ namespace pharos\phathom\Grammar {
 
             We didn't use references here because spooky action at a distance is spooky.
 
-            In addition, it is convenient if a pass() can refuse to commit changes.
+            In addition, it is convenient if Optimizations are speculative (easier to write).
         */
         final public function __construct(
-            protected \pharos\phathom\Lexer  $lexer,
-            protected                 string $start,
-            protected                 array  $rules,
-            protected                 array  $terminals,
-            protected                 array  $patterns,
-            protected                 array  $literals,
-            protected                 array  $symbols
+            protected Interface\Engine  $engine,
+            protected Lexer             $lexer,
+            protected            string $start,
+            protected            array  $rules,
+            protected            array  $terminals,
+            protected            array  $patterns,
+            protected            array  $literals,
+            protected            array  $symbols
         ) {}
 
         /*

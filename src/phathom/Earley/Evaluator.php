@@ -2,10 +2,9 @@
 
 namespace pharos\phathom\Earley {
     use \pharos\phathom\Context;
+    use \pharos\phathom\Exception;
+    use \pharos\phathom\Grammar\Frame;
     use \pharos\phathom\Grammar\Quantifier;
-
-    use \pharos\phathom\Exception\Ambiguity as AmbiguityException;
-    use \pharos\phathom\Exception\Execute   as ExecuteException;
 
     final class Evaluator {
         private string      $start;
@@ -69,7 +68,7 @@ namespace pharos\phathom\Earley {
 
             if ($prioritized === false) {
                 if (\count($backs) > 1) {
-                    throw AmbiguityException::range(
+                    throw Exception\Ambiguity::range(
                         $this->context,
                         $selected->rule,
                         $tokens,
@@ -114,15 +113,46 @@ namespace pharos\phathom\Earley {
             return $back->child->alternative->priority;
         }
 
-        private function execute(Item $item) : mixed {
+        private function setup() : array {
             $select = $this->select(...);
-            $apply  = $this->apply(...);
-            $stack  = [Frame::select($item)];
-            $heap   = [];
+
+            return [
+                function(mixed $item, array $tokens) use ($select) : array {
+                    $limit   = \count($item->alternative->symbols);
+                    $partial = \array_fill(0, $limit, null);
+                    $slots   = [];
+                    $nodes   = [];
+
+                    $cursor = $item;
+                    for ($pos = $limit - 1; $pos >= 0; $pos--) {
+                        $back = $select($cursor->backs, $tokens);
+                        if ($back->token !== null) {
+                            $partial[$pos] = $tokens[$back->token];
+                        } else {
+                            $slots[] = $pos;
+                            $nodes[] = $back->child;
+                        }
+                        $cursor = $back->prev;
+                    }
+
+                    return [$partial, $slots, $nodes];
+                },
+                $this->apply(...),
+            ];
+        }
+
+        private function execute(Item $item) : mixed {
+            [
+                $children,
+                $apply
+            ] = $this->setup();
+
+            $stack = [Frame::select($item)];
+            $heap  = [];
 
             while (($frame = \array_pop($stack))) {
                 $frame(
-                    $select,
+                    $children,
                     $apply,
                     $stack,
                     $heap,
@@ -151,7 +181,7 @@ namespace pharos\phathom\Earley {
                     $alt         = $nalt;
                     $prioritized = $nalt->priority;
                 } elseif ($prioritized === false) {
-                    throw AmbiguityException::range(
+                    throw Exception\Ambiguity::range(
                         $this->context,
                         $this->start,
                         $this->tokens,
@@ -168,7 +198,7 @@ namespace pharos\phathom\Earley {
             }
 
             if ($item === null) {
-                throw ExecuteException::nomatch(
+                throw Exception\Execute::nomatch(
                     $this->context,
                     $this->start,
                     $this->tokens);

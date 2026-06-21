@@ -2,8 +2,7 @@
 
 namespace pharos\phathom\Grammar {
     use \pharos\phathom\File;
-
-    use \pharos\phathom\Exception\Directive;
+    use \pharos\phathom\Exception;
 
     final class Parser {
         const array reserve = [
@@ -26,8 +25,9 @@ namespace pharos\phathom\Grammar {
                 'start'      => false,
                 'collector'  => false,
                 'optimizer'  => [
-                    '\pharos\phathom\Earley\Optimize\Lexer' => false,
+                    '\pharos\phathom\Grammar\Optimize\Lexer' => false,
                 ],
+                'engine'     => false,
             ],
             private             array   $rules = [],
         ) {
@@ -43,7 +43,7 @@ namespace pharos\phathom\Grammar {
 
         private static function reserved(Token $ident) : string {
             if (\in_array((string) $ident, self::reserve)) {
-                throw Directive::reserved(
+                throw Exception\Directive::reserved(
                         $ident, self::reserve);
             }
             return (string) $ident;
@@ -51,7 +51,7 @@ namespace pharos\phathom\Grammar {
 
         private function start(Token $directive) : void {
             if ($this->directives['start'] !== false) {
-                throw Directive::declared(
+                throw Exception\Directive::declared(
                     'start',
                     $directive,
                     $this->directives['start']);
@@ -65,7 +65,7 @@ namespace pharos\phathom\Grammar {
                     ->relative((string) $directive);
 
             if (isset($this->included[$file->path])) {
-                throw Directive::include(
+                throw Exception\Directive::include(
                     $directive,
                     $this->included[
                         $file->path
@@ -86,7 +86,7 @@ namespace pharos\phathom\Grammar {
 
         private function abstract(string $kind, Token $directive) : void {            
             if ($this->directives[$kind] !== false) {
-                throw Directive::abstract(
+                throw Exception\Directive::abstract(
                     $kind,
                     $directive,
                     $this->directives[$kind]);
@@ -95,7 +95,7 @@ namespace pharos\phathom\Grammar {
             $abstract = (string) $directive;
 
             if (!\class_exists($abstract)) {
-                throw Directive::autoload(
+                throw Exception\Directive::autoload(
                     $kind, $directive);
             }
 
@@ -107,26 +107,55 @@ namespace pharos\phathom\Grammar {
                 'token'   => '\pharos\phathom\Token',
                 'context' => '\pharos\phathom\Context'
             }, $parents)) {
-                throw Directive::parent(
+                throw Exception\Directive::parent(
                     $kind, $parent, $directive);
             }
 
             $this->directives[$kind] = $directive;
         }
 
-        public function optimizer(Token $directive) : void {
+        private function engine(Token $directive) : void {
+            if ($this->directives['engine'] !== false) {
+                throw Exception\Directive::declared(
+                    'engine',
+                    $directive,
+                    $this->directives['engine']);
+            }
+
+            $class = (string) $directive;
+
+            if (!\class_exists($class)) {
+                throw Exception\Directive::autoload(
+                    'engine', $directive);
+            }
+
+            $interfaces = \array_map(function(string $iface) : string {
+                return "\\$iface";
+            }, \class_implements($class));
+
+            if (!\in_array('\pharos\phathom\Grammar\Interface\Engine', $interfaces)) {
+                throw Exception\Directive::interface(
+                    'engine',
+                    '\pharos\phathom\Grammar\Interface\Engine',
+                    $directive);
+            }
+
+            $this->directives['engine'] = $directive;
+        }
+
+        private function optimizer(Token $directive) : void {
             $interface = (string) $directive;
 
             if (\array_key_exists(
                     $interface,
                     $this->directives['optimizer'])) {
-                throw Directive::optimizer(
+                throw Exception\Directive::optimizer(
                     $directive,
                     $this->directives['optimizer'][$interface]);
             }
 
             if (!\class_exists($interface)) {
-                throw Directive::autoload(
+                throw Exception\Directive::autoload(
                     'optimizer', $directive);
             }
 
@@ -135,7 +164,7 @@ namespace pharos\phathom\Grammar {
             }, \class_parents($interface));
 
             if (!\in_array('\pharos\phathom\Grammar\Optimization', $parents)) {
-                throw Directive::parent(
+                throw Exception\Directive::parent(
                     'optimizer',
                     '\pharos\phathom\Grammar\Optimization',
                     $directive);
@@ -146,7 +175,7 @@ namespace pharos\phathom\Grammar {
 
         private function collector(Token $directive) : void {
             if ($this->directives['collector'] !== false) {
-                throw Directive::declared(
+                throw Exception\Directive::declared(
                     'collector',
                     $directive,
                     $this->directives['collector']);
@@ -154,7 +183,7 @@ namespace pharos\phathom\Grammar {
 
             if (Collector::from(
                     (string) $directive) == Collector::UNKNOWN) {
-                throw Directive::collector(
+                throw Exception\Directive::collector(
                     $directive,
                     Collector::policies);
             }
@@ -288,9 +317,9 @@ namespace pharos\phathom\Grammar {
                                             ->realpath(
                                                 (string) $directive);
                                     if ($path === false) {
-                                        throw Directive::missing($directive);
+                                        throw Exception\Directive::missing($directive);
                                     } else if (isset($this->directives['lexer'][$path])) {
-                                        throw Directive::lexer(
+                                        throw Exception\Directive::lexer(
                                             $directive,
                                             $this->directives['lexer'][$path]);
                                     }
@@ -309,6 +338,10 @@ namespace pharos\phathom\Grammar {
                                     $this->start($directive);
                                 break;
 
+                                case 'engine':
+                                    $this->engine($directive);
+                                break;
+
                                 case 'optimizer':
                                     $this->optimizer($directive);
                                 break;
@@ -318,7 +351,7 @@ namespace pharos\phathom\Grammar {
                                 break;
 
                                 default:
-                                    throw Directive::unknown(
+                                    throw Exception\Directive::unknown(
                                         $ident, self::reserve);
                             }
                         } while ($peek()->type === Token::COMMA && $consume());

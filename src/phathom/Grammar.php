@@ -3,6 +3,7 @@
 namespace pharos\phathom
 {   
     use \pharos\phathom\Grammar\Collector;
+    use \pharos\phathom\Grammar\Interface\Engine;
 
     final class Grammar
     {
@@ -28,6 +29,7 @@ namespace pharos\phathom
         public private(set) array     $literals   = [];   /* optionally compiled const int Token:: => Token */
         /* compiled Collector policy */
         public private(set) Collector $collector  = Collector::DEFAULT;
+        public private(set) Engine    $engine;
 
         public function __construct(
             public private(set)  File   $file,
@@ -66,15 +68,23 @@ namespace pharos\phathom
                 $this->patterns,
                 $this->abstracts,
                 $this->collector,
+                $engine,
                 $optimizations,
             ] = $compiler->compile();
 
-            $this->optimize($optimizations, true);
+            $this->engine = new $engine($this);
+
+            $this->optimize(
+                \array_merge(
+                    $this->engine
+                        ->optimizations,
+                    $optimizations), true);
         }
 
         private function optimize(array $optimizations, bool $generate) : void {
             $optimizer =
                 new Grammar\Optimizer(
+                    $this->engine,
                     $this->lexer,
                     $this->start,
                     $this->rules,
@@ -106,6 +116,8 @@ namespace pharos\phathom
         private function generate(array|false $optimizations) : void {
             $generator = new Grammar\Generator(
                 $this->assets,
+                \get_class(
+                    $this->engine),
                 $this->abstracts,
                 $this->lexer,
                 $this->rules);
@@ -125,11 +137,9 @@ namespace pharos\phathom
             $collections =
                 Collector::apply($this->collector);
             try {
-                $chart =
-                new Earley\Chart($this, $input);
                 $result =
-                    new Earley\Evaluator(
-                        $chart, $context)();
+                    ($this->engine)(
+                        $context, $input);
             } finally {
                 Collector::restore($collections);
             }
@@ -152,6 +162,7 @@ namespace pharos\phathom
                 'literals'  => $this->literals,
                 'abstracts' => $this->abstracts,
                 'collector' => $this->collector,
+                'engine'    => $this->engine,
             ];
         }
 

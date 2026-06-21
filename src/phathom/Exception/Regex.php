@@ -41,22 +41,21 @@ namespace pharos\phathom\Exception {
         }
 
         // @codeCoverageIgnoreStart
-        public static function skipping(File|Buffer $input, int $position) : Regex {
+        public static function skipping(File|Buffer $input, int $position, array $expected) : Regex {
             return new self(\sprintf(
                 "The PCRE engine encountered an error ".
-                    "while skipping ".
+                    "while skipping %s, ".
                 "PCRE reported: %s at %s:%d",
+                self::explain($expected),
                 \preg_last_error_msg(), $input, $position));
         }
 
-        public static function matching(File|Buffer $input, int $position, string $name, array $token) : Regex {
+        public static function matching(File|Buffer $input, int $position, array $expected) : Regex {
             return new self(\sprintf(
                 "The PCRE engine encountered an error ".
-                    "while matching ".
-                "Token %s defined in %s, ".
+                    "while matching %s, ".
                 "PCRE reported: %s at %s:%d",
-                self::describe($name, $token),
-                $token['file'],
+                self::explain($expected),
                 \preg_last_error_msg(), $input, $position));
         }
         // @codeCoverageIgnoreEnd

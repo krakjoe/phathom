@@ -1,10 +1,11 @@
 <?php
 namespace pharos\phathom\Grammar {
     use \pharos\phathom\Lexer;
-    use \pharos\phathom\Exception\Optimizer as Exception;
-
+    use \pharos\phathom\Exception;
+    
     final class Optimizer {
         public function __construct(
+            private Interface\Engine $engine,
             private Lexer  $lexer,
             private string $start,
             private array  $rules,
@@ -18,6 +19,7 @@ namespace pharos\phathom\Grammar {
             foreach ($optimizations as $optimization => $directive) {
                 $optimizer =
                     new $optimization(
+                        $this->engine,
                         $this->lexer,
                         $this->start,
                         $this->rules,
@@ -30,7 +32,7 @@ namespace pharos\phathom\Grammar {
                     $commit =
                         $optimizer->pass($generated);
                 } catch(\Throwable $thrown) {
-                    throw Exception::threw(
+                    throw Exception\Optimizer::threw(
                         $optimization,
                         $directive,
                         $thrown);

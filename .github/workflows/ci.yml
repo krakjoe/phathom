@@ -10,6 +10,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        engine: [Earley, GLR]
+
     steps:
       - uses: actions/checkout@v4
 
@@ -25,13 +29,15 @@ jobs:
 
       - name: Run tests with coverage
         run: vendor/bin/phpunit --coverage-clover coverage.xml --coverage-text --log-junit junit.xml
+        env:
+          PHATHOM_ENGINE: '\pharos\phathom\${{ matrix.engine }}\Engine'
 
       - name: Upload PHP coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.xml
-          flags: php
+          flags: php-${{ matrix.engine }}
 
       - name: Upload PHP tests to Codecov
         uses: codecov/codecov-action@v5
@@ -39,10 +45,14 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: junit.xml
           report_type: test_results
-          flags: php
+          flags: php-${{ matrix.engine }}
 
   test-ext:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        engine: [Earley, GLR]
 
     steps:
       - uses: actions/checkout@v4
@@ -72,6 +82,7 @@ jobs:
         env:
           TEST_PHP_EXECUTABLE: php
           ZEND_DONT_UNLOAD_MODULES: 1
+          PHATHOM_ENGINE: '\pharos\phathom\${{ matrix.engine }}\Engine'
           PHPUNIT_ARGS: --log-junit ../junit-ext.xml
 
       - name: Upload C coverage to Codecov
@@ -79,7 +90,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ext/coverage.info
-          flags: ext
+          flags: ext-${{ matrix.engine }}
 
       - name: Upload C tests to Codecov
         uses: codecov/codecov-action@v5
@@ -87,4 +98,4 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: junit-ext.xml
           report_type: test_results
-          flags: ext
+          flags: ext-${{ matrix.engine }}

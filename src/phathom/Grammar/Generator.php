@@ -5,15 +5,15 @@ namespace pharos\phathom\Grammar {
     use \pharos\phathom\Grammar;
     use \pharos\phathom\Assets;
     use \pharos\phathom\Lexer;
-    use \pharos\phathom\Grammar\Quantifier;
-
     use \pharos\phathom\Exception;
-    use \pharos\phathom\Exception\IO as IOException;
-    use \pharos\phathom\Exception\Undefined;
+
+    use \pharos\phathom\Grammar\Quantifier;
+    use \pharos\phathom\Grammar\Interface\Engine;
 
     final class Generator {
         public function __construct(
             private ?Assets $assets,
+            private string  $engine,
             private array   $abstracts,
             private Lexer   $lexer,
             private array   $rules) {
@@ -26,7 +26,7 @@ namespace pharos\phathom\Grammar {
                         $self->relative(
                             "../../../assets");
                     $this->assets = new Assets($default);
-                } catch(IOException $ex) {
+                } catch(Exception\IO $ex) {
                     throw new Exception(
                         "could not find the default assets directory");
                 }
@@ -84,6 +84,7 @@ namespace pharos\phathom\Grammar {
                 "__%s__",
                 \hash('sha256',
                     \serialize([
+                        $this->engine,
                         $this->abstracts['context'],
                         $this->rules])));
             $symbol = \sprintf(
@@ -131,7 +132,7 @@ namespace pharos\phathom\Grammar {
                         (int) $next->text;
 
                     if (!isset($variables[$variable])) {
-                        throw Undefined::variable(
+                        throw Exception\Undefined::variable(
                             $alternative->file,
                             $rule, $index, $variable);
                     }

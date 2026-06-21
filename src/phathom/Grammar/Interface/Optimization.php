@@ -14,6 +14,7 @@ namespace pharos\phathom\Grammar\Interface {
      */
     interface Optimization {
         public function __construct(
+            Engine $engine,
             Lexer  $lexer,
             string $start,
             array  $rules,

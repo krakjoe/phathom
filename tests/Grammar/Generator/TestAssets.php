@@ -5,7 +5,7 @@ namespace pharos\phathom\tests\Grammar\Generator {
             $symbols = [];
             $generator =
                 new \pharos\phathom\Grammar\Generator(
-                    null, [
+                    null, '\\pharos\\phathom\\Grammar\\Interface\\Engine', [
                         'token'   => '\\pharos\\phathom\\tests\\Grammar\\Generator\\Token',
                         'context' => '\\pharos\\phathom\\tests\\Grammar\\Generator\\Context'
                     ], 

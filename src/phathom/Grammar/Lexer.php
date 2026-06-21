@@ -2,7 +2,7 @@
 
 namespace pharos\phathom\Grammar {
     use \pharos\phathom\File;
-    use \pharos\phathom\Exception\Unexpected;
+    use \pharos\phathom\Exception;
 
     final class Lexer {
         public private(set) File         $file;
@@ -204,7 +204,7 @@ namespace pharos\phathom\Grammar {
             while ($this->position < $this->length && $depth > 0) {
                 if ($this->buffer[$this->position] === '\\') {
                     if (($this->position + 1) >= $this->length) {
-                        throw Unexpected::escape($type, [
+                        throw Exception\Unexpected::escape($type, [
                             'path'     => $this->file->path,
                             'position' => $this->position
                         ], [
@@ -242,7 +242,7 @@ namespace pharos\phathom\Grammar {
             }
 
             if ($depth !== 0) {
-                throw Unexpected::unbalanced(
+                throw Exception\Unexpected::unbalanced(
                     $type,
                     $content, [
                         'path'     => $this->file->path,
@@ -254,7 +254,7 @@ namespace pharos\phathom\Grammar {
             }
 
             if (!\strlen($content)) {
-                throw Unexpected::empty(
+                throw Exception\Unexpected::empty(
                     $type, [
                         'path'     => $this->file->path,
                         'position' => $start,
@@ -307,7 +307,7 @@ namespace pharos\phathom\Grammar {
             }
 
             if (!$terminated) {
-                throw Unexpected::unterminated(
+                throw Exception\Unexpected::unterminated(
                     Token::STRING,
                     $content, [
                         'path'     => $this->file->path,
@@ -330,7 +330,7 @@ namespace pharos\phathom\Grammar {
                  $position < \strlen($content);
                  $position++) {
                 if (!\ctype_alnum($content[$position])) {
-                    throw Unexpected::annotation(
+                    throw Exception\Unexpected::annotation(
                         $content, [
                             'path' => $this->file->path,
                             'position' => $start + $position,
@@ -374,7 +374,7 @@ namespace pharos\phathom\Grammar {
 
                 return [$content, $start];
             } else {
-                throw Unexpected::character(
+                throw Exception\Unexpected::character(
                     $this->buffer, [
                         'path'     => $this->file->path,
                         'position' => $this->position
@@ -387,7 +387,7 @@ namespace pharos\phathom\Grammar {
 
             if ($tokens[0]->type !== Token::IDENT &&
                 $tokens[0]->type !== Token::EOF) {
-                throw Unexpected::initial($tokens[0]);
+                throw Exception\Unexpected::initial($tokens[0]);
             }
 
             $listing = false;
@@ -412,7 +412,7 @@ namespace pharos\phathom\Grammar {
 
                     if (!\in_array(
                             $next->type, $rules['allow'], true)) {
-                        throw Unexpected::token(
+                        throw Exception\Unexpected::token(
                             $token, $next, \array_map(function($rule) {
                                 return Token::string($rule);
                             }, $rules['allow']));

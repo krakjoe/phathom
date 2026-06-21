@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace pharos\phathom {
-    use \pharos\phathom\Exception\IO as IOException;
+    use \pharos\phathom\Exception;
 
     final class Assets {
         private Lock $lock;
@@ -21,7 +21,7 @@ namespace pharos\phathom {
                 try {
                     $result = $this->directory
                         ->relative($file);
-                } catch (IOException $ex) {
+                } catch (Exception\IO $ex) {
                     $result = $this->directory
                         ->put($file, $generate());
                 }

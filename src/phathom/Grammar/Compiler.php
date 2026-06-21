@@ -3,12 +3,9 @@
 namespace pharos\phathom\Grammar {
     use \pharos\phathom\File;
     use \pharos\phathom\Lexer;
+    use \pharos\phathom\Exception;
 
-    use \pharos\phathom\Exception\Undefined;
-    use \pharos\phathom\Exception\Priority;
-    use \pharos\phathom\Exception\Associativity;
-    use \pharos\phathom\Exception\Optimizer;
-    use \pharos\phathom\Grammar\Associativity as AssociativityValue;
+    use \pharos\phathom\Grammar\Associativity;
 
     final class Compiler {
         private string     $start     = 'unit';
@@ -20,6 +17,7 @@ namespace pharos\phathom\Grammar {
             'context' => '\pharos\phathom\Context'
         ];
         private Collector   $collector = Collector::DEFAULT;
+        private string      $engine =    \pharos\phathom\GLR\Engine::class;
         private array       $optimizations = [];
 
         public function __construct(
@@ -61,12 +59,21 @@ namespace pharos\phathom\Grammar {
                     $this->directives['optimizer'];
             }
 
+            if (($override = \getenv("PHATHOM_ENGINE"))) {
+                $this->engine =
+                    (string) $override;
+            } else if ($this->directives['engine'] !== false) {
+                $this->engine =
+                    (string)
+                        $this->directives['engine'];
+            }
+
             if (empty($this->rules)) {
-                throw Undefined::rules($this->file);
+                throw Exception\Undefined::rules($this->file);
             }
 
             if (!isset($this->rules[$this->start])) {
-                throw Undefined::start(
+                throw Exception\Undefined::start(
                     $this->file, $this->start);
             }
         }
@@ -117,7 +124,7 @@ namespace pharos\phathom\Grammar {
                 $prioritized = \count($priorities) > 0;
                 if (($prioritized  && $alternative->priority === false) ||
                     (!$prioritized && $alternative->priority !== false)) {
-                    throw Priority::inconsistent(
+                    throw Exception\Priority::inconsistent(
                         $this->file, $rule, $aid + 1);
                 }
             }
@@ -130,7 +137,7 @@ namespace pharos\phathom\Grammar {
         private function compilePriorities(
             string $rule, array $priorities, array $associations) : void {
             if (\count($priorities) === 1) {
-                throw Priority::inert($this->file, $rule);
+                throw Exception\Priority::inert($this->file, $rule);
             }
 
             $seen = [];
@@ -140,11 +147,11 @@ namespace pharos\phathom\Grammar {
                     // validate it — a consistent assoc (e.g. all [left]) is valid.
                     $group = $associations[$priority] ?? [];
                     foreach ($group as $assoc) {
-                        if ($assoc !== AssociativityValue::NONE) {
+                        if ($assoc !== Associativity::NONE) {
                             continue 2;
                         }
                     }
-                    throw Priority::ambiguous(
+                    throw Exception\Priority::ambiguous(
                         $this->file, $rule, $aid + 1);
                 }
                 $seen[$priority] = true;
@@ -156,9 +163,9 @@ namespace pharos\phathom\Grammar {
             array &$priorities, array &$associations) : void {
             $assoc = $alternative->associativity;
 
-            if ($assoc !== AssociativityValue::NONE &&
+            if ($assoc !== Associativity::NONE &&
                 $alternative->priority === false) {
-                throw Associativity::inconsistent(
+                throw Exception\Associativity::inconsistent(
                     $this->file, $rule, $aid + 1);
             }
 
@@ -172,25 +179,25 @@ namespace pharos\phathom\Grammar {
             foreach ($associations as $priority => $group) {
                 if (\count($group) === 1) {
                     $aid = \array_key_first($group);
-                    if ($group[$aid] !== AssociativityValue::NONE) {
+                    if ($group[$aid] !== Associativity::NONE) {
                         foreach ($alternatives[$aid]->symbols as $symbol) {
                             if ($symbol->name === $rule) {
                                 continue 2;
                             }
                         }
-                        throw Associativity::inert($this->file, $rule);
+                        throw Exception\Associativity::inert($this->file, $rule);
                     }
                 } else {
                     $first = null;
                     foreach ($group as $aid => $assoc) {
-                        if ($assoc === AssociativityValue::NONE) {
-                            throw Associativity::ambiguous(
+                        if ($assoc === Associativity::NONE) {
+                            throw Exception\Associativity::ambiguous(
                                 $this->file, $rule, $aid + 1, 'missing');
                         }
                         if ($first === null) {
                             $first = $assoc;
                         } elseif ($assoc !== $first) {
-                            throw Associativity::ambiguous(
+                            throw Exception\Associativity::ambiguous(
                                 $this->file, $rule, $aid + 1, 'conflict');
                         }
                     }
@@ -223,7 +230,7 @@ namespace pharos\phathom\Grammar {
 
                 default:
                     if (!$this->lexer->known($symbol->name)) {
-                        throw Undefined::symbol(
+                        throw Exception\Undefined::symbol(
                             $this->file, $rule, $symbol->name);
                     }
 
@@ -313,6 +320,7 @@ namespace pharos\phathom\Grammar {
                 $this->patterns,
                 $this->abstracts,
                 $this->collector,
+                $this->engine,
                 $this->optimizations,
             ];
         }

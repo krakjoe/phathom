@@ -1,50 +1,44 @@
 <?php declare(strict_types=1);
 
-namespace pharos\phathom\Earley\Optimize {
+namespace pharos\phathom\Earley {
+    use \pharos\phathom\Grammar;
+    use \pharos\phathom\Grammar\Interface;
     use \pharos\phathom\Grammar\Optimization;
     use \pharos\phathom\Grammar\Symbol;
-    use \pharos\phathom\Earley\Item;
 
     /*
-    * We're going to prewarm the pattern cache on lexer by telling
-    * it what it may expect at any call to scan for this grammar.
-    * This achieves:
-    *   no regex pattern allocations (in userland) during a parse
-    *   the pattern cache is serialized complete with the grammar
+    * Earley characteristic automaton — built AOT, used only to prewarm
+    * the lexer pattern cache via Grammar\Optimize\Lexer.
+    *
+    * An LR(0)-style item-set closure (predict + complete) over the grammar
+    * produces a graph of (rule, alt, dot) sets connected by terminal-labelled
+    * scan edges.  The terminal set at the dot in each node is the exact set
+    * scan() would receive at the corresponding chart position; calling
+    * lexer->expect() for each such set pre-compiles every regex the lexer
+    * will ever need.
+    *
+    * Unlike GLR\Automaton the tables are NOT needed at parse time — Earley
+    * is not table-driven.  __serialize therefore returns [] and the expected
+    * sets travel with the lexer pattern cache, not with this object.
     */
-    final class Lexer extends Optimization {
-        private const string OPTIMIZED = '@';
+    final class Automaton implements Interface\Automaton {
+        private const string RESERVE = "\$Automaton\$";
 
+        private string $start;
+        private array $rules    = [];
         private array $seen     = [];
         private array $items    = [];
         private array $nullable = [];
         private array $waiting  = [];
+        private array $expected = [];
 
-        /*
-        * In detail we are building an Earl(e)y (AOT) characteristic automaton:
-        *  (LR(0)-style item-set closure with predict+complete).
-        * Each node in the automaton is a predict+complete-closed set of 
-        *  (rule, alt, dot) triples;
-        * edges are labelled by terminal consts (scan transitions).
-        *
-        * The expected set passed to scan() at any chart position is exactly
-        * the set of terminal consts at the dot across all items in the
-        * corresponding automaton node.
-        */
-        public function pass(bool $generated) : bool {
-            if ($generated === true) {
-                /* don't take part in post-generation pass */
-                return false;
-            }
-
-            $optimized = [];
-            [
-                $optimize,
-                $queue
-            ] = $this->start();
+        public function __construct(Grammar $grammar) {
+            $visited = [];
+            $queue =
+                $this->start($grammar);
 
             while (([$node, $context] = \array_pop($queue))) {
-                if (!$this->optimize($optimized, $node)) {
+                if (!$this->visit($visited, $node)) {
                     continue;
                 }
 
@@ -78,7 +72,7 @@ namespace pharos\phathom\Earley\Optimize {
                     continue;
                 }
 
-                $optimize($expected);
+                $this->expected[] = $expected;
 
                 foreach ($this->update($node)
                             as $dotted => $items) {
@@ -93,8 +87,32 @@ namespace pharos\phathom\Earley\Optimize {
                 }
             }
 
-            /* nothing to commit */
-            return false;
+            unset($this->start);
+            unset($this->rules);
+            unset($this->seen);
+            unset($this->items);
+            unset($this->nullable);
+            unset($this->waiting);
+        }
+
+        private function start(Grammar $grammar) : array {
+            $this->start = $grammar->start;
+            $this->rules = $grammar->rules;
+
+            $initial = [];
+            foreach ($this->rules
+                        [$this->start] as $aid => $alt) {
+                $initial[] = new Item(
+                    rule:        $this->start,
+                    alt:         $aid,
+                    dot:         0,
+                    origin:      0,
+                    backs:       [],
+                    alternative: $alt);
+            }
+            return [
+                [$this->collect($initial), []]
+            ];
         }
 
         /*
@@ -125,20 +143,20 @@ namespace pharos\phathom\Earley\Optimize {
             return $update;
         }
 
-        private function optimize(array &$optimized, array $node) : bool {
-            $optimize = &$optimized;
+        private function visit(array &$visited, array $node) : bool {
+            $visit = &$visited;
             foreach ($node as $item) {
-                $optimize = &$optimize
+                $visit = &$visit
                     [$item->rule]
                     [$item->alt]
                     [$item->dot];
             }
 
-            if (isset($optimize[Lexer::OPTIMIZED])) {
+            if (isset($visit[Automaton::RESERVE])) {
                 return false;
             }
 
-            return ($optimize[Lexer::OPTIMIZED] = true);
+            return ($visit[Automaton::RESERVE] = true);
         }
 
         private function collect(array $seeds, array $context = []) : array {
@@ -241,24 +259,22 @@ namespace pharos\phathom\Earley\Optimize {
             }
         }
 
-        private function start() : array {
-            $initial = [];
-            foreach ($this->rules
-                        [$this->start] as $aid => $alt) {
-                $initial[] = new Item(
-                    rule:        $this->start,
-                    alt:         $aid,
-                    dot:         0,
-                    origin:      0,
-                    backs:       [],
-                    alternative: $alt);
-            }
-            return [
-                $this->lexer->expect(...),
-                [
-                    [$this->collect($initial), []]
-                ]
-            ];
+        public function expected() : array {
+            return $this->expected;
+        }
+
+        public function __serialize() : array {
+            /* expected will be serial on lexer */
+            return [];
+        }
+
+        public function __unserialize(array $array) : void {
+            unset($this->start);
+            unset($this->rules);
+            unset($this->seen);
+            unset($this->items);
+            unset($this->nullable);
+            unset($this->waiting);
         }
     }
 }

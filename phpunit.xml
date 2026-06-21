@@ -58,6 +58,10 @@
       <file>tests/Grammar/Directive/Optimizer/Test.php</file>
     </testsuite>
 
+    <testsuite name="Grammar\Directive\Engine">
+      <file>tests/Grammar/Directive/Engine/Test.php</file>
+    </testsuite>
+
     <testsuite name="Grammar\Directive\Collector">
       <file>tests/Grammar/Directive/Collector/Test.php</file>
     </testsuite>
