@@ -22,7 +22,7 @@ namespace pharos\phathom\GLR {
             public private(set) int         $alt,
             public private(set) Alternative $alternative,
             public private(set) array       $children,  /* (int|Node)[] */
-            int                         $pos,       /* thread->pos at reduction = end */
+            int                             $pos,       /* thread->pos at reduction = end */
         ) {
             $this->end   = $pos;
             $this->start = $this->computeStart($children, $pos);

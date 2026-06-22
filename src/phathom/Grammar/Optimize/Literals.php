@@ -1,4 +1,5 @@
-<?php
+<?php declare(strict_types=1);
+
 namespace pharos\phathom\Grammar\Optimize {
     final class Literals extends \pharos\phathom\Grammar\Optimization {
         public function pass(bool $generated) : bool {

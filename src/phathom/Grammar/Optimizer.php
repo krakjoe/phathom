@@ -1,4 +1,5 @@
-<?php
+<?php declare(strict_types=1);
+
 namespace pharos\phathom\Grammar {
     use \pharos\phathom\Lexer;
     use \pharos\phathom\Exception;

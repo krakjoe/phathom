@@ -94,6 +94,8 @@ namespace pharos\phathom\Earley {
                     return $back;
                 }
             }
+
+            /* unreachable by construction */
         }
 
         private function resolve(Item $a, Item $b) : Item {
