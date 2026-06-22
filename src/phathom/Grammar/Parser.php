@@ -6,7 +6,7 @@ namespace pharos\phathom\Grammar {
 
     final class Parser {
         const array reserve = [
-            'token', 'context', 'lexer', 'include', 'start', 'optimizer', 'collector',
+            'token', 'context', 'lexer', 'include', 'start', 'optimizer', 'collector', 'engine',
         ];
 
         const array annotations = [

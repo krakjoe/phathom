@@ -6,6 +6,10 @@ Grammar files drive phathom's parsing engines. A grammar file contains:
   - **rules**      — definitions of semantic structure with optional actions
   - **comments**   — lines beginning with `#` are ignored
 
+Their form has been chosen to align with the taste of a PHP developer; (E)BNF does not fall off the fingers naturally.
+
+`phathom` grammar being a mix of JSON and PHP syntax, with a terminating `;`, separating `:` and `|` ought to feel more natural to us.
+
 ---
 
 ## Directives
