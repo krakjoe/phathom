@@ -1,62 +1,113 @@
 # Optimizations
 
-Optimization passes allow for special preparation of the grammar at compile time.
+`Grammar` implements a double pass (speculative) optimization pipeline:
 
-Flow:
-`Grammar\Optimizer` unseals the `Grammar` by passing a deconstruction to a concrete implementation of `\pharos\phathom\Grammar\Optimization`, it then invokes the `pass` method. Where `pass` returned `true`, requests a reconstruction from the implementation.
+  - `pre-generation`
+  - `post-generation`
 
-Construction of the `Optimization` and reconstruction of `Grammar` after a committed pass are implemented by the abstract, and cannot be altered.
+*Note: `Optimizer` runs as part of the compilation pipeline, before any oppportunity to serialize.*
 
-The concrete implementation only requires `pass` to be implemented:
+## pre-generation
 
-```
-namespace my\app {
-    final class Optimization extends \pharos\phathom\Grammar\Optimization {
-        /* 
-           executed precisely once with generated === true
-            (pre-generation, $this->symbols are abstract)
-           executed precisely once with generated === false
-            (post-generation, $this->symbols are concrete)
+At this stage of `Grammar` compilation, no `Assets` have been written, which means two things:
 
-           $this->symbols are never committed
+  - concrete symbols are not yet available
+  - changes committed by the pass are reflected in `Assets`
+
+## post-generation
+
+At this stage of `Grammar` compilation, `Assets` have been written, which means two things:
+
+  - concrete symbols are available
+  - changes committed by the pass are not reflected in `Assets`
+
+### Flow
+
+`Grammar\Optimizer` passes a deconstructed `Grammar` to (a new instance of) each registered `\pharos\phathom\Grammar\Optimization` at both stages.
+
+The implementation of `Optimization::pass` may refuse to take part in a stage, or may apply changes speculatively - ie, it can return `false`.
+
+Changes committed are threaded through `Grammar\Optimizer` to `Grammar`.
+
+### Abstract
+
+Follows is an abstract documentation of the public API for `Optimization`:
+
+```php
+namespace pharos\phathom\Grammar {
+    use \pharos\phathom\Lexer;
+
+    abstract class Optimization {
+        /**
+         * @var Interface\Engine $engine (never committed)
+         **/
+        protected Interface\Engine  $engine;
+
+        /**
+         * @var Lexer $lexer (never committed)
+         **/ 
+        protected Lexer             $lexer;
+
+        /**
+         * @var string $start string (committed)
+         **/
+        protected            string $start;
+
+        /**
+         * @var array $rules [string(name) => array(Alternative)]  (committed)
+        **/
+        protected            array  $rules;
+
+        /**
+         * @var array $terminals [string(name) => int(Token:: const)] (committed)
+         **/
+        protected            array  $terminals;
+
+        /**
+         * @var array $patterns  [string(pattern) => int(Token:: const)] (committed)
+         **/
+        protected            array  $patterns;
+
+        /**
+         * @var array $literals [int(Token:: const) => Token] (committed)
+         **/
+        protected            array  $literals;
+
+        /**
+         * Contains abstract types pre-generations, concrete post-generation
+         * @var array $symbols [token => string, context => string] (never committed)
+         **/
+        protected            array  $symbols;
+
+        /**
+        * @param generated false === pre-generation, true == post-generation
+        * @return bool true to commit, false to refuse
         */
-        public function pass(bool $generated) : bool {
-            if ($generated) {
-                /* omit to take part in post-generation pass */
-                return false;
-            }
-
-            /* do things with deconstructed Grammar, or Engine::$automaton
-                for details see the abstract,
-                for example see src/phathom/Earley/Optimize/Lexer.php */
-
-            /* return true to commit changes */
-            return true;
-        }
+        abstract public function pass(bool $generated) : bool;
     }
 }
 ```
 
-in grammar:
+## Grammar
 
 ```
 optimizer: "\my\app\Optimization";
 ```
 
-## Optimizers
+### Optimizers
 
-### `\pharos\phathom\Grammar\Optimize\Lexer`
+#### `\pharos\phathom\Grammar\Optimize\Lexer`
 
 Loaded: `yes`
 
 This pass warms the lexer pattern cache, see the [implementation](src/phathom/GLR/Optimize/Lexer.php) for more details.
 
-### `\pharos\phathom\Grammar\Optimize\Literals`
+#### `\pharos\phathom\Grammar\Optimize\Literals`
 
 Loaded: `no`
 
 This pass populates a literal token cache with any token whose pattern defines a literal string - ie, doesn't use any special regex characters.
 
-#### Notes
+##### Notes
 
-Optimization passes run at the tail of the compilation pipeline, such that optimizations are persisted with the serial form of Grammar.
+`Optimization` passes run at the tail of the compilation pipeline, such that optimizations are persisted with the serial form of `Grammar`.
