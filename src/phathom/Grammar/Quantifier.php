@@ -9,19 +9,19 @@ namespace pharos\phathom\Grammar {
 
         public static function from(?string $quantifier) : Quantifier {
             return match($quantifier) {
-                '?'     => QUANTIFIER::OPTIONAL,
-                '+'     => QUANTIFIER::PLUS,
-                '*'     => QUANTIFIER::STAR,
-                default => QUANTIFIER::NONE
+                '?'     => Quantifier::OPTIONAL,
+                '+'     => Quantifier::PLUS,
+                '*'     => Quantifier::STAR,
+                default => Quantifier::NONE
             };
         }
 
         public static function name(Quantifier $quantifier) : string {
             return match($quantifier) {
-                QUANTIFIER::NONE     => 'none',
-                QUANTIFIER::STAR     => 'star',
-                QUANTIFIER::PLUS     => 'plus',
-                QUANTIFIER::OPTIONAL => 'opt',
+                Quantifier::NONE     => 'none',
+                Quantifier::STAR     => 'star',
+                Quantifier::PLUS     => 'plus',
+                Quantifier::OPTIONAL => 'opt',
             };
         }
     }

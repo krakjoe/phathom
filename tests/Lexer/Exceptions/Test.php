@@ -116,7 +116,7 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectExceptionMessageMatches(
             "/Token definition for 0DISALLOWED ".
                 "uses an illegal name, ".
-                    "\(ie, it it not compatible with PHP variable names\) ".
+                    "\(ie, it is not compatible with PHP variable names\) ".
                 "names must match \[a-zA-Z_\]\[a-zA-Z0-9_\]\* ".
             "in .*Noident.lexer/");
 

@@ -11,7 +11,7 @@ namespace pharos\phathom {
 
         public function __construct(
             public private(set) File $directory) {
-            if ($this->directory->kind != FILE::DIRECTORY) {
+            if ($this->directory->kind != File::DIRECTORY) {
                 throw new Exception\IO(
                     "attempt to create guard for non-directory ".
                     "{$this->directory} ".

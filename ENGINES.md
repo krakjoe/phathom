@@ -27,9 +27,9 @@ A 64kb sample will parse in an average of ~1000ms (1s).
 
 ### Earley (C)
 
-The C implementation agressively optimizes memory usage and relieves the pressure of GC and Zend MM with respect to the Grammar during parsing - note that user action code may induce it's own pressure which the extension cannot avoid.
+The C implementation aggressively optimizes memory usage and relieves the pressure of GC and Zend MM with respect to the Grammar during parsing - note that user action code may induce it's own pressure which the extension cannot avoid.
 
-A 64kb sample willl parse in an average of ~400ms.
+A 64kb sample will parse in an average of ~400ms.
 
 ### GLR (PHP)
 
