@@ -1,0 +1,19 @@
+{
+    "string": "string",
+    "integer": 42,
+    "float": 3.13,
+    "array": [
+        1, 2, 3,
+    ],
+    "empty": [],
+    "trailing": {
+        "content": "comma",
+    },
+    "entry": [
+        "a",
+        "b",
+        0: "c",
+        "d",
+    ],
+    "uninitialized": {},
+}

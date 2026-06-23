@@ -1,0 +1,57 @@
+##########################################################################
+# Standard-ish json grammar
+##########################################################################
+#      ! Note: this is part of a demo, not a perfect json parser !       #
+##########################################################################
+lexer: "json.lexer";
+
+# ---- values -------------------------------------------------------------
+
+value:
+      string
+    | integer
+    | float
+    | array
+    | object
+;
+
+# ---- scalars ------------------------------------------------------------
+
+string:  (STRING)  { return \json_decode((string) $1); } ;
+integer: (INTEGER) { return (int) (string) $1; } ;
+float:   (FLOAT)   { return (float) (string) $1; } ;
+
+# ---- array --------------------------------------------------------------
+
+array:
+      (LBRACKET entries RBRACKET) { return $this->array($2); }
+    | (LBRACKET RBRACKET)         { return []; }
+;
+
+entries:
+      (entry)                  { return [$1]; }
+    | (entries COMMA entry)    { $1[] = $3; return $1; }
+    | (entries COMMA)          { return $1; }
+;
+
+entry:
+      (INTEGER COLON value) { return [(int)(string) $1, $3]; }
+    | (value)               { return [null, $1]; }
+;
+
+# ---- object -------------------------------------------------------------
+
+object:
+      (LBRACE members RBRACE) { return $2; }
+    | (LBRACE RBRACE)         { return []; }
+;
+
+members:
+      (member)                   { return $1; }
+    | (members COMMA member)     { return \array_merge($1, $3); }
+    | (members COMMA)            { return $1; }
+;
+
+member:
+      (STRING COLON value)       { return [\json_decode((string) $1) => $3]; }
+;

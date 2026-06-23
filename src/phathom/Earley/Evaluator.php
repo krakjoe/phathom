@@ -95,7 +95,7 @@ namespace pharos\phathom\Earley {
                 }
             }
 
-            /* unreachable by construction */
+            /* unreachable by construction, any code here is dead */
         }
 
         private function resolve(Item $a, Item $b) : Item {

@@ -1,0 +1,28 @@
+{
+    "name": "phathom/jstrong",
+    "description": "Typed JSON with self-references — phathom grammar demo",
+    "autoload": {
+        "psr-4": {
+            "pharos\\phathom\\demo\\jstrong\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "pharos\\phathom\\demo\\jstrong\\tests\\": "tests/"
+        }
+    },
+    "require": {
+        "pharos/phathom": "dev-main"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.1"
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": false
+}

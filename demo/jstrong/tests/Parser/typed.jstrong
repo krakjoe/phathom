@@ -1,0 +1,7 @@
+{
+    "object": new \pharos\phathom\demo\jstrong\tests\Config {
+        "property": \pharos\phathom\demo\jstrong\tests\Config {
+            "property": "value",
+        },
+    },
+}

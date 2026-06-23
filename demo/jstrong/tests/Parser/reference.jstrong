@@ -1,0 +1,13 @@
+{
+    "indexed": [42, {"pi": 3.14}],
+    "object": new \pharos\phathom\demo\jstrong\tests\Config {
+        "property": \pharos\phathom\demo\jstrong\tests\Config {
+            "property": "value",
+        },
+    },
+    "reference":                 $this->object,
+    "reference-property":        $this->object->property,
+    "reference-property-nested": $this->object->property->property,
+    "reference-index":           $this->indexed[0],
+    "reference-index-nested":    $this->indexed[1][pi]
+}

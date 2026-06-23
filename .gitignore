@@ -24,3 +24,7 @@ core.*
 # Scratchpads
 /*.php
 /*.diff
+
+# Demo assets
+demo/**/assets
+demo/**/vendor

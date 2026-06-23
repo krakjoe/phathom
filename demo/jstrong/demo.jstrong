@@ -1,0 +1,8 @@
+{
+    "object": new MyObject {
+        "Property": "MyPropertyValue",
+    },
+    "reference": {
+        "MyReference": $this->object,
+    },
+}

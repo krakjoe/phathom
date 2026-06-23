@@ -1,0 +1,60 @@
+###########################################################################
+# Augment standard-ish JSON with inline PHP objects and self-references
+###########################################################################
+include: "json.grammar";
+
+# ---- parser entry point -------------------------------------------------
+
+unit:
+    (object) {
+        return $this->parse($1);
+    }
+;
+
+# ---- value extension ----------------------------------------------------
+
+value:
+      typed
+    | reference
+;
+
+# ---- typed object -------------------------------------------------------
+
+typed:
+    (NEW NAMESPACED object) {
+        return $this->typed((string) $2, $3);
+    }
+    | (NAMESPACED object) {
+        return $this->typed((string) $1, $2);
+    }
+;
+
+# ---- self-referece ------------------------------------------------------
+
+reference:
+    (THIS chain) {
+        return $this->reference($2);
+    }
+;
+
+chain:
+      (ARROW IDENT) {
+        return [['prop', (string) $2]];
+    }
+    | (chain ARROW IDENT) {
+        $1[] = ['prop', (string) $3];
+        return $1;
+    }
+    | (chain LBRACKET INTEGER RBRACKET) {
+        $1[] = ['idx', (int)(string) $3];
+        return $1;
+    }
+    | (chain LBRACKET IDENT RBRACKET) {
+        $1[] = ['idx', (string) $3];
+        return $1;
+    }
+;
+
+# --- lexer/parser --------------------------------------------------------
+lexer:   "jstrong.lexer";
+context: "\pharos\phathom\demo\jstrong\Parser";

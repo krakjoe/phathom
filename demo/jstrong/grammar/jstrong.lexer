@@ -1,0 +1,14 @@
+[NEW]
+pattern = /new/
+
+[NAMESPACED]
+pattern = /[\\A-Za-z_][A-Za-z0-9_\\]*/
+
+[THIS]
+pattern = /\x24this/
+
+[ARROW]
+pattern = /->/
+
+[IDENT]
+pattern = /[A-Za-z_][A-Za-z0-9_]*/

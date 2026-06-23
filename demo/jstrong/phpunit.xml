@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<phpunit colors="true"
+         bootstrap="vendor/autoload.php"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         displayDetailsOnTestsThatTriggerDeprecations="true"
+         cacheDirectory=".phpunit.cache">
+  <testsuites>
+    <testsuite name="Parser">
+      <file>tests/Parser/Test.php</file>
+    </testsuite>
+  </testsuites>
+  <source>
+    <include>
+      <directory suffix=".php">src</directory>
+    </include>
+    <exclude/>
+  </source>
+</phpunit>
