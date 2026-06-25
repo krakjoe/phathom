@@ -374,6 +374,8 @@ In the general parser framework case, grammar files are monolithic (the zend lan
 
 For phathom, grammar files are modular - they may merge additional lexer configuration and *append alternatives for rules defined in other grammar*.
 
+Grammar may be authored as modular and composed (which would be recommended practice for large grammar), however even a complete grammar - with `token` and `context` declarations (potentially not intended to be modular), may be included *by a third party* and treated as modular because `context` and `token` support (LSP) substitution.
+
 ---
 
 ## Formal Reference
