@@ -1,0 +1,59 @@
+{
+    "name": "phathom",
+    "displayName": "phathom",
+    "description": "Syntax highlighting for phathom .grammar and .lexer files",
+    "version": "0.1.0",
+    "publisher": "krakjoe",
+    "license": "MIT",
+    "engines": {
+        "vscode": "^1.60.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/krakjoe/phathom"
+    },
+    "contributes": {
+        "languages": [
+            {
+                "id": "phathom",
+                "aliases": [
+                    "phathom Grammar",
+                    "phathom"
+                ],
+                "extensions": [
+                    ".grammar"
+                ],
+                "configuration": "./grammar.json"
+            },
+            {
+                "id": "phathom-lexer",
+                "aliases": [
+                    "phathom Lexer",
+                    "phathom-lexer"
+                ],
+                "extensions": [
+                    ".lexer"
+                ],
+                "configuration": "./lexer.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "phathom",
+                "scopeName": "source.phathom",
+                "path": "./syntaxes/grammar.json",
+                "embeddedLanguages": {
+                    "source.php": "php"
+                }
+            },
+            {
+                "language": "phathom-lexer",
+                "scopeName": "source.phathom-lexer",
+                "path": "./syntaxes/lexer.json"
+            }
+        ]
+    }
+}

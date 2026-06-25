@@ -1,0 +1,199 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "phathom Grammar",
+    "scopeName": "source.phathom",
+    "fileTypes": ["grammar"],
+    "patterns": [
+        { "include": "#comment" },
+        { "include": "#directive" },
+        { "include": "#rule" }
+    ],
+    "repository": {
+
+        "comment": {
+            "name": "comment.line.hash.phathom",
+            "match": "#.*$"
+        },
+
+        "directive": {
+            "comment": "Directives: engine, start, context, token, lexer, include, optimizer, collector",
+            "name": "meta.directive.phathom",
+            "begin": "^[ \\t]*(engine|start|context|token|lexer|include|optimizer|collector)(?=[ \\t]*:)",
+            "end": ";",
+            "beginCaptures": {
+                "1": { "name": "keyword.control.directive.phathom" }
+            },
+            "endCaptures": {
+                "0": { "name": "punctuation.terminator.directive.phathom" }
+            },
+            "patterns": [
+                { "include": "#comment" },
+                { "include": "#colon" },
+                { "include": "#string" },
+                { "include": "#comma" }
+            ]
+        },
+
+        "rule": {
+            "comment": "Rule definitions: name: alt | alt ; — excludes directive keywords via negative lookahead",
+            "name": "meta.rule.phathom",
+            "begin": "^[ \\t]*(?!(?:engine|start|context|token|lexer|include|optimizer|collector)[ \\t]*:)([a-z_][a-zA-Z0-9_]*)[ \\t]*(:)",
+            "end": ";",
+            "beginCaptures": {
+                "1": { "name": "entity.name.function.rule.phathom" },
+                "2": { "name": "punctuation.separator.rule.phathom" }
+            },
+            "endCaptures": {
+                "0": { "name": "punctuation.terminator.rule.phathom" }
+            },
+            "patterns": [
+                { "include": "#comment" },
+                { "include": "#action" },
+                { "include": "#annotation" },
+                { "include": "#inline_pattern" },
+                { "include": "#string" },
+                { "include": "#terminal" },
+                { "include": "#nonterminal" },
+                { "include": "#quantifier" },
+                { "include": "#pipe" },
+                { "include": "#parens" }
+            ]
+        },
+
+        "action": {
+            "comment": "PHP action block { ... } — embeds PHP grammar; phathom vars $1..$n and $this highlighted first",
+            "name": "meta.embedded.action.phathom",
+            "begin": "\\{",
+            "end": "\\}",
+            "beginCaptures": {
+                "0": { "name": "punctuation.section.action.begin.phathom" }
+            },
+            "endCaptures": {
+                "0": { "name": "punctuation.section.action.end.phathom" }
+            },
+            "patterns": [
+                { "include": "#action_vars" },
+                { "include": "source.php" }
+            ]
+        },
+
+        "action_vars": {
+            "comment": "Positional args $1..$n and $this — phathom-specific, highlighted before PHP grammar fires",
+            "name": "variable.language.action.phathom",
+            "match": "\\$(?:this|[1-9][0-9]*)"
+        },
+
+        "annotation": {
+            "comment": "Annotations: [left], [right], [none], [n]",
+            "patterns": [
+                {
+                    "comment": "Known named annotations",
+                    "name": "storage.modifier.annotation.phathom",
+                    "match": "\\[(left|right|none)\\]",
+                    "captures": {
+                        "1": { "name": "keyword.other.annotation.phathom" }
+                    }
+                },
+                {
+                    "comment": "Numeric priority annotation [n]",
+                    "name": "storage.modifier.annotation.priority.phathom",
+                    "match": "\\[([0-9]+)\\]",
+                    "captures": {
+                        "1": { "name": "constant.numeric.priority.phathom" }
+                    }
+                },
+                {
+                    "comment": "Other annotations",
+                    "name": "storage.modifier.annotation.phathom",
+                    "match": "\\[([a-zA-Z][a-zA-Z0-9]*)\\]",
+                    "captures": {
+                        "1": { "name": "keyword.other.annotation.phathom" }
+                    }
+                }
+            ]
+        },
+
+        "inline_pattern": {
+            "comment": "Inline PCRE regex < /pattern/ > — grammar forbids > in content so begin/end is clean",
+            "name": "string.regexp.inline.phathom",
+            "begin": "<",
+            "end": ">",
+            "beginCaptures": {
+                "0": { "name": "punctuation.definition.regexp.begin.phathom" }
+            },
+            "endCaptures": {
+                "0": { "name": "punctuation.definition.regexp.end.phathom" }
+            }
+        },
+
+        "string": {
+            "comment": "phathom strings (spec: quote [^quote]+ quote)",
+            "patterns": [
+                {
+                    "name": "string.quoted.double.phathom",
+                    "begin": "\"",
+                    "end": "\"",
+                    "beginCaptures": {
+                        "0": { "name": "punctuation.definition.string.begin.phathom" }
+                    },
+                    "endCaptures": {
+                        "0": { "name": "punctuation.definition.string.end.phathom" }
+                    }
+                },
+                {
+                    "name": "string.quoted.single.phathom",
+                    "begin": "'",
+                    "end": "'",
+                    "beginCaptures": {
+                        "0": { "name": "punctuation.definition.string.begin.phathom" }
+                    },
+                    "endCaptures": {
+                        "0": { "name": "punctuation.definition.string.end.phathom" }
+                    }
+                }
+            ]
+        },
+
+        "terminal": {
+            "comment": "Lexer token names — all-uppercase identifiers from .lexer sections",
+            "name": "support.type.token.phathom",
+            "match": "\\b[A-Z][A-Z0-9_]*\\b"
+        },
+
+        "nonterminal": {
+            "comment": "Rule references — lowercase-starting identifiers, excluding directive keywords",
+            "name": "entity.name.type.nonterminal.phathom",
+            "match": "\\b(?!(?:engine|start|context|token|lexer|include|optimizer|collector|garbage)[ \\t]*:)[a-z_][a-zA-Z0-9_]*\\b"
+        },
+
+        "quantifier": {
+            "comment": "Repetition quantifiers after symbols: + * ?",
+            "name": "keyword.operator.quantifier.phathom",
+            "match": "[+*?]"
+        },
+
+        "pipe": {
+            "comment": "Alternative separator",
+            "name": "keyword.operator.alternative.phathom",
+            "match": "\\|"
+        },
+
+        "parens": {
+            "comment": "Expression grouping ( )",
+            "patterns": [
+                { "name": "punctuation.section.expression.begin.phathom", "match": "\\(" },
+                { "name": "punctuation.section.expression.end.phathom",   "match": "\\)" }
+            ]
+        },
+
+        "colon": {
+            "name": "punctuation.separator.colon.phathom",
+            "match": ":"
+        },
+
+        "comma": {
+            "name": "punctuation.separator.comma.phathom",
+            "match": ","
+        }
+    }
+}
