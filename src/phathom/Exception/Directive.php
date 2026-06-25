@@ -18,11 +18,13 @@ namespace pharos\phathom\Exception {
                 "%s cannot be declared ".
                     "as \"%s\" at %s:%d, ".
                 "%s already declared ".
-                    "as \"%s\" at %s:%d",
+                    "as \"%s\" at %s:%d, " .
+                "and \"%s\" does not extend \"%s\"",
                 $kind, (string) $directive,
                     $directive->location['path'], $directive->location['position'],
                 $kind, (string) $declared,
                     $declared->location['path'], $declared->location['position'],
+                (string) $directive, (string) $declared,
             ));
         }
 

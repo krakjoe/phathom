@@ -86,11 +86,13 @@ namespace pharos\phathom\Grammar {
 
         private function abstract(string $kind, Token $directive) : void {            
             if ($this->directives[$kind] !== false) {
-                throw Exception\Directive::abstract(
-                    $kind,
-                    $directive,
-                    $this->directives[$kind]);
-            }
+                $parent =
+                    (string)
+                        $this->directives[$kind];
+            } else $parent = match($kind) {
+                'token'   => '\pharos\phathom\Token',
+                'context' => '\pharos\phathom\Context',
+            };
 
             $abstract = (string) $directive;
 
@@ -103,12 +105,15 @@ namespace pharos\phathom\Grammar {
                 return "\\$parent";
             }, \class_parents($abstract));
 
-            if (!\in_array($parent = match($kind) {
-                'token'   => '\pharos\phathom\Token',
-                'context' => '\pharos\phathom\Context'
-            }, $parents)) {
-                throw Exception\Directive::parent(
-                    $kind, $parent, $directive);
+            if (!\in_array($parent, $parents)) {
+                if ($this->directives[$kind] !== false) {
+                    throw Exception\Directive::abstract(
+                        $kind, $directive,
+                        $this->directives[$kind]);
+                } else {
+                    throw Exception\Directive::parent(
+                        $kind, $parent, $directive);
+                }
             }
 
             $this->directives[$kind] = $directive;

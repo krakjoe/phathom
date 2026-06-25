@@ -1,0 +1,4 @@
+context: "\pharos\phathom\tests\Grammar\Directive\Context\First";
+context: "\pharos\phathom\tests\Grammar\Directive\Context\Second";
+
+unit: </[a-z]+/>;

@@ -3,14 +3,9 @@
 ###########################################################################
 include: "json.grammar";
 
-# ---- parser entry point -------------------------------------------------
+context: "\pharos\phathom\demo\jstrong\Strong";
 
-unit:
-    (object) {
-        return $this->parse($1);
-    }
-;
-
+lexer:   "jstrong.lexer";
 # ---- value extension ----------------------------------------------------
 
 value:
@@ -54,7 +49,3 @@ chain:
         return $1;
     }
 ;
-
-# --- lexer/parser --------------------------------------------------------
-lexer:   "jstrong.lexer";
-context: "\pharos\phathom\demo\jstrong\Parser";

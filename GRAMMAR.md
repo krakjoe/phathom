@@ -16,16 +16,16 @@ Their form has been chosen to align with the taste of a PHP developer; (E)BNF do
 
 Form: `directive: "string" [, "string"];`
 
-| Directive   | Explanation                                                                          | Required | Repeatable |
-|-------------|--------------------------------------------------------------------------------------|----------|------------|
-| `engine`    | FQCN of an implementation of `\pharos\phathom\Grammar\Interface\Engine`              |    no    |     no     |
-| `start`     | Name of the starting rule                                                            |    no    |     no     |
-| `context`   | FQCN of a descendant of `\pharos\phathom\Context`                                    |    no    |     no     |
-| `token`     | FQCN of a descendant of `\pharos\phathom\Token`                                      |    no    |     no     |
-| `lexer`     | Path, relative to the current grammar file, of a lexer `.ini`                        |    no    |     yes    |
-| `include`   | Path, relative to the current grammar file, of another grammar file                  |    no    |     yes    |
-| `optimizer` | FQCN of a descendant of `\pharos\phathom\Grammar\Optimization`                       |    no    |     yes    |
-| `collector` | Name of garbage collection policy                                                    |    no    |     no     |
+| Directive   | Explanation                                                                          | Required | Repeatable | Substitutable |
+|-------------|--------------------------------------------------------------------------------------|----------|------------|---------------|
+| `engine`    | FQCN of an implementation of `\pharos\phathom\Grammar\Interface\Engine`              |    no    |     no     |      no       |
+| `start`     | Name of the starting rule                                                            |    no    |     no     |      n/a      |
+| `context`   | FQCN of a descendant of `\pharos\phathom\Context`                                    |    no    |     yes    |      yes      |
+| `token`     | FQCN of a descendant of `\pharos\phathom\Token`                                      |    no    |     yes    |      yes      |
+| `lexer`     | Path, relative to the current grammar file, of a lexer `.ini`                        |    no    |     yes    |      n/a      |
+| `include`   | Path, relative to the current grammar file, of another grammar file                  |    no    |     yes    |      n/a      |
+| `optimizer` | FQCN of a descendant of `\pharos\phathom\Grammar\Optimization`                       |    no    |     yes    |      n/a      |
+| `collector` | Name of garbage collection policy                                                    |    no    |     no     |      no       |
 
 ### `engine`
 
@@ -51,17 +51,19 @@ start: "unit";
 
 ### `context`
 
-FQCN of a descendant of `pharos\phathom\Context` for scope of action code; the engine will derive a concrete `Context` from this class.
+FQCN of a descendant of `pharos\phathom\Context` (or the previous declaration) for scope of action code; the engine will derive a concrete `Context` from this class.
 
 ```
 context: "\MyApp\Context";
 ```
 
+*`context` supports (LSP) substitution via repitition.*
+
 **The class `pharos\phathom\Context` will be used when no `context` directive is present**
 
 ### `token`
 
-FQCN of an abstract descendant of `\pharos\phathom\Token` that represents parsed values; the engine will derive a `Token` from this class.
+FQCN of an abstract descendant of `\pharos\phathom\Token` (or the previous declaration) that represents parsed values; the engine will derive a `Token` from this class.
 
 ```
 token: "\MyApp\Token";
@@ -69,13 +71,15 @@ token: "\MyApp\Token";
 
 *The class must extend the abstract `\pharos\phathom\Token`, without implementing `string`, and so remain abstract.*
 
+*`token` supports (LSP) substitution via repitition.*
+
 **The abstract `pharos\phathom\Token` will be used when no `token` directive is present**
 
 ### `include`
 
 Merges another grammar into the current grammar.
 
-Included files support all directives (although `token` and `context` are not repeatable).
+Included files support all directives.
 
 ```
 include: "expressions.grammar";

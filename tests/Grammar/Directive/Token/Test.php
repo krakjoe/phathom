@@ -72,4 +72,14 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         new \pharos\phathom\Grammar($file);
     }
+
+    public function testSubstitute() : void {
+        $file = $this->file
+            ->relative("Substitute.grammar");
+        $grammar =
+            new \pharos\phathom\Grammar($file);
+        $token = new $grammar->token(0, []);
+        $this->assertInstanceOf(First::class,  $token);
+        $this->assertInstanceOf(Second::class, $token);
+    }
 }

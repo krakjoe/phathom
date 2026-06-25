@@ -1,0 +1,4 @@
+token: "\pharos\phathom\tests\Grammar\Directive\Token\First";
+token: "\pharos\phathom\tests\Grammar\Directive\Token\Second";
+
+unit: </[a-z]+/>;

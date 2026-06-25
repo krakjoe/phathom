@@ -2,30 +2,12 @@
 
 namespace pharos\phathom\demo\jstrong;
 
-class Parser extends \pharos\phathom\Context
+class Strong extends \pharos\phathom\demo\jstrong\JSON
 {
     protected function parse(array|object $root): array|object
     {
         $this->patch($root, $root);
         return $root;
-    }
-
-    protected function array(array $entries): array
-    {
-        $result = [];
-        $next   = 0;
-        foreach ($entries as [$idx, $val]) {
-            if ($idx === null) {
-                while (array_key_exists($next, $result)) {
-                    $next++;
-                }
-                $result[$next++] = $val;
-            } else {
-                $result[$idx] = $val;
-                $next = $idx + 1;
-            }
-        }
-        return $result;
     }
 
     protected function typed(string $type, array $props): object
