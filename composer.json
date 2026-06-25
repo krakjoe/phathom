@@ -1,6 +1,6 @@
 {
     "name": "pharos/phathom",
-    "description": "An Earley parsing engine for phathoming things",
+    "description": "A multi-engine parser framework, for phathoming texty things.",
     "autoload": {
         "psr-4": {
             "pharos\\phathom\\": "src/phathom/"
