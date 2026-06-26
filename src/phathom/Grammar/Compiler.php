@@ -8,9 +8,6 @@ namespace pharos\phathom\Grammar {
     use \pharos\phathom\Grammar\Associativity;
 
     final class Compiler {
-        private string      $engine = \pharos\phathom\GLR\Engine::class;
-        private array       $optimizations = [];
-
         private string     $start     = 'unit';
         private array      $terminals = [];
         private array      $patterns  = [];
@@ -19,8 +16,9 @@ namespace pharos\phathom\Grammar {
             'token'   => '\pharos\phathom\Token',
             'context' => '\pharos\phathom\Context'
         ];
-        private array       $imports   = [];
         private Collector   $collector = Collector::DEFAULT;
+        private string      $engine =    \pharos\phathom\GLR\Engine::class;
+        private array       $optimizations = [];
 
         public function __construct(
             private File   $file,
@@ -69,9 +67,6 @@ namespace pharos\phathom\Grammar {
                     (string)
                         $this->directives['engine'];
             }
-
-            $this->imports = \array_keys(
-                $this->directives['use']);
 
             if (empty($this->rules)) {
                 throw Exception\Undefined::rules($this->file);
@@ -319,15 +314,14 @@ namespace pharos\phathom\Grammar {
             $this->compileConstants();
 
             return [
-                $this->engine,
-                $this->optimizations,
                 $this->start,
                 $this->rules,
                 $this->terminals,
                 $this->patterns,
                 $this->abstracts,
-                $this->imports,
                 $this->collector,
+                $this->engine,
+                $this->optimizations,
             ];
         }
     }

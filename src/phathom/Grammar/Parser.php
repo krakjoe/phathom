@@ -7,7 +7,6 @@ namespace pharos\phathom\Grammar {
     final class Parser {
         const array reserve = [
             'token', 'context', 'lexer', 'include', 'start', 'optimizer', 'collector', 'engine',
-            'use',
         ];
 
         const array annotations = [
@@ -29,7 +28,6 @@ namespace pharos\phathom\Grammar {
                     '\pharos\phathom\Grammar\Optimize\Lexer' => false,
                 ],
                 'engine'     => false,
-                'use'        => [],
             ],
             private             array   $rules = [],
         ) {
@@ -196,19 +194,6 @@ namespace pharos\phathom\Grammar {
             }
 
             $this->directives['collector'] = $directive;
-        }
-
-        private function import(Token $directive) : void {
-            if (\array_key_exists(
-                    (string) $directive,
-                    $this->directives['use'])) {
-                throw Exception\Directive::import(
-                    $directive,
-                    $this->directives['use']
-                        [(string) $directive]);
-            }
-
-            $this->directives['use'][(string) $directive] = $directive;
         }
 
         /**

@@ -18,7 +18,6 @@ namespace pharos\phathom
             'token'   =>     '\pharos\phathom\Token',
             'context' =>     '\pharos\phathom\Context',
         ];
-        private              array    $imports = [];      /* declared imports                             */
 
         /* compiled members */
         public private(set) string    $context;           /* compiled concrete Context implementation       */
@@ -63,15 +62,14 @@ namespace pharos\phathom
                     $this->directives,
                     $this->parsed);
             [
-                $engine,
-                $optimizations,
                 $this->start,
                 $this->rules,
                 $this->terminals,
                 $this->patterns,
                 $this->abstracts,
-                $this->imports,
                 $this->collector,
+                $engine,
+                $optimizations,
             ] = $compiler->compile();
 
             $this->engine = new $engine($this);
@@ -121,7 +119,6 @@ namespace pharos\phathom
                 \get_class(
                     $this->engine),
                 $this->abstracts,
-                $this->imports,
                 $this->lexer,
                 $this->rules);
             [

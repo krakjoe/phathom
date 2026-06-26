@@ -15,7 +15,6 @@ namespace pharos\phathom\Grammar {
             private ?Assets $assets,
             private string  $engine,
             private array   $abstracts,
-            private array   $imports,
             private Lexer   $lexer,
             private array   $rules) {
 
@@ -45,11 +44,6 @@ namespace pharos\phathom\Grammar {
                     \sprintf(
                         "use %s as Token;", $token),
                 ];
-
-                foreach ($this->imports as $import) {
-                    $result[] = \sprintf(
-                        "use %s;", $import);
-                }
 
                 $result[] =
                     \sprintf(
@@ -164,11 +158,6 @@ namespace pharos\phathom\Grammar {
                     "<?php",
                     \sprintf("namespace pharos\phathom\assets\Token;"),
                 ];
-
-                foreach ($this->imports as $import) {
-                    $result[] = \sprintf(
-                        "use %s;", $import);
-                }
 
                 $result[] =
                     \sprintf(
