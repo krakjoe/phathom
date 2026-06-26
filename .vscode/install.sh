@@ -2,13 +2,23 @@
 ROOT=$(dirname "${BASH_SOURCE[0]}")
 VSIX="${ROOT}/phathom.vsix"
 
-# Bailout if installed
-code --list-extensions 2>/dev/null | \
-    grep -q "^krakjoe.phathom$"
+# Get the local version from package.json
+LOCAL_VERSION=$(node -p "require('${ROOT}/phathom/package.json').version" 2>/dev/null)
 
-if [ $? -eq 0 ];
+# Get the installed version (format: krakjoe.phathom@x.y.z)
+INSTALLED_VERSION=$(code --list-extensions --show-versions 2>/dev/null | \
+    grep "^krakjoe.phathom@" | \
+    sed 's/^krakjoe\.phathom@//')
+
+# Bailout if installed version is >= local version
+if [ -n "${INSTALLED_VERSION}" ] && [ -n "${LOCAL_VERSION}" ];
 then
-    exit 0
+    if ! printf '%s\n%s\n' "${INSTALLED_VERSION}" "${LOCAL_VERSION}" | \
+        sort -V -C 2>/dev/null || \
+            [ "${INSTALLED_VERSION}" = "${LOCAL_VERSION}" ];
+    then
+        exit 0
+    fi
 fi
 
 # Build extension

@@ -13,7 +13,7 @@
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/krakjoe/phathom"
+        "url": "https://github.com/krakjoe/phathom-vscode"
     },
     "contributes": {
         "languages": [
