@@ -36,6 +36,10 @@ Real files are the only thing maximally compatible with opcache (and so JIT), an
 
 The internal state of a Grammar object must be serializable in order for them to be cached between requests, written to disk, or otherwise sent over the wire complete.
 
-#### Caution
+## Pruning
 
-Assets are automatically regenerated when content changes, but at regeneration time we cannot know which file we are replacing, and since it has a different file name, deployments that regularly change their grammars will need to prune their assets directory.
+**Assets are automatically regenerated when content changes, but at regeneration time we cannot know which file we are replacing, and since it has a different file name, deployments that regularly change their grammars will need to prune their assets directory.**
+
+`phathom` does not provide an out-of-the-box solution for asset pruning, because no such thing can exist and be generally fit for purpose; `phathom` storage model includes serialization, and the storage models for serialized data are innumerable. It also includes physical file generation, these physical files may be generated in your source code tree; We are not releasing a tool that can potentially wipe out your source code if you make a mistake.
+
+*The solution to pruning depends entirely on your deployment model and requires either careful bespoke implementation, or no implementation at all; we provide the latter!*
