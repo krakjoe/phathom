@@ -1,6 +1,6 @@
 # Assets
 
-**An assets directory is required at runtime, by default the asset directory at the root of the source tree will be used**
+**An assets directory is required at runtime, by default the asset directory at the root of the `phathom` source tree will be used**
 
 During compilation of grammar files, 2 PHP classes are generated (Token, Context); These files must be written to the physical disk - so they may be cached and optimized as normal code - which means at some point you need to execute with write permission.
 
@@ -36,10 +36,10 @@ Real files are the only thing maximally compatible with opcache (and so JIT), an
 
 The internal state of a Grammar object must be serializable in order for them to be cached between requests, written to disk, or otherwise sent over the wire complete.
 
-## Pruning
+### Pruning
 
-**Assets are automatically regenerated when content changes, but at regeneration time we cannot know which file we are replacing, and since it has a different file name, deployments that regularly change their grammars will need to prune their assets directory.**
+**Assets are automatically regenerated when content changes, but at regeneration time we cannot know which file we are replacing, and since it has a different file name, deployments that regularly change their grammars live will need to prune their assets directory.**
 
-`phathom` does not provide an out-of-the-box solution for asset pruning, because no such thing can exist and be generally fit for purpose; `phathom` storage model includes serialization, and the storage models for serialized data are innumerable. It also includes physical file generation, these physical files may be generated in your source code tree; We are not releasing a tool that can potentially wipe out your source code if you make a mistake.
+`phathom` does not provide an out-of-the-box solution for asset pruning, because no such thing can exist and be generally fit for purpose; `phathom` storage model includes serialization, and the storage models for serialized data are innumerable. It also includes physical file generation, these physical files may be generated in your source code tree (and probably should be for versioning); We are not releasing a tool that can potentially wipe out your source code if you make a mistake.
 
 *The solution to pruning depends entirely on your deployment model and requires either careful bespoke implementation, or no implementation at all; we provide the latter!*

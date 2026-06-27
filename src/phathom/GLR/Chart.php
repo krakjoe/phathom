@@ -234,7 +234,7 @@ namespace pharos\phathom\GLR {
             }
 
             if ($a->alternative->associativity ===
-                    \pharos\phathom\Grammar\Associativity::LEFT) {
+                    Grammar\Associativity::LEFT) {
                 return $a->leftEnd() >= $b->leftEnd() ? $a : $b;
             }
             return $a->leftEnd() <= $b->leftEnd() ? $a : $b;

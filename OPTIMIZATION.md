@@ -1,11 +1,11 @@
 # Optimizations
 
-`Grammar` implements a double pass (speculative) optimization pipeline:
+`Grammar\Optimizer` implements a double pass (speculative) optimization pipeline:
 
   - `pre-generation`
   - `post-generation`
 
-*Note: `Optimizer` runs as part of the compilation pipeline, before any oppportunity to serialize.*
+*Note: `Grammar\Optimizer` runs as part of the compilation pipeline, before any oppportunity to serialize; this means changes made by `Optimization` instances are persistent in the serial state of `Grammar`; `Grammar\Optimizer` does not run after `__unserialize`.*
 
 ## pre-generation
 
@@ -23,7 +23,7 @@ At this stage of `Grammar` compilation, `Assets` have been written, which means 
 
 ### Flow
 
-`Grammar\Optimizer` passes a deconstructed `Grammar` to (a new instance of) each registered `\pharos\phathom\Grammar\Optimization` at both stages.
+`Grammar\Optimizer` passes a deconstructed `Grammar` to (a new instance of) each registered `Grammar\Optimization` at both stages.
 
 The implementation of `Optimization::pass` may refuse to take part in a stage, or may apply changes speculatively - ie, it can return `false`.
 
@@ -31,7 +31,7 @@ Changes committed are threaded through `Grammar\Optimizer` to `Grammar`.
 
 ### Abstract
 
-Follows is an abstract documentation of the public API for `Optimization`:
+Follows is an abstract documentation of the public API for `Grammar\Optimization`:
 
 ```php
 namespace pharos\phathom\Grammar {
@@ -108,6 +108,4 @@ Loaded: `no`
 
 This pass populates a literal token cache with any token whose pattern defines a literal string - ie, doesn't use any special regex characters.
 
-##### Notes
-
-`Optimization` passes run at the tail of the compilation pipeline, such that optimizations are persisted with the serial form of `Grammar`.
+Note that, enabling this optimization sacrifices location information for these `Token` instances; during development it is probably desirable to remain disabled for the sake of exception messages.

@@ -21,7 +21,7 @@ namespace pharos\phathom\GLR {
     * pos tracks how many tokens this thread has consumed; it advances only
     * on shift, never on reduce.
     *
-    * Threads are deduplicated in Chart::reduceAll using a trie indexed by
+    * Threads are deduplicated in Chart::reduce using a trie indexed by
     * $states to keep the forest bounded.
     */
     final class Thread {
