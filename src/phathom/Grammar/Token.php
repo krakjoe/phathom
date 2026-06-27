@@ -20,8 +20,9 @@ namespace pharos\phathom\Grammar {
 
         const int QUANTIFIER   = 10;
 
-        const int COLON        = 20;
-        const int COMMA        = 21;
+        const int APPEND       = 20;
+        const int ASSIGN       = 21;
+        const int COMMA        = 22;
 
         const int LIST_START   = 30;
         const int LIST_END     = 31;
@@ -38,7 +39,8 @@ namespace pharos\phathom\Grammar {
                 case Token::PATTERN:    return 'PATTERN';
                 case Token::STRING:     return 'STRING';
                 case Token::QUANTIFIER: return 'QUANTIFIER';
-                case Token::COLON:      return 'COLON';
+                case Token::APPEND:     return 'APPEND';
+                case Token::ASSIGN:     return 'ASSIGN';
                 case Token::COMMA:      return 'COMMA';
                 case Token::LIST_START: return 'LIST_START';
                 case Token::LIST_END:   return 'LIST_END';

@@ -46,7 +46,7 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectExceptionMessage(
             "Unexpected LIST_START, ".
             "IDENT must be followed by ".
-                "COLON, PIPE, QUANTIFIER, or END, ".
+                "APPEND, ASSIGN, PIPE, QUANTIFIER, or END, ".
             "got LIST_START");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
@@ -108,7 +108,7 @@ final class Test extends \PHPUnit\Framework\TestCase
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $this->assertEquals($lexer->tokenize(), [
             new Token(Token::IDENT,    ['path' => $file->path, 'position' => 0],  'ident'),
-            new Token(Token::COLON,    ['path' => $file->path, 'position' => 5],  null),
+            new Token(Token::APPEND,    ['path' => $file->path, 'position' => 5],  null),
             new Token(Token::LIST_START, ['path' => $file->path, 'position' => 7],  null),
             new Token(Token::IDENT,    ['path' => $file->path, 'position' => 8],  'ident'),
             new Token(Token::PATTERN,  ['path' => $file->path, 'position' => 14], 'pattern'),
@@ -125,10 +125,10 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectException(
             \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
-            "Unexpected COLON, ".
-            "COLON must be followed by ".
+            "Unexpected APPEND, ".
+            "APPEND must be followed by ".
                 "IDENT, STRING, LIST_START, or PATTERN, ".
-            "got COLON");
+            "got APPEND");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
@@ -141,10 +141,10 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectException(
             \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
-            "Unexpected COLON, ".
+            "Unexpected APPEND, ".
             "IDENT must be followed by ".
                 "IDENT, PATTERN, QUANTIFIER, or LIST_END, ".
-            "got COLON");
+            "got APPEND");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();
@@ -158,7 +158,7 @@ final class Test extends \PHPUnit\Framework\TestCase
             \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected EOF, ".
-            "COLON must be followed by ".
+            "APPEND must be followed by ".
                 "IDENT, STRING, LIST_START, or PATTERN, ".
             "got EOF");
 
@@ -205,7 +205,7 @@ final class Test extends \PHPUnit\Framework\TestCase
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $this->assertEquals($lexer->tokenize(), [
             new Token(Token::IDENT,      ['path' => $file->path, 'position' => 0],  'ident'),
-            new Token(Token::COLON,      ['path' => $file->path, 'position' => 5],  null),
+            new Token(Token::APPEND,      ['path' => $file->path, 'position' => 5],  null),
             new Token(Token::IDENT,      ['path' => $file->path, 'position' => 8],  'ident'),
             new Token(Token::PIPE,       ['path' => $file->path, 'position' => 14], null),
             new Token(Token::PATTERN,    ['path' => $file->path, 'position' => 24], 'pattern'),
@@ -229,7 +229,7 @@ final class Test extends \PHPUnit\Framework\TestCase
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $this->assertEquals($lexer->tokenize(), [
             new Token(Token::IDENT,   ['path' => $file->path, 'position' => 0],  'ident'),
-            new Token(Token::COLON,   ['path' => $file->path, 'position' => 5],  null),
+            new Token(Token::APPEND,   ['path' => $file->path, 'position' => 5],  null),
             new Token(Token::PATTERN, ['path' => $file->path, 'position' => 7],  'pattern'),
             new Token(Token::END,     ['path' => $file->path, 'position' => 16], null),
             new Token(Token::EOF,     ['path' => $file->path, 'position' => 17], null),
@@ -259,7 +259,7 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectExceptionMessage(
             "Unexpected ACTION, ".
             "IDENT must be followed by ".
-                "COLON, PIPE, QUANTIFIER, or END, ".
+                "APPEND, ASSIGN, PIPE, QUANTIFIER, or END, ".
             "got ACTION");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
@@ -273,7 +273,7 @@ final class Test extends \PHPUnit\Framework\TestCase
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $this->assertEquals($lexer->tokenize(), [
             new Token(Token::IDENT,      ['path' => $file->path, 'position' => 0],  'ident'),
-            new Token(Token::COLON,      ['path' => $file->path, 'position' => 5],  null),
+            new Token(Token::APPEND,      ['path' => $file->path, 'position' => 5],  null),
             new Token(Token::LIST_START, ['path' => $file->path, 'position' => 7],  null),
             new Token(Token::IDENT,      ['path' => $file->path, 'position' => 8],  'ident'),
             new Token(Token::LIST_END,   ['path' => $file->path, 'position' => 13], null),
@@ -290,11 +290,11 @@ final class Test extends \PHPUnit\Framework\TestCase
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $this->assertEquals($lexer->tokenize(), [
             new Token(Token::IDENT,  ['path' => $file->path, 'position' => 0],  'ident'),
-            new Token(Token::COLON,  ['path' => $file->path, 'position' => 5],  null),
+            new Token(Token::APPEND,  ['path' => $file->path, 'position' => 5],  null),
             new Token(Token::STRING, ['path' => $file->path, 'position' => 7],  "string'string"),
             new Token(Token::END,    ['path' => $file->path, 'position' => 23], null),
             new Token(Token::IDENT,  ['path' => $file->path, 'position' => 25], 'ident'),
-            new Token(Token::COLON,  ['path' => $file->path, 'position' => 30], null),
+            new Token(Token::APPEND,  ['path' => $file->path, 'position' => 30], null),
             new Token(Token::STRING, ['path' => $file->path, 'position' => 32], '\n'),
             new Token(Token::END,    ['path' => $file->path, 'position' => 36], null),
             new Token(Token::EOF,    ['path' => $file->path, 'position' => 37], null),
@@ -308,11 +308,11 @@ final class Test extends \PHPUnit\Framework\TestCase
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $this->assertEquals($lexer->tokenize(), [
             new Token(Token::IDENT,  ['path' => $file->path, 'position' => 0],  'ident'),
-            new Token(Token::COLON,  ['path' => $file->path, 'position' => 5],  null),
+            new Token(Token::APPEND,  ['path' => $file->path, 'position' => 5],  null),
             new Token(Token::STRING, ['path' => $file->path, 'position' => 7],  'string"string'),
             new Token(Token::END,    ['path' => $file->path, 'position' => 23], null),
             new Token(Token::IDENT,  ['path' => $file->path, 'position' => 25], 'ident'),
-            new Token(Token::COLON,  ['path' => $file->path, 'position' => 30], null),
+            new Token(Token::APPEND,  ['path' => $file->path, 'position' => 30], null),
             new Token(Token::STRING, ['path' => $file->path, 'position' => 32], '\n'),
             new Token(Token::END,    ['path' => $file->path, 'position' => 36], null),
             new Token(Token::EOF,    ['path' => $file->path, 'position' => 37], null),
@@ -328,7 +328,7 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectExceptionMessage(
             "Unexpected LIST_START, ".
             "IDENT must be followed by ".
-                "COLON, PIPE, QUANTIFIER, or END, ".
+                "APPEND, ASSIGN, PIPE, QUANTIFIER, or END, ".
             "got LIST_START");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
@@ -374,32 +374,32 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals($lexer->tokenize(), [
             new Token(Token::IDENT,      ['path' => $file->path, 'position' => 0],   'ident1'),
-            new Token(Token::COLON,      ['path' => $file->path, 'position' => 6],   null),
+            new Token(Token::APPEND,      ['path' => $file->path, 'position' => 6],   null),
             new Token(Token::IDENT,      ['path' => $file->path, 'position' => 8],   'ident1'),
             new Token(Token::QUANTIFIER, ['path' => $file->path, 'position' => 14],  '+'),
             new Token(Token::END,        ['path' => $file->path, 'position' => 16],  null),
             new Token(Token::IDENT,      ['path' => $file->path, 'position' => 18],  'ident2'),
-            new Token(Token::COLON,      ['path' => $file->path, 'position' => 24],  null),
+            new Token(Token::APPEND,      ['path' => $file->path, 'position' => 24],  null),
             new Token(Token::IDENT,      ['path' => $file->path, 'position' => 26],  'ident2'),
             new Token(Token::QUANTIFIER, ['path' => $file->path, 'position' => 32],  '*'),
             new Token(Token::END,        ['path' => $file->path, 'position' => 34],  null),
             new Token(Token::IDENT,      ['path' => $file->path, 'position' => 36],  'ident3'),
-            new Token(Token::COLON,      ['path' => $file->path, 'position' => 42],  null),
+            new Token(Token::APPEND,      ['path' => $file->path, 'position' => 42],  null),
             new Token(Token::IDENT,      ['path' => $file->path, 'position' => 44],  'ident3'),
             new Token(Token::QUANTIFIER, ['path' => $file->path, 'position' => 50],  '?'),
             new Token(Token::END,        ['path' => $file->path, 'position' => 52],  null),
             new Token(Token::IDENT,      ['path' => $file->path, 'position' => 55],  'pattern1'),
-            new Token(Token::COLON,      ['path' => $file->path, 'position' => 63],  null),
+            new Token(Token::APPEND,      ['path' => $file->path, 'position' => 63],  null),
             new Token(Token::PATTERN,    ['path' => $file->path, 'position' => 65],  'pattern1'),
             new Token(Token::QUANTIFIER, ['path' => $file->path, 'position' => 75],  '+'),
             new Token(Token::END,        ['path' => $file->path, 'position' => 77],  null),
             new Token(Token::IDENT,      ['path' => $file->path, 'position' => 79],  'pattern2'),
-            new Token(Token::COLON,      ['path' => $file->path, 'position' => 87],  null),
+            new Token(Token::APPEND,      ['path' => $file->path, 'position' => 87],  null),
             new Token(Token::PATTERN,    ['path' => $file->path, 'position' => 89],  'pattern2'),
             new Token(Token::QUANTIFIER, ['path' => $file->path, 'position' => 99],  '*'),
             new Token(Token::END,        ['path' => $file->path, 'position' => 101], null),
             new Token(Token::IDENT,      ['path' => $file->path, 'position' => 103], 'pattern3'),
-            new Token(Token::COLON,      ['path' => $file->path, 'position' => 111], null),
+            new Token(Token::APPEND,      ['path' => $file->path, 'position' => 111], null),
             new Token(Token::PATTERN,    ['path' => $file->path, 'position' => 113], 'pattern3'),
             new Token(Token::QUANTIFIER, ['path' => $file->path, 'position' => 123], '?'),
             new Token(Token::END,        ['path' => $file->path, 'position' => 125], null),
@@ -427,7 +427,7 @@ final class Test extends \PHPUnit\Framework\TestCase
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $this->assertEquals($lexer->tokenize(), [
             new Token(Token::IDENT,   ['path' => $file->path, 'position' => 0],  'ident'),
-            new Token(Token::COLON,   ['path' => $file->path, 'position' => 5],  null),
+            new Token(Token::APPEND,   ['path' => $file->path, 'position' => 5],  null),
             new Token(Token::PATTERN, ['path' => $file->path, 'position' => 7],  'pattern<'),
             new Token(Token::END,     ['path' => $file->path, 'position' => 18], null),
             new Token(Token::EOF,     ['path' => $file->path, 'position' => 19], null),
@@ -441,11 +441,11 @@ final class Test extends \PHPUnit\Framework\TestCase
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $this->assertEquals($lexer->tokenize(), [
             new Token(Token::IDENT,   ['path' => $file->path, 'position' => 0],  'ident'),
-            new Token(Token::COLON,   ['path' => $file->path, 'position' => 5],  null),
+            new Token(Token::APPEND,   ['path' => $file->path, 'position' => 5],  null),
             new Token(Token::PATTERN, ['path' => $file->path, 'position' => 7],  'escape\\literal'),
             new Token(Token::END,     ['path' => $file->path, 'position' => 23], null),
             new Token(Token::IDENT,   ['path' => $file->path, 'position' => 26], 'ident'),
-            new Token(Token::COLON,   ['path' => $file->path, 'position' => 31], null),
+            new Token(Token::APPEND,   ['path' => $file->path, 'position' => 31], null),
             new Token(Token::PATTERN, ['path' => $file->path, 'position' => 33], '\\'),
             new Token(Token::END,     ['path' => $file->path, 'position' => 37], null),
             new Token(Token::EOF,     ['path' => $file->path, 'position' => 38], null),
@@ -492,7 +492,7 @@ final class Test extends \PHPUnit\Framework\TestCase
             \pharos\phathom\Exception\Unexpected::class);
         $this->expectExceptionMessage(
             "Unexpected ANNOTATION, ".
-            "COLON must be followed by ".
+            "APPEND must be followed by ".
                 "IDENT, STRING, LIST_START, or PATTERN, ".
             "got ANNOTATION(42)");
 
@@ -571,6 +571,22 @@ final class Test extends \PHPUnit\Framework\TestCase
         $this->expectExceptionMessageMatches(
             "/Unexpected character \"1\", expected IDENT ".
                 "at .*IdentInvalidInitialCharacter.grammar:0/");
+
+        $lexer = new \pharos\phathom\Grammar\Lexer($file);
+        $lexer->tokenize();
+    }
+
+    public function testAssignNotAllowedInDirective() : void {
+        $file = $this->file
+            ->relative("AssignNotAllowedInDirective.grammar");
+
+        $this->expectException(
+            \pharos\phathom\Exception\Unexpected::class);
+        $this->expectExceptionMessage(
+            "Unexpected STRING, ".
+                "ASSIGN must be followed by ".
+            "IDENT, PATTERN, or LIST_START, ".
+            "got STRING(my.lexer)");
 
         $lexer = new \pharos\phathom\Grammar\Lexer($file);
         $lexer->tokenize();

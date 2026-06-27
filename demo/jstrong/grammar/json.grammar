@@ -10,11 +10,7 @@ context: "\pharos\phathom\demo\jstrong\JSON";
 
 # ---- entry point --------------------------------------------------------
 
-unit:
-    (object) {
-        return $this->parse($1);
-    }
-;
+unit: object ;
 
 # ---- values -------------------------------------------------------------
 

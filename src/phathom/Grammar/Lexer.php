@@ -40,9 +40,12 @@ namespace pharos\phathom\Grammar {
          *   comma        := ','
          *   strings      := string |
          *                   strings comma string
+         *   append       := ':'
+         *   assign       := '='
+         *   pipe         := '|'
+         *   directive    := ident append strings end
+         *   rule         := ident (append | assign) alternative (pipe alternative)* end
          *   grammar      := (directive | rule)*
-         *   directive    := ident COLON strings end
-         *   rule         := ident COLON alternative (PIPE alternative)* end
          **/
 
         /**
@@ -81,13 +84,21 @@ namespace pharos\phathom\Grammar {
                     Token::END,
                 ],
             ],
-            Token::COLON => [
+            Token::APPEND => [
                 'list' => false,
                 'allow' => [
                     Token::IDENT,
                     Token::STRING,
                     Token::LIST_START,
                     Token::PATTERN,
+                ],
+            ],
+            Token::ASSIGN => [
+                'list' => false,
+                'allow' => [
+                    Token::IDENT,
+                    Token::PATTERN,
+                    Token::LIST_START,
                 ],
             ],
             Token::COMMA => [
@@ -156,7 +167,8 @@ namespace pharos\phathom\Grammar {
                     ],
                 ],
                 'allow' => [
-                    Token::COLON,
+                    Token::APPEND,
+                    Token::ASSIGN,
                     Token::PIPE,
                     Token::QUANTIFIER,
                     Token::END,
@@ -499,7 +511,15 @@ namespace pharos\phathom\Grammar {
 
                     case ':':
                         $tokens[] = new Token(
-                            Token::COLON, [
+                            Token::APPEND, [
+                                'path'     => $this->file->path,
+                                'position' => $this->position++,
+                            ]);
+                        break;
+
+                    case '=':
+                        $tokens[] = new Token(
+                            Token::ASSIGN, [
                                 'path'     => $this->file->path,
                                 'position' => $this->position++,
                             ]);

@@ -147,6 +147,10 @@ rule: alternative | alternative | ... ;
 Alternatives are separated by `|`.  Each alternative is either a bare quantifiable symbol
 or a parenthesised expression optionally followed by annotations and/or an action block.
 
+When `rule` is followed by `:`, the alternatives that follow are appended to the rule (leaving previous alternatives unchanged).
+
+When `rule` is followed by `=`, the alternatives that follow are assigned to the rule (removing previous alternatives).
+
 ### Symbols
 
 A symbol is either:
@@ -372,9 +376,14 @@ $result = $parser->parse(
 
 In the general parser framework case, grammar files are monolithic (the zend language parser is ~2k lines for example): If a new feature is added, you have to pick apart at least one giant file to implement it.
 
-For phathom, grammar files are modular - they may merge additional lexer configuration and *append alternatives for rules defined in other grammar*.
+For `phathom`, grammar files are modular - they may:
 
-Grammar may be authored as modular and composed (which would be recommended practice for large grammar), however even a complete grammar - with `token` and `context` declarations (potentially not intended to be modular), may be included *by a third party* and treated as modular because `context` and `token` support (LSP) substitution.
+  - include other grammar
+  - merge additional lexer configuration
+  - append alternatives for rules defined in other grammar (`:`)
+  - assign alternatives for rules defined in other grammar (`=`)
+
+Grammar may be authored as modular and composed (which would be recommended practice for large grammar), however even a complete grammar - with `token` and `context` declarations (potentially not intended to be modular), may be included *by a third party* and treated as modular because `context` and `token` support (LSP) substitution, and rules may be completely overridden.
 
 ---
 
@@ -393,11 +402,15 @@ quote        := ('\'' | '"')
 string       := quote [^\1]+ quote
 alternative  := expression action?
               | quantifiable
-strings      := string
-              | strings comma string
+comma        := ','
+strings      := string |
+                strings comma string
+append       := ':'
+assign       := '='
+pipe         := '|'
+directive    := ident append strings end
+rule         := ident (append | assign) alternative (pipe alternative)* end
 grammar      := (directive | rule)*
-directive    := ident COLON strings end
-rule         := ident COLON alternative (PIPE alternative)* end
 ```
 
 ---

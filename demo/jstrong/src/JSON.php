@@ -4,11 +4,6 @@ namespace pharos\phathom\demo\jstrong;
 
 class JSON extends \pharos\phathom\Context
 {
-    protected function parse(array|object $root): array|object
-    {
-        return $root;
-    }
-
     protected function array(array $entries): array
     {
         $result = [];

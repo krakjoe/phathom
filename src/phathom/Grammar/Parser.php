@@ -240,7 +240,14 @@ namespace pharos\phathom\Grammar {
             while (!$eof()) {
                 $ident =
                     $consume(); /* IDENT */
-                $consume(); /* COLON */
+                $operation =
+                    $consume(); /* APPEND|ASSIGN */
+
+                if ($operation->type === Token::ASSIGN) {
+                    $this->rules[
+                        self::reserved($ident)
+                    ] = [];
+                }
 
                 while (true) {
                     switch ($peek()->type) {
@@ -292,7 +299,8 @@ namespace pharos\phathom\Grammar {
                             }
 
                             $this->rules[self::reserved($ident)][] =
-                                Alternative::complex($this->file, $symbols, $annotations, $action);
+                                Alternative::complex(
+                                    $this->file, $symbols, $annotations, $action);
                             break;
 
                         case Token::IDENT:

@@ -18,7 +18,7 @@
         "directive": {
             "comment": "Directives: engine, start, context, token, lexer, include, optimizer, collector",
             "name": "meta.directive.phathom",
-            "begin": "^[ \\t]*(engine|start|context|token|lexer|include|optimizer|collector)(?=[ \\t]*:)",
+            "begin": "^[ \\t]*(engine|start|context|token|lexer|include|optimizer|collector)(?=[ \\t]*[:=])",
             "end": ";",
             "beginCaptures": {
                 "1": { "name": "keyword.control.directive.phathom" }
@@ -28,7 +28,8 @@
             },
             "patterns": [
                 { "include": "#comment" },
-                { "include": "#colon" },
+                { "include": "#append" },
+                { "include": "#assign" },
                 { "include": "#string" },
                 { "include": "#comma" }
             ]
@@ -37,11 +38,11 @@
         "rule": {
             "comment": "Rule definitions: name: alt | alt ; — excludes directive keywords via negative lookahead",
             "name": "meta.rule.phathom",
-            "begin": "^[ \\t]*(?!(?:engine|start|context|token|lexer|include|optimizer|collector)[ \\t]*:)([a-z_][a-zA-Z0-9_]*)[ \\t]*(:)",
+            "begin": "^[ \\t]*(?!(?:engine|start|context|token|lexer|include|optimizer|collector)[ \\t]*[:=])([a-z_][a-zA-Z0-9_]*)[ \\t]*([:=])",
             "end": ";",
             "beginCaptures": {
                 "1": { "name": "entity.name.function.rule.phathom" },
-                "2": { "name": "punctuation.separator.rule.phathom" }
+                "2": { "name": "keyword.operator.operation.phathom" }
             },
             "endCaptures": {
                 "0": { "name": "punctuation.terminator.rule.phathom" }
@@ -163,7 +164,7 @@
         "nonterminal": {
             "comment": "Rule references — lowercase-starting identifiers, excluding directive keywords",
             "name": "entity.name.type.nonterminal.phathom",
-            "match": "\\b(?!(?:engine|start|context|token|lexer|include|optimizer|collector|garbage)[ \\t]*:)[a-z_][a-zA-Z0-9_]*\\b"
+            "match": "\\b(?!(?:engine|start|context|token|lexer|include|optimizer|collector|garbage)[ \\t]*[:=])[a-z_][a-zA-Z0-9_]*\\b"
         },
 
         "quantifier": {
@@ -186,9 +187,14 @@
             ]
         },
 
-        "colon": {
-            "name": "punctuation.separator.colon.phathom",
+        "append": {
+            "name": "keyword.operator.append.phathom",
             "match": ":"
+        },
+
+        "assign": {
+            "name": "keyword.operator.assign.phathom",
+            "match": "="
         },
 
         "comma": {

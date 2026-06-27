@@ -208,4 +208,16 @@ final class Test extends \PHPUnit\Framework\TestCase
 
         $parser->parse($content);
     }
+
+    public function testBasicAssignment() : void {
+        $file = $this->file
+            ->relative("BasicAssignment.grammar");
+        $grammar = new \pharos\phathom\Grammar($file);
+        $this->assertTrue(
+            \count($grammar->rules['complex']) === 2);
+        $this->assertTrue(
+            \count($grammar->rules['simple']) === 1);
+        $this->assertTrue(
+            \count($grammar->rules['multi']) === 2);
+    }
 }
