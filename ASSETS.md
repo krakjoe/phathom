@@ -4,9 +4,7 @@
 
 During compilation of grammar files, 2 PHP classes are generated (Token, Context); These files must be written to the physical disk - so they may be cached and optimized as normal code - which means at some point you need to execute with write permission.
 
-For a read-only deployment, you may deploy assets generated (possibly in your source tree) during testing/staging so long as the paths remain consistent.
-
-You may change the assets directory location at runtime, see `Grammar::__construct(File $grammar, ?Assets $assets = null)`.
+You should change the assets directory location at runtime, see `Grammar::__construct(File $grammar, ?Assets $assets = null)`.
 
 *Changes to grammar/lexer files will result in re-generation of assets upon subsequent invocation.*
 
@@ -29,13 +27,17 @@ A class derived from a user provided  `\pharos\phathom\Context` (set with the `c
 
 *The `Token` concrete implementation is imported as `Token`, such that action code referencing `Token` is referring to the concrete class*
 
-#### Pruning
+#### Deploying Assets
+
+Grammar **is code**, not data; as such you will want to collect coverage on this code, version it, and store it alongside other application code.
 
 **Assets are automatically regenerated when content changes, but at regeneration time we cannot know which file we are replacing, and since it has a different file name, deployments that regularly change their grammars live will need to prune their assets directory.**
 
-`phathom` does not provide an out-of-the-box solution for asset pruning, because no such thing can exist and be generally fit for purpose; `phathom` storage model includes serialization, and the storage models for serialized data are innumerable. It also includes physical file generation, these physical files may be generated in your source code tree (and should be for versioning); We are not releasing a tool that can potentially wipe out your source code if you make a mistake.
+If `Grammar` and the resulting assets are treated as code, and committed with your application, then pruning becomes a workflow problem solved with normal VCS workflow idioms.
 
-*The solution to pruning depends entirely on your deployment model and requires either careful bespoke implementation, or no implementation at all; we provide the latter!*
+`phathom` does not provide an out-of-the-box solution for asset pruning beyond a description of best practice, because no such thing can exist and be generally fit for purpose; `phathom` storage model includes serialization, and the storage models for serialized data are innumerable. It also includes physical file generation, these physical files should be generated in your source code tree; We are not releasing a tool that can potentially wipe out your source code if you make a mistake.
+
+*The solution to pruning depends entirely on your deployment model and requires either careful bespoke implementation, or no implementation at all; we provide and prefer the latter!*
 
 #### Notes
 
