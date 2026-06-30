@@ -18,7 +18,7 @@ namespace pharos\phathom\Grammar {
 
     final class Parser {
         const array reserve = [
-            'token', 'context', 'lexer', 'include', 'start', 'optimizer', 'collector', 'engine',
+            'token', 'context', 'lexer', 'include', 'start', 'optimizer', 'collector', 'engine', 'import',
         ];
 
         const array annotations = [
@@ -31,15 +31,16 @@ namespace pharos\phathom\Grammar {
             public private(set) File    $file,
             private             array   $included = [],
             private             array   $directives = [
+                'engine'     => false,
+                'optimizer'  => [
+                    '\pharos\phathom\Grammar\Optimize\Lexer' => false,
+                ],
+                'import'     => [],
                 'lexer'      => [],
                 'context'    => false,
                 'token'      => false,
                 'start'      => false,
                 'collector'  => false,
-                'optimizer'  => [
-                    '\pharos\phathom\Grammar\Optimize\Lexer' => false,
-                ],
-                'engine'     => false,
             ],
             private             array   $rules = [],
         ) {
@@ -208,6 +209,17 @@ namespace pharos\phathom\Grammar {
             $this->directives['collector'] = $directive;
         }
 
+        private function import(Token $directive) : void {
+            $class = (string) $directive;
+
+            if (!\class_exists($class)) {
+                throw Exception\Directive::autoload(
+                    'import', $directive);
+            }
+
+            $this->directives['import'][] = $directive;
+        }
+
         /**
          * The contract of this function must always be to return valid structures.
          * 
@@ -327,7 +339,7 @@ namespace pharos\phathom\Grammar {
                         case Token::STRING: do {
                             $directive =
                                 $consume(); /* STRING */
-                            switch ((string) $ident) {                                    
+                            switch ((string) $ident) {                                  
                                 case 'token':
                                     $this->abstract('token', $directive);
                                 break;
@@ -373,6 +385,10 @@ namespace pharos\phathom\Grammar {
 
                                 case 'collector':
                                     $this->collector($directive);
+                                break;
+
+                                case 'import':
+                                    $this->import($directive);
                                 break;
 
                                 default:

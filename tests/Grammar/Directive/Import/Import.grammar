@@ -1,0 +1,5 @@
+import: "\pharos\phathom\tests\Grammar\Directive\Import\Symbol";
+
+unit: (</[a-z]+/>) {
+    return Symbol::class;
+};

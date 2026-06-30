@@ -8,7 +8,7 @@ namespace pharos\phathom\tests\Grammar\Generator {
                     null, '\\pharos\\phathom\\Grammar\\Interface\\Engine', [
                         'token'   => '\\pharos\\phathom\\tests\\Grammar\\Generator\\Token',
                         'context' => '\\pharos\\phathom\\tests\\Grammar\\Generator\\Context'
-                    ], 
+                    ], [],
                     new \pharos\phathom\Lexer(),
                     []);
 

@@ -27,6 +27,7 @@ namespace pharos\phathom\Grammar {
             private ?Assets $assets,
             private string  $engine,
             private array   $abstracts,
+            private array   $import,
             private Lexer   $lexer,
             private array   $rules) {
 
@@ -56,6 +57,10 @@ namespace pharos\phathom\Grammar {
                     \sprintf(
                         "use %s as Token;", $token),
                 ];
+
+                foreach ($this->import as $import) {
+                    $result[] = \sprintf("use %s;", $import);
+                }
 
                 $result[] =
                     \sprintf(
@@ -206,6 +211,7 @@ namespace pharos\phathom\Grammar {
                 "__%s__",
                 \hash('sha256',
                     \serialize([
+                        $this->engine,
                         $this->abstracts['token'],
                         $this->lexer])));
             $symbol = \sprintf(

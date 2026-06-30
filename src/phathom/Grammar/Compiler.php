@@ -20,17 +20,18 @@ namespace pharos\phathom\Grammar {
     use \pharos\phathom\Grammar\Associativity;
 
     final class Compiler {
-        private string     $start     = 'unit';
-        private array      $terminals = [];
-        private array      $patterns  = [];
-        private array      $symbols   = [];
-        private array      $abstracts = [
+        private string     $engine        = \pharos\phathom\GLR\Engine::class;
+        private array      $optimizations = [];
+        private array      $import        = [];
+        private string     $start         = 'unit';
+        private array      $terminals     = [];
+        private array      $patterns      = [];
+        private array      $symbols       = [];
+        private array      $abstracts     = [
             'token'   => '\pharos\phathom\Token',
             'context' => '\pharos\phathom\Context'
         ];
-        private Collector   $collector = Collector::DEFAULT;
-        private string      $engine =    \pharos\phathom\GLR\Engine::class;
-        private array       $optimizations = [];
+        private Collector   $collector    = Collector::DEFAULT;
 
         public function __construct(
             private File   $file,
@@ -78,6 +79,11 @@ namespace pharos\phathom\Grammar {
                 $this->engine =
                     (string)
                         $this->directives['engine'];
+            }
+
+            foreach ($this->directives['import'] as $directive) {
+                $this->import[] =
+                    (string) $directive;
             }
 
             if (empty($this->rules)) {
@@ -326,14 +332,15 @@ namespace pharos\phathom\Grammar {
             $this->compileConstants();
 
             return [
+                $this->engine,
+                $this->optimizations,
+                $this->import,
                 $this->start,
                 $this->rules,
                 $this->terminals,
                 $this->patterns,
                 $this->abstracts,
                 $this->collector,
-                $this->engine,
-                $this->optimizations,
             ];
         }
     }

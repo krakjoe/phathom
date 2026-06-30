@@ -16,9 +16,9 @@
         },
 
         "directive": {
-            "comment": "Directives: engine, start, context, token, lexer, include, optimizer, collector",
+            "comment": "Directives: engine, start, context, token, lexer, include, optimizer, collector, import",
             "name": "meta.directive.phathom",
-            "begin": "^[ \\t]*(engine|start|context|token|lexer|include|optimizer|collector)(?=[ \\t]*[:=])",
+            "begin": "^[ \\t]*(engine|start|context|token|lexer|include|optimizer|collector|import)(?=[ \\t]*[:=])",
             "end": ";",
             "beginCaptures": {
                 "1": { "name": "keyword.control.directive.phathom" }
@@ -38,7 +38,7 @@
         "rule": {
             "comment": "Rule definitions: name: alt | alt ; — excludes directive keywords via negative lookahead",
             "name": "meta.rule.phathom",
-            "begin": "^[ \\t]*(?!(?:engine|start|context|token|lexer|include|optimizer|collector)[ \\t]*[:=])([a-z_][a-zA-Z0-9_]*)[ \\t]*([:=])",
+            "begin": "^[ \\t]*(?!(?:engine|start|context|token|lexer|include|optimizer|collector|import)[ \\t]*[:=])([a-z_][a-zA-Z0-9_]*)[ \\t]*([:=])",
             "end": ";",
             "beginCaptures": {
                 "1": { "name": "entity.name.function.rule.phathom" },
@@ -164,7 +164,7 @@
         "nonterminal": {
             "comment": "Rule references — lowercase-starting identifiers, excluding directive keywords",
             "name": "entity.name.type.nonterminal.phathom",
-            "match": "\\b(?!(?:engine|start|context|token|lexer|include|optimizer|collector|garbage)[ \\t]*[:=])[a-z_][a-zA-Z0-9_]*\\b"
+            "match": "\\b(?!(?:engine|start|context|token|lexer|include|optimizer|collector|import)[ \\t]*[:=])[a-z_][a-zA-Z0-9_]*\\b"
         },
 
         "quantifier": {

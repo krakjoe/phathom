@@ -32,6 +32,8 @@ namespace pharos\phathom
         ];
 
         /* compiled members */
+        public private(set) Engine    $engine;            /* compiled engine                                */
+        public private(set) array     $import     = [];   /* compiled imports                               */
         public private(set) string    $context;           /* compiled concrete Context implementation       */
         public private(set) string    $token;             /* compiled concrete Token implementation         */
         public private(set) string    $start;             /* compiled name of starting rule                 */
@@ -41,7 +43,6 @@ namespace pharos\phathom
         public private(set) array     $literals   = [];   /* optionally compiled const int Token:: => Token */
         /* compiled Collector policy */
         public private(set) Collector $collector  = Collector::DEFAULT;
-        public private(set) Engine    $engine;
 
         public function __construct(
             public private(set)  File   $file,
@@ -74,14 +75,15 @@ namespace pharos\phathom
                     $this->directives,
                     $this->parsed);
             [
+                $engine,
+                $optimizations,
+                $this->import,
                 $this->start,
                 $this->rules,
                 $this->terminals,
                 $this->patterns,
                 $this->abstracts,
                 $this->collector,
-                $engine,
-                $optimizations,
             ] = $compiler->compile();
 
             $this->engine = new $engine($this);
@@ -131,6 +133,7 @@ namespace pharos\phathom
                 \get_class(
                     $this->engine),
                 $this->abstracts,
+                $this->import,
                 $this->lexer,
                 $this->rules);
             [
@@ -175,6 +178,7 @@ namespace pharos\phathom
                 'abstracts' => $this->abstracts,
                 'collector' => $this->collector,
                 'engine'    => $this->engine,
+                'import'    => $this->import,
             ];
         }
 

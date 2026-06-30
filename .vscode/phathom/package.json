@@ -2,7 +2,7 @@
     "name": "phathom",
     "displayName": "phathom",
     "description": "Syntax highlighting for phathom .grammar and .lexer files",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "publisher": "krakjoe",
     "license": "MIT",
     "engines": {

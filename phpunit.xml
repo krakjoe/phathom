@@ -66,6 +66,10 @@
       <file>tests/Grammar/Directive/Collector/Test.php</file>
     </testsuite>
 
+    <testsuite name="Grammar\Directive\Import">
+      <file>tests/Grammar/Directive/Import/Test.php</file>
+    </testsuite>
+
     <testsuite name="Grammar\Generator">
       <file>tests/Grammar/Generator/TestNoAssets.php</file>
       <file>tests/Grammar/Generator/TestAssets.php</file>

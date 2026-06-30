@@ -16,16 +16,17 @@ Their form has been chosen to align with the taste of a PHP developer; (E)BNF do
 
 Form: `directive: "string" [, "string"];`
 
-| Directive   | Explanation                                                                          | Required | Repeatable | Substitutable |
-|-------------|--------------------------------------------------------------------------------------|----------|------------|---------------|
-| `engine`    | FQCN of an implementation of `\pharos\phathom\Grammar\Interface\Engine`              |    no    |     no     |      no       |
-| `start`     | Name of the starting rule                                                            |    no    |     no     |      n/a      |
-| `context`   | FQCN of a descendant of `\pharos\phathom\Context`                                    |    no    |     yes    |      yes      |
-| `token`     | FQCN of a descendant of `\pharos\phathom\Token`                                      |    no    |     yes    |      yes      |
-| `lexer`     | Path, relative to the current grammar file, of a lexer `.ini`                        |    no    |     yes    |      n/a      |
-| `include`   | Path, relative to the current grammar file, of another grammar file                  |    no    |     yes    |      n/a      |
-| `optimizer` | FQCN of a descendant of `\pharos\phathom\Grammar\Optimization`                       |    no    |     yes    |      n/a      |
-| `collector` | Name of garbage collection policy                                                    |    no    |     no     |      no       |
+| Directive   | Explanation                                                                          | Required | Repeatable |
+|-------------|--------------------------------------------------------------------------------------|----------|------------|
+| `engine`    | FQCN of an implementation of `\pharos\phathom\Grammar\Interface\Engine`              |    no    |     no     |
+| `start`     | Name of the starting rule                                                            |    no    |     no     |
+| `context`   | FQCN of a descendant of `\pharos\phathom\Context`                                    |    no    |     yes    |
+| `token`     | FQCN of a descendant of `\pharos\phathom\Token`                                      |    no    |     yes    |
+| `lexer`     | Path, relative to the current grammar file, of a lexer `.ini`                        |    no    |     yes    |
+| `include`   | Path, relative to the current grammar file, of another grammar file                  |    no    |     yes    |
+| `optimizer` | FQCN of a descendant of `\pharos\phathom\Grammar\Optimization`                       |    no    |     yes    |
+| `collector` | Name of garbage collection policy                                                    |    no    |     no     |
+| `import`    | FQCN of a symbol to import into generated `\pharos\phathom\Context`                  |    no    |     yes    |
 
 ### `engine`
 
@@ -132,6 +133,14 @@ Name of the garbage collection policy:
 **`default` is used by default**
 
 *See: [COLLECTOR.md](COLLECTOR.md) for details*
+
+### `import`
+
+```
+import: "\my\app\symbol";
+```
+
+Imports `\my\app\symbol` such that action code may refer to `symbol`;
 
 ---
 
